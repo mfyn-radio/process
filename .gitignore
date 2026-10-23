@@ -2,3 +2,10 @@ client_secret*.json
 __pycache__/
 .venv/
 .pytest_cache/
+
+# Written by the Processing sketches while they run
+processing/*/cover_tmp.png
+processing/*/input/*
+processing/*/output/*
+!processing/*/input/.keep
+!processing/*/output/.keep
