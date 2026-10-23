@@ -77,17 +77,60 @@ artist directory built along the way:
 - **Making Reels and scheduling posts are separate automations**, with
   `MFYN_Reels` between them.
 
+### Later the same day: live test with new purchases
+
+Four purchases came through step 1 by themselves, in the hourly runs at
+14:07 and 15:07:
+
+- **Fellatio:** *Ezekiel Is Unwell!* (an album) and *Plasticine Paul Live In
+  The Hague* (a single track).
+- **Daufødt:** *Glitter*.
+
+All three are in `MFYN_Library`, their receipts are labelled, and their
+artists and releases are in the sheet with location, tags, bio and links. For
+example, Daufødt's Facebook was picked up, so link reading works.
+
+Make Reels was re-run for the episode after deleting the old Reels. It skips
+tracks that already have one.
+
+Found along the way, still to do:
+
+- [ ] **Labels aren't detected when a label sells through the artist's own
+      Bandcamp page.** Daufødt's receipt says "purchasing from
+      **FysiskFormat**", and Fellatio's says "**AT EASE**", but both were
+      recorded as Self-released, because the album page belongs to the
+      artist.
+      - **Proposed fix:** take the label from the receipt's seller when it
+        isn't the artist, let the automation replace its own
+        "Self-released", then re-run `--artists`.
+      - **Waiting on:** confirmation that AT EASE is a label.
+- [ ] **The Reel's pixel font only has the 95 basic characters,** so ø, ù, é
+      and non-Latin text come out as `?` (Daufødt, FOSCØ, Put Pùrana,
+      *Nisemono 偽者*).
+      - **Proposed fix, in Make Reels, without touching the sketch:**
+        1. check names against the sketch's `data/fonts.json`;
+        2. write plain-letter versions (ø→O, é→E…) into the *temporary
+           copies'* tags before rendering;
+        3. ask for a display name when a name can't be converted.
+      - The `.json` details and captions keep the real spelling.
+- [ ] **Selected backlog:** only chosen older purchases get downloaded, using
+      `--message-id`.
+      - Claude listed the 23 older receipts with their IDs.
+      - The first pick, *My Wife's An Angel – Keep Honking I'm About To
+        Fucking Kill Myself* (`1a0fd5b82a311729`, label Knife Hits), **didn't
+        arrive**: no folder, no label. The cause isn't known yet. Next time,
+        check `%APPDATA%\mfyn-intake\acquire.log` for the lines after
+        `1a0fd5b82a311729: failed`.
+      - Old receipts' download pages may behave differently from new ones.
+
 ### Open items
 
-- [ ] **Merge mfyn-radio/process#12.** It restores the Album Story sketch,
-      which mfyn-radio/process#11 changed by mistake. Then `git pull` on the PC.
+- [x] Merge mfyn-radio/process#12 (Album Story restored, this log added).
 - [ ] **Finish tuning the Reel sketch** locally: long titles and artists,
       the smaller text size. Commit and push it from the PC.
 - [ ] **Test Make Reels end to end** on a real episode, and check the
       `.json` files.
-- [ ] **Backlog:** the ~30 purchases from before 2026-10-23 aren't
-      downloaded. Run `python -m intake.acquire --dry-run --backlog`, then
-      `--backlog`, then `--artists`.
+- [ ] **Backlog:** handled selectively. See "Selected backlog" above.
 - [ ] **Clean up:** delete `H:\My Drive\MFYN_Processing` (replaced by the
       repo) and the `add-processing-sketches` branch on GitHub.
 - [ ] **Untested:** receipts with several albums on them.
