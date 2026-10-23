@@ -10,6 +10,7 @@ post on Instagram and play on Music for Your Neighbors (MFYN).
 | 1 | [Acquire](01-acquire.md) | A Bandcamp purchase is downloaded as FLAC into `MFYN_Library` | Live (2026-10-23) |
 | 2 | [Create the show](02-create-show.md) | Pick tracks, make the episode, archive it in `MFYN_Show_Archive` | Manual |
 | 3 | [Make Reels](03-make-reels.md) | The episode's tracks become 30-second Reels in `MFYN_Reels` | Built, being tested |
+| — | *Instagram copy* | A caption for each Reel, from its details and the MFYN Artists sheet | Next up |
 | 4 | *Schedule posts* | Reels in `MFYN_Reels` are scheduled on Instagram | Not built yet |
 
 Ground rule: **MFYN only uses music it owns.** Everything starts with a
@@ -51,6 +52,7 @@ Bandcamp purchase.
 
 ## Docs
 
+- **[Session log](session-log.md): where we left off, and what's next.**
 - Step 1, Acquire:
   - [What it does and how to set it up](01-acquire.md)
   - [Decisions and how we got here](01-acquire-decisions.md)
