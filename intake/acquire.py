@@ -1,32 +1,27 @@
 """Step 1, Acquire: download new Bandcamp purchases into MFYN_Library.
 
-    python -m intake.acquire              # new purchases (hourly job)
-    python -m intake.acquire --backlog    # also purchases before START_DATE
-    python -m intake.acquire --dry-run    # show what would happen, change nothing
-    python -m intake.acquire --message-id ID   # just this one purchase email
+Runs on the MFYN PC (hourly, from Task Scheduler). See docs/01-acquire.md.
+
+    python -m intake.acquire --setup CLIENT_JSON   # one-time Gmail sign-in
+    python -m intake.acquire                       # new purchases
+    python -m intake.acquire --backlog             # also purchases before START_DATE
+    python -m intake.acquire --dry-run             # show what would happen, change nothing
+    python -m intake.acquire --message-id ID       # just this one purchase email
 """
 import argparse
 import datetime
 import logging
+import logging.handlers
 import sys
 import tempfile
-import zipfile
 from pathlib import Path
 
-from . import bandcamp, config, google_clients, library, purchase_email
+from . import bandcamp, config, gmail, library, purchase_email
 
 log = logging.getLogger("acquire")
 
 
-def label_id(gmail, name):
-    labels = gmail.users().labels().list(userId="me").execute()["labels"]
-    for label in labels:
-        if label["name"] == name:
-            return label["id"]
-    return gmail.users().labels().create(userId="me", body={"name": name}).execute()["id"]
-
-
-def pending_message_ids(gmail, backlog):
+def pending_message_ids(service, backlog):
     query = config.PURCHASE_QUERY
     for name in (config.DONE_LABEL, config.EXCLUDED_LABEL):
         # Gmail search writes nested label names with "-" instead of "/".
@@ -35,28 +30,17 @@ def pending_message_ids(gmail, backlog):
         query += f" after:{config.START_DATE:%Y/%m/%d}"
     ids, page = [], None
     while True:
-        resp = gmail.users().messages().list(userId="me", q=query, pageToken=page).execute()
+        resp = service.users().messages().list(userId="me", q=query, pageToken=page).execute()
         ids += [m["id"] for m in resp.get("messages", [])]
         page = resp.get("nextPageToken")
         if not page:
             return list(reversed(ids))  # oldest first
 
 
-def unpack(downloaded, work_dir):
-    """Album downloads are zips: extract them and drop the zip. Single tracks arrive as-is."""
-    if not zipfile.is_zipfile(downloaded):
-        return [downloaded]
-    out = work_dir / "unzipped"
-    with zipfile.ZipFile(downloaded) as zf:
-        zf.extractall(out)
-    downloaded.unlink()
-    return sorted(p for p in out.rglob("*") if p.is_file())
-
-
-def handle(gmail, drive, message_id, today, dry_run):
+def handle(service, browser, message_id, today, dry_run):
     """Process one purchase email. Returns the label to add once it's finished
     (DONE_LABEL or EXCLUDED_LABEL), or None to leave it for a later run."""
-    msg = gmail.users().messages().get(userId="me", id=message_id, format="full").execute()
+    msg = service.users().messages().get(userId="me", id=message_id, format="full").execute()
     purchase = purchase_email.parse(message_id, purchase_email.body_text(msg["payload"]))
     if purchase is None:
         log.warning("%s: no download link found, skipping", message_id)
@@ -68,57 +52,79 @@ def handle(gmail, drive, message_id, today, dry_run):
     if not purchase.is_released(today):
         log.info("%s: pre-order, releases %s; will retry then", message_id, purchase.release_date)
         return None
-
-    items = bandcamp.items(purchase.download_url, config.AUDIO_FORMAT)
-    if not items or any(item.format_url is None for item in items):
-        log.info("%s: not downloadable yet; will retry next run", message_id)
+    if dry_run:
+        log.info("%s: would download from %s", message_id, purchase.seller)
         return None
 
-    for item in items:
-        name = library.folder_name(item.artist, item.title)
-        if library.exists(drive, config.LIBRARY_FOLDER_ID, name):
-            log.info("%s: '%s' is already in the library", message_id, name)
-            continue
-        if dry_run:
-            log.info("%s: would add '%s'", message_id, name)
-            continue
-        with tempfile.TemporaryDirectory() as tmp:
-            work_dir = Path(tmp)
-            log.info("%s: downloading '%s'", message_id, name)
-            files = unpack(bandcamp.download(item.format_url, work_dir), work_dir)
-            library.add_album(drive, config.LIBRARY_FOLDER_ID, name, files)
-            log.info("%s: added '%s' (%d files)", message_id, name, len(files))
+    try:
+        downloaded = browser.download(purchase.download_url, config.AUDIO_FORMAT)
+    except bandcamp.NotAvailable as e:
+        log.info("%s: not downloadable yet (%s); will retry next run", message_id, e)
+        return None
+    # Bandcamp names downloads "Artist - Album.zip", which is the folder name we want.
+    name = library.clean(downloaded.stem)
+    if (config.LIBRARY_DIR / name).exists():
+        log.info("%s: '%s' is already in the library", message_id, name)
+        downloaded.unlink()
+        return config.DONE_LABEL
+    files = library.add(config.LIBRARY_DIR, name, downloaded)
+    log.info("%s: added '%s' (%d files)", message_id, name, len(files))
     return config.DONE_LABEL
+
+
+def setup_logging():
+    config.APP_DIR.mkdir(parents=True, exist_ok=True)
+    fmt = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
+    file_handler = logging.handlers.RotatingFileHandler(config.LOG_FILE, maxBytes=1 << 20, backupCount=3, encoding="utf-8")
+    console = logging.StreamHandler()
+    for handler in (file_handler, console):
+        handler.setFormatter(fmt)
+        logging.getLogger().addHandler(handler)
+    logging.getLogger().setLevel(logging.INFO)
 
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--setup", metavar="CLIENT_JSON", help="sign in to Gmail as mfyn@ using this OAuth client file")
     parser.add_argument("--backlog", action="store_true", help=f"include purchases before {config.START_DATE}")
-    parser.add_argument("--dry-run", action="store_true", help="don't download, upload or label anything")
+    parser.add_argument("--dry-run", action="store_true", help="don't download, add or label anything")
     parser.add_argument("--message-id", help="process only this Gmail message, whatever its date or label")
     args = parser.parse_args(argv)
-    logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
+    setup_logging()
 
-    gmail, drive = google_clients.gmail(), google_clients.drive()
+    if args.setup:
+        gmail.setup(args.setup)
+        log.info("Signed in. Token saved to %s", config.TOKEN_FILE)
+        return 0
+    if not config.LIBRARY_DIR.is_dir():
+        log.error("Library folder %s not found. Is Google Drive for desktop running?", config.LIBRARY_DIR)
+        return 1
+
+    service = gmail.client()
     label_ids = {} if args.dry_run else {
-        name: label_id(gmail, name) for name in (config.DONE_LABEL, config.EXCLUDED_LABEL)
+        name: gmail.label_id(service, name) for name in (config.DONE_LABEL, config.EXCLUDED_LABEL)
     }
     today = datetime.date.today()
-
-    message_ids = [args.message_id] if args.message_id else pending_message_ids(gmail, args.backlog)
+    message_ids = [args.message_id] if args.message_id else pending_message_ids(service, args.backlog)
     log.info("%d purchase email(s) to check", len(message_ids))
+
     failures = 0
-    for message_id in message_ids:
+    with tempfile.TemporaryDirectory(prefix="mfyn-") as tmp:
+        browser = bandcamp.Browser(Path(tmp))
         try:
-            label = handle(gmail, drive, message_id, today, args.dry_run)
-        except Exception:
-            log.exception("%s: failed; will retry next run", message_id)
-            failures += 1
-            continue
-        if label and not args.dry_run:
-            gmail.users().messages().modify(
-                userId="me", id=message_id, body={"addLabelIds": [label_ids[label]]}
-            ).execute()
+            for message_id in message_ids:
+                try:
+                    label = handle(service, browser, message_id, today, args.dry_run)
+                except Exception:
+                    log.exception("%s: failed; will retry next run", message_id)
+                    failures += 1
+                    continue
+                if label and not args.dry_run:
+                    service.users().messages().modify(
+                        userId="me", id=message_id, body={"addLabelIds": [label_ids[label]]}
+                    ).execute()
+        finally:
+            browser.close()
 
     if failures:
         log.error("%d purchase(s) failed", failures)

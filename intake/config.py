@@ -1,8 +1,16 @@
 """Settings for the intake automation. See docs/01-acquire.md."""
 import datetime
+import os
+from pathlib import Path
 
-# MFYN_Library in mfyn@'s My Drive (H:\My Drive\MFYN_Library).
-LIBRARY_FOLDER_ID = "1Anmx1Om4RZdmwujyu8fEb-lUJnEULKG5"
+# Synced to MFYN_Library in mfyn@'s My Drive by Google Drive for desktop.
+LIBRARY_DIR = Path(os.environ.get("MFYN_LIBRARY", r"H:\My Drive\MFYN_Library"))
+
+# Google sign-in and logs live outside the repo, on this PC only.
+APP_DIR = Path(os.environ.get("APPDATA", Path.home())) / "mfyn-intake"
+CLIENT_FILE = APP_DIR / "client_secret.json"
+TOKEN_FILE = APP_DIR / "token.json"
+LOG_FILE = APP_DIR / "acquire.log"
 
 # Added to a purchase email once it has been handled.
 DONE_LABEL = "MFYN/Downloaded"

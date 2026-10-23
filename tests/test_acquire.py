@@ -45,13 +45,37 @@ def test_body_text_walks_parts():
     assert "<b>html</b>" in purchase_email.body_text(payload)
 
 
-def test_folder_name():
-    assert library.folder_name("Acidic Male", "Flesh Reversal") == "Acidic Male - Flesh Reversal"
-    assert library.folder_name("AC/DC", 'What? "Live"') == "AC_DC - What_ _Live_"
-    assert library.folder_name("Artist ", "Album.") == "Artist - Album"
+def test_clean():
+    assert library.clean("Acidic Male - Flesh Reversal") == "Acidic Male - Flesh Reversal"
+    assert library.clean('AC/DC - What? "Live"') == "AC_DC - What_ _Live_"
+    assert library.clean("Artist - Album.") == "Artist - Album"
 
 
 def test_parse_seller_with_dash():
     text = ("Thanks for purchasing from Music for Your Neighbors - Archive!\n\n"
             "https://bandcamp.com/download?from=receipt&payment_id=2&sig=cd")
     assert purchase_email.parse("m4", text).seller == "Music for Your Neighbors - Archive"
+
+
+def test_add_unzips_album_and_removes_zip(tmp_path):
+    import zipfile
+    zpath = tmp_path / "Artist - Album.zip"
+    with zipfile.ZipFile(zpath, "w") as zf:
+        zf.writestr("Artist - Album - 01 Song.flac", b"flac")
+        zf.writestr("cover.jpg", b"jpg")
+    lib = tmp_path / "lib"
+    lib.mkdir()
+    (lib / ".partial - Artist - Album").mkdir()  # left over from an interrupted run
+    files = library.add(lib, "Artist - Album", zpath)
+    assert [f.name for f in files] == ["Artist - Album - 01 Song.flac", "cover.jpg"]
+    assert not zpath.exists()
+    assert sorted(p.name for p in lib.iterdir()) == ["Artist - Album"]
+
+
+def test_add_single_track(tmp_path):
+    track = tmp_path / "Artist - Track.flac"
+    track.write_bytes(b"flac")
+    lib = tmp_path / "lib"
+    lib.mkdir()
+    files = library.add(lib, "Artist - Track", track)
+    assert [f.name for f in files] == ["Artist - Track.flac"]

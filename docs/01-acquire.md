@@ -1,26 +1,38 @@
 # Step 1: Acquire
 
-Getting a purchased album from Bandcamp into the MFYN library in Google Drive.
+Getting a purchased album from Bandcamp into the MFYN library.
 
 | | |
 |---|---|
 | **Trigger** | A Bandcamp purchase email arrives at mfyn@nothingflatdigital.com |
 | **Input** | An album bought on Bandcamp. MFYN only uses music it owns. |
 | **Output** | One folder per album in `MFYN_Library`, with FLAC tracks and cover art |
-| **Runs as** | mfyn@nothingflatdigital.com (owns both the inbox and the library) |
-| **Automation** | GitHub Actions, hourly: [`acquire.yml`](../.github/workflows/acquire.yml) runs [`intake/acquire.py`](../intake/acquire.py) |
-| **Access** | [Google Cloud setup](setup/google-cloud.md) |
+| **Runs on** | The MFYN Windows PC, hourly, from Task Scheduler |
+| **Code** | [`intake/acquire.py`](../intake/acquire.py), started by [`scripts/run_acquire.cmd`](../scripts/run_acquire.cmd) |
 
 ## What it does
 
 1. Find unprocessed purchase emails in the mfyn@ inbox.
-2. Follow the email's download link and choose **FLAC**.
-3. Wait for Bandcamp to prepare the zip, then download it.
-4. Unzip it into `MFYN_Library/Artist - Album` and delete the zip.
+2. Open the email's download link in Chrome and choose **FLAC**.
+3. Wait for Bandcamp to prepare the zip, and let Chrome download it.
+4. Unzip it into `MFYN_Library\Artist - Album` and delete the zip.
 5. Label the email `MFYN/Downloaded` so it is never processed twice.
 
 Purchases from [excluded pages](#excluded-purchases) are skipped and labelled
 `MFYN/Excluded`.
+
+## Why it runs on the PC, in Chrome
+
+Bandcamp shows a "Client Challenge" (bot protection) instead of the download
+page to anything that isn't a real browser. That rules out plain scripts and
+GitHub Actions. A normal Chrome window on the MFYN PC gets the real page.
+The approach is based on [bcdl](https://github.com/corbin-zip/bcdl).
+
+Receipt links work without signing in to Bandcamp, so no Bandcamp password is
+stored anywhere. Chrome only opens when there's something to download.
+
+Writing into `H:\My Drive\MFYN_Library` means Google Drive for desktop does the
+uploading. The PC needs to be on, signed in, and running Drive for desktop.
 
 ## Details
 
@@ -47,62 +59,85 @@ The list is `EXCLUDED_SELLERS` in [`intake/config.py`](../intake/config.py).
 
 ### Library location
 
-- Path on desktop: `H:\My Drive\MFYN_Library`
+- Path: `H:\My Drive\MFYN_Library`. Set the `MFYN_LIBRARY` environment
+  variable to use a different one.
 - Owner: mfyn@nothingflatdigital.com
 - Drive folder ID: `1Anmx1Om4RZdmwujyu8fEb-lUJnEULKG5`
 
 ### Folder naming
 
-- Albums: `Artist - Album`
-- A single track bought now and then: `Artist - Track`
-- Characters Drive or Windows don't allow in names (`\ / : * ? " < > |`) are
-  removed or replaced.
-- If the folder already exists, the album is skipped.
+- `Artist - Album`, taken from the name Bandcamp gives the zip.
+- A single track bought now and then: `Artist - Track`.
+- Characters Windows doesn't allow in names (`\ / : * ? " < > |`) become `_`.
+- If the folder already exists, the album isn't added again.
 
 ### Pre-orders
 
 Some emails say `Releases <date>`. The album can't be downloaded until then.
 The email is left unlabelled and retried after the release date.
 
-### Scope
-
-- **New purchases only.** The job runs automatically from the day it goes live.
-- **Backlog:** a manual batch run reprocesses older purchase emails still in
-  the inbox. If Bandcamp's emailed links for old purchases have stopped
-  working, the batch run falls back to the Bandcamp collection page.
-
 ### Failures
 
 - If one album fails (for example, Bandcamp is down), its email stays
   unlabelled and is retried on the next run. The other albums carry on.
-- Albums upload into a folder named `.partial - Artist - Album`, which is
-  renamed once every file is in. If a run is interrupted, the half-finished
-  folder is replaced on the next try, so a folder without the prefix is always
+- Albums are unzipped into a folder named `.partial - Artist - Album`, which
+  is renamed once complete. If a run is interrupted, the half-finished folder
+  is replaced on the next try, so a folder without the prefix is always
   complete.
-- A run with any failure shows as failed in GitHub Actions, and GitHub emails
-  you about it.
+- Everything is logged to `%APPDATA%\mfyn-intake\acquire.log`.
 
-## Running it
+### Scope
 
-The job runs every hour, at 17 minutes past. To run it by hand:
+- **New purchases only.** Purchases from 2026-10-23 onwards.
+- **Backlog:** `--backlog` also handles older purchase emails still in the
+  inbox.
 
-1. Go to **Actions → Acquire Bandcamp purchases** in the GitHub repo.
-2. Click **Run workflow**.
-3. Optionally tick:
-   - **Backlog**: also download purchases from before 2026-10-23.
-   - **Dry run**: list what would be downloaded without downloading,
-     uploading or labelling anything.
-   - **Message ID**: handle just one purchase email, whatever its date. This
-     is the Gmail API ID (16 hex characters, like `1a12586490c98e61`), not
-     the ID in the Gmail web address. Ask Claude to look it up.
+## Setting it up on the PC
 
-From a terminal with the three `GOOGLE_*` values set as environment variables:
+One time only. Needs Python and Google Chrome, both already installed.
+
+1. **Get the code.** Install Git (`winget install Git.Git`), then:
+   ```
+   cd %USERPROFILE%
+   git clone https://github.com/mfyn-radio/process.git mfyn-process
+   cd mfyn-process
+   python -m pip install -r requirements.txt
+   ```
+   Git asks you to sign in to GitHub the first time.
+2. **Sign in to Gmail as mfyn@.** Use the client JSON from
+   [Google Cloud setup](setup/google-cloud.md):
+   ```
+   python -m intake.acquire --setup %USERPROFILE%\Downloads\client_secret_648160844206-jhea8g49optdpf94bqet5grgbf64915g.apps.googleusercontent.com.json
+   ```
+   A browser opens. Sign in as **mfyn@nothingflatdigital.com** and approve.
+   The token is saved in `%APPDATA%\mfyn-intake\`, never in the repo.
+3. **Test it** with a dry run, then one real album:
+   ```
+   python -m intake.acquire --dry-run --backlog
+   python -m intake.acquire --message-id <id>
+   ```
+4. **Schedule it hourly:**
+   ```
+   schtasks /Create /TN "MFYN Acquire" /SC HOURLY /TR "\"%USERPROFILE%\mfyn-process\scripts\run_acquire.cmd\""
+   ```
+   It runs while you're signed in to Windows. To run it straight away:
+   `schtasks /Run /TN "MFYN Acquire"`.
+
+To update the code later: `cd %USERPROFILE%\mfyn-process` then `git pull`.
+
+## Running it by hand
 
 ```
-pip install -r requirements.txt
 python -m intake.acquire [--backlog] [--dry-run] [--message-id ID]
 ```
 
+- `--dry-run` lists what would be downloaded without opening Chrome,
+  downloading or labelling anything.
+- `--backlog` includes purchases from before 2026-10-23.
+- `--message-id` handles just one purchase email, whatever its date. This is
+  the Gmail API ID (16 hex characters, like `1a0dacaede35264f`), not the ID in
+  the Gmail web address. Ask Claude to look it up.
+
 ## Open questions
 
-- How long Bandcamp's emailed download links stay valid (affects the batch run).
+- Multi-item purchases (more than one album on one receipt) are untested.
