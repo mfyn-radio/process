@@ -3,6 +3,10 @@
 One-time setup that lets the intake automation read the mfyn@ inbox and write
 to the `MFYN_Library` folder in mfyn@'s Drive, without anyone signed in.
 
+**Status:** done on 2026-10-23. The three secrets are stored in GitHub, and
+the token was checked against the mfyn@ inbox and the `MFYN_Library` folder.
+You only need this guide again to redo the setup (see *If it stops working*).
+
 Takes about 10 minutes. You need a Windows PC with Python installed.
 
 ## 1–3. Project, APIs and consent screen (already done)
