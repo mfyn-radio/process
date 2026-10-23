@@ -83,7 +83,7 @@ int txt(Canvas cv, float x, float y, String s, String font, int p, float[] col) 
 int dmWidth(String s, String font, int p) { return s.length() == 0 ? 0 : cols(bitmap(s, font)) * p; }
 
 
-// ---------- long titles: wrap onto two lines, then cut with "..." ----------
+// ---------- long titles and artists: wrap onto two lines, then cut with "..." ----------
 String ellipsize(String s, String font, int p, int maxw) {
   if (dmWidth(s, font, p) <= maxw) return s;
   String[] words = splitTokens(s, " ");
