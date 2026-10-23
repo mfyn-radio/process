@@ -102,6 +102,26 @@ tracks arrive as one file and get the same treatment.
 - Emails are only labelled after success.
 - So an interrupted or failed run is simply retried next hour.
 
+### Artist directory for Instagram tags
+
+FLAC tags don't include Instagram handles, but posts should tag the artist
+when they have an account.
+
+- Step 1 now adds each new artist to the **MFYN Artists** Google Sheet, with
+  a handle suggested from the album's Bandcamp page. This is automatic, with
+  no review.
+- The handle is confirmed when Reels are made (step 3).
+- It's used when posts are scheduled (step 4), so a handle fixed late still
+  gets used.
+
+Two details:
+
+- **Labels and compilations.** The Bandcamp page belongs to the seller, so for
+  compilations no handle is suggested. On a label release the suggestion may
+  be the label's account, which confirmation catches.
+- **Narrow access.** The sheet uses the `drive.file` permission, which only
+  reaches files the automation created itself.
+
 ## Problems along the way
 
 Each one is in [troubleshooting](01-acquire-troubleshooting.md).

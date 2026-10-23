@@ -65,6 +65,21 @@ The client JSON is
 A copy is kept in `%APPDATA%\mfyn-intake\client_secret.json`. Sign in as
 **mfyn@**.
 
+### `missing newer permissions`
+
+The code now needs a permission the saved sign-in doesn't have (for example,
+access to the MFYN Artists sheet). Sign in again with `--setup`, as above.
+
+### `couldn't open the MFYN Artists sheet` or `couldn't update the MFYN Artists sheet`
+
+Downloads carry on without it. Check the error that follows:
+
+- `Google Sheets API has not been used in project …`: enable the **Google
+  Sheets API** in the `mfyn-library-agent` Cloud project
+  (**APIs & Services → Library**). Then run `--artists` to fill in the
+  artists that were missed.
+- `insufficient authentication scopes`: sign in again with `--setup`.
+
 ### `Library folder … not found`
 
 `H:\My Drive\MFYN_Library` isn't there. Is Google Drive for desktop running and

@@ -79,3 +79,74 @@ def test_add_single_track(tmp_path):
     lib.mkdir()
     files = library.add(lib, "Artist - Track", track)
     assert [f.name for f in files] == ["Artist - Track.flac"]
+
+
+def test_handle_from_links():
+    from intake.artists import handle_from_links
+    assert handle_from_links([
+        "https://appliedcommunications.bandcamp.com/music",
+        "https://www.instagram.com/p/C123/",            # a post, not an account
+        "https://www.instagram.com/applied.comms/?hl=en",
+    ]) == "@applied.comms"
+    assert handle_from_links(["https://twitter.com/x", None]) is None
+
+
+def test_bandcamp_page_from_comment():
+    from intake.tags import PAGE_URL
+    assert PAGE_URL.search("Visit https://appliedcommunications.bandcamp.com").group(0) == \
+        "https://appliedcommunications.bandcamp.com"
+
+
+def _album(tmp_path, artists):
+    """An album folder of tagged FLACs, like Bandcamp's, from tests/blank.flac."""
+    import shutil
+    from pathlib import Path
+    from mutagen.flac import FLAC
+    folder = tmp_path / "Album"
+    folder.mkdir()
+    for i, artist in enumerate(artists, 1):
+        path = folder / f"{i:02} track.flac"
+        shutil.copy(Path(__file__).parent / "blank.flac", path)
+        tags = FLAC(path)
+        tags["artist"] = artist
+        tags["comment"] = "Visit https://somelabel.bandcamp.com"
+        tags.save()
+    return folder
+
+
+class FakeSheet:
+    def __init__(self, known=()):
+        self.rows = [(a, None, None) for a in known]
+
+    def known(self):
+        return {a.casefold() for a, _, _ in self.rows}
+
+    def add(self, artist, handle, page):
+        self.rows.append((artist, handle, page))
+
+
+class FakeBrowser:
+    def __init__(self):
+        self.visited = []
+
+    def links(self, url):
+        self.visited.append(url)
+        return ["https://instagram.com/somelabel"]
+
+
+def test_record_single_artist_album(tmp_path):
+    import logging
+    from intake import artists
+    sheet, browser = FakeSheet(), FakeBrowser()
+    artists.record(sheet, browser, _album(tmp_path, ["Solo", "Solo"]), logging.getLogger())
+    assert sheet.rows == [("Solo", "@somelabel", "https://somelabel.bandcamp.com")]
+
+
+def test_record_compilation_skips_label_handle_and_known_artists(tmp_path):
+    import logging
+    from intake import artists
+    sheet, browser = FakeSheet(known=["Known"]), FakeBrowser()
+    artists.record(sheet, browser, _album(tmp_path, ["Known", "New One", "New Two"]), logging.getLogger())
+    assert sheet.rows[1:] == [("New One", None, "https://somelabel.bandcamp.com"),
+                              ("New Two", None, "https://somelabel.bandcamp.com")]
+    assert browser.visited == []

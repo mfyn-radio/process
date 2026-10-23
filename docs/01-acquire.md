@@ -22,6 +22,8 @@ See also: [decisions and how we got here](01-acquire-decisions.md) ·
 3. Wait for Bandcamp to prepare the zip, and let Chrome download it.
 4. Unzip it into `MFYN_Library\Artist - Album` and delete the zip.
 5. Label the email `MFYN/Downloaded` so it is never processed twice.
+6. Add any new artists to the [MFYN Artists sheet](#artist-directory), with an
+   Instagram handle suggested from their Bandcamp page.
 
 Purchases from [excluded pages](#excluded-purchases) are skipped and labelled
 `MFYN/Excluded`.
@@ -62,6 +64,33 @@ labelled `MFYN/Excluded` instead.
 - **Music for Your Neighbors - Archive**: past episodes of the show, not music.
 
 The list is `EXCLUDED_SELLERS` in [`intake/config.py`](../intake/config.py).
+
+### Artist directory
+
+The **MFYN Artists** Google Sheet in mfyn@'s Drive lists every artist in the
+library with their Instagram handle, for tagging them in posts. The automation
+creates the sheet on first use.
+
+| Artist | Instagram | Status | Bandcamp page | Added |
+|---|---|---|---|---|
+| from the FLAC `ARTIST` tag | `@handle` or blank | see below | from the FLAC comment | date |
+
+- **Status** is one of:
+  - `Suggested`: found on the artist's Bandcamp page, not yet checked.
+  - `Not found`: no Instagram link was found.
+  - Confirmed or corrected later, when Reels are made (step 3).
+- A new artist is added automatically when their album arrives. Nobody
+  reviews it at this point.
+- **Where the suggested handle comes from:** Chrome opens the album's Bandcamp
+  page (from the `Visit https://….bandcamp.com` comment Bandcamp puts in each
+  FLAC) and takes the first Instagram account it links to.
+- **Labels:** that page belongs to whoever sold the album. On a label release
+  it's the label's page, so the suggestion may be the label's account. For
+  compilations (several artists on one album), no handle is suggested.
+- **Matching:** artists are matched by name, ignoring case. A collaboration
+  like `A + B` is one row.
+- **If the sheet can't be reached:** downloads still go ahead. Fill in missed
+  artists with `--artists`.
 
 ### Library location
 
@@ -110,7 +139,7 @@ One time only. Needs Python and Google Chrome, both already installed.
    python -m pip install -r requirements.txt
    ```
    Git asks you to sign in to GitHub the first time.
-2. **Sign in to Gmail as mfyn@.** Use the client JSON from
+2. **Sign in to Google as mfyn@.** Use the client JSON from
    [Google Cloud setup](setup/google-cloud.md):
    ```
    python -m intake.acquire --setup %USERPROFILE%\Downloads\client_secret_648160844206-jhea8g49optdpf94bqet5grgbf64915g.apps.googleusercontent.com.json
@@ -136,7 +165,7 @@ To update the code later: `cd %USERPROFILE%\mfyn-process` then `git pull`.
 From the repo folder (`cd %USERPROFILE%\mfyn-process`):
 
 ```
-python -m intake.acquire [--backlog] [--dry-run] [--message-id ID]
+python -m intake.acquire [--backlog] [--dry-run] [--message-id ID] [--artists]
 ```
 
 - `--dry-run` lists what would be downloaded without opening Chrome,
@@ -145,6 +174,9 @@ python -m intake.acquire [--backlog] [--dry-run] [--message-id ID]
 - `--message-id` handles just one purchase email, whatever its date. This is
   the Gmail API ID (16 hex characters, like `1a0dacaede35264f`), not the ID in
   the Gmail web address. Ask Claude to look it up.
+- `--artists` adds every artist already in the library that's missing from
+  the MFYN Artists sheet, then stops. Use it once after setup, and after a
+  backlog run.
 
 ## Day to day
 
@@ -156,6 +188,8 @@ Keep the PC on and signed in, with Drive for desktop running.
 
 ## Open questions
 
+- The `Status` values step 3 writes when a handle is confirmed (designed with
+  step 3).
 - Multi-item purchases (more than one album on one receipt) are untested.
 - The ~30 purchases from before 2026-10-23 haven't been downloaded yet. Run
   `--dry-run --backlog` first to see the list.
