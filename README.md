@@ -10,7 +10,7 @@ post on Instagram and play on the radio show.
   one, inputs and outputs, and decisions made along the way.
 - `intake/` — the automation code.
 - `scripts/` — launchers, like the one Task Scheduler runs.
-- `tests/` — run with `pytest`; GitHub runs them on every push.
+- `tests/` — run with `python -m pytest`; GitHub runs them on every push.
 
 ## Steps
 
