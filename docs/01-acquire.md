@@ -22,8 +22,9 @@ See also: [decisions and how we got here](01-acquire-decisions.md) ·
 3. Wait for Bandcamp to prepare the zip, and let Chrome download it.
 4. Unzip it into `MFYN_Library\Artist - Album` and delete the zip.
 5. Label the email `MFYN/Downloaded` so it is never processed twice.
-6. Add any new artists to the [MFYN Artists sheet](#artist-directory), with an
-   Instagram handle suggested from their Bandcamp page.
+6. Record the release, its artists and its label in the
+   [MFYN Artists sheet](#the-mfyn-artists-sheet), with Instagram handles
+   suggested from Bandcamp.
 
 Purchases from [excluded pages](#excluded-purchases) are skipped and labelled
 `MFYN/Excluded`.
@@ -65,32 +66,77 @@ labelled `MFYN/Excluded` instead.
 
 The list is `EXCLUDED_SELLERS` in [`intake/config.py`](../intake/config.py).
 
-### Artist directory
+### The MFYN Artists sheet
 
-The **MFYN Artists** Google Sheet in mfyn@'s Drive lists every artist in the
-library with their Instagram handle, for tagging them in posts. The automation
-creates the sheet on first use.
+The **MFYN Artists** Google Sheet in mfyn@'s Drive is what the library knows
+about its music: who the artists are, their Instagram handles for tagging,
+and each release's label, date and tags. The automation creates it on first
+use and fills it in after every album. Nobody reviews it at this point.
 
-| Artist | Instagram | Status | Bandcamp page | Added |
-|---|---|---|---|---|
-| from the FLAC `ARTIST` tag | `@handle` or blank | see below | from the FLAC comment | date |
+**Artists** is the artist library: one row per artist.
 
-- **Status** is one of:
-  - `Suggested`: found on the artist's Bandcamp page, not yet checked.
-  - `Not found`: no Instagram link was found.
-  - Confirmed or corrected later, when Reels are made (step 3).
-- A new artist is added automatically when their album arrives. Nobody
-  reviews it at this point.
-- **Where the suggested handle comes from:** Chrome opens the album's Bandcamp
-  page (from the `Visit https://….bandcamp.com` comment Bandcamp puts in each
-  FLAC) and takes the first Instagram account it links to.
-- **Labels:** that page belongs to whoever sold the album. On a label release
-  it's the label's page, so the suggestion may be the label's account. For
-  compilations (several artists on one album), no handle is suggested.
-- **Matching:** artists are matched by name, ignoring case. A collaboration
-  like `A + B` is one row.
-- **If the sheet can't be reached:** downloads still go ahead. Fill in missed
-  artists with `--artists`.
+| Column | Comes from |
+|---|---|
+| Artist | the FLAC `ARTIST` tag |
+| Instagram | the artist's Bandcamp page, as `@handle` |
+| Status | see below |
+| Location | Bandcamp, e.g. `Brooklyn, New York` |
+| Tags | every Bandcamp tag across their releases |
+| Website | their Bandcamp page's links |
+| Other links | SoundCloud, YouTube, TikTok, X, Bluesky, Facebook… for crediting in captions. Not Spotify or Apple Music. |
+| Bandcamp page | |
+| Bio | their Bandcamp bio. Notes for you and the show; paraphrase it in captions. |
+| Added | the date the row was added |
+
+**Releases** has one row per album in the library: Album, Artist, Label,
+Release date, Tags, Album link, Credits, Purchased (the receipt date), Library
+folder, Added.
+
+- **Label** is whoever sold the album on Bandcamp, or `Self-released` when
+  the artist sold it.
+- **Release date** comes from the album page, written as `2026-10-30` so it
+  sorts.
+
+**Labels** has one row per label: Label, Instagram, Status, Location, Website,
+Other links, Bandcamp page, Added. A label's Instagram is suggested and
+confirmed the same way as an artist's, so posts can tag both.
+
+**Tags** has one row per Bandcamp tag per release (Tag, Artist, Album). Sort
+or filter this tab to see, say, every *ambient* artist, or add a pivot table
+to count the library by tag. Bandcamp tags mix genres with places like
+*Brooklyn*; they're kept as Bandcamp has them.
+
+#### Status
+
+| Status | Meaning |
+|---|---|
+| `Suggested` | A handle was found on Bandcamp, not yet checked |
+| `Not found` | No Instagram link was found |
+| *(set in step 3)* | Confirmed or corrected when Reels are made |
+
+#### How it's filled in
+
+- **The automation only fills empty cells and adds tags.** It never
+  overwrites anything typed in the sheet, so corrections and your own notes
+  are safe. The one exception is `Status`, which follows the Instagram cell
+  while it still says `Suggested` or `Not found`.
+- **Which Bandcamp page:** the album page, linked from the receipt's download
+  page. In a backlog or `--artists` run, the album is looked up on the
+  seller's page (from the `Visit https://….bandcamp.com` comment in each
+  FLAC).
+- **Self-release:** the page's sidebar is the artist's own, so it fills the
+  artist's Instagram, location, links and bio.
+- **Label release:** the sidebar is the label's, so it fills the **Labels**
+  row instead. The artist gets their tags, but their Instagram is left
+  `Not found` for you to fill in.
+- **Compilations (several artists):** each artist gets a row with just their
+  name. Tags and details stay on the release.
+- **Matching:** names are matched ignoring case. A collaboration like `A + B`
+  is one row.
+- **If the sheet can't be reached:** downloads still go ahead. `--artists`
+  fills in what was missed.
+- Columns are found by their header, so you can reorder columns or add your
+  own. Don't rename the built-in ones.
 
 ### Library location
 
@@ -174,9 +220,9 @@ python -m intake.acquire [--backlog] [--dry-run] [--message-id ID] [--artists]
 - `--message-id` handles just one purchase email, whatever its date. This is
   the Gmail API ID (16 hex characters, like `1a0dacaede35264f`), not the ID in
   the Gmail web address. Ask Claude to look it up.
-- `--artists` adds every artist already in the library that's missing from
-  the MFYN Artists sheet, then stops. Use it once after setup, and after a
-  backlog run.
+- `--artists` fills in the MFYN Artists sheet from every album already in the
+  library, then stops. It's safe to repeat. Use it after setup, after a
+  backlog run, or after a code update that adds columns.
 
 ## Day to day
 
@@ -190,6 +236,8 @@ Keep the PC on and signed in, with Drive for desktop running.
 
 - The `Status` values step 3 writes when a handle is confirmed (designed with
   step 3).
+- Bandcamp's page layout was read from what's known of it, not confirmed. If
+  fields stay empty after `--artists`, the page reading needs adjusting.
 - Multi-item purchases (more than one album on one receipt) are untested.
 - The ~30 purchases from before 2026-10-23 haven't been downloaded yet. Run
   `--dry-run --backlog` first to see the list.
