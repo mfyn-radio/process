@@ -25,4 +25,6 @@ post on Instagram and play on the radio show.
    archive it. *(manual)*
 3. [Make Reels](docs/03-make-reels.md) — the episode's tracks become
    30-second Instagram Reels. Double-click to start. *(built, being tested)*
-4. Schedule posts — *(not built yet)*
+4. Schedule posts — *(not built yet; Instagram captions come first)*
+
+Where we left off, and what's next: [`docs/session-log.md`](docs/session-log.md).

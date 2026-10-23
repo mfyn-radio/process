@@ -291,25 +291,6 @@ ArrayList<String> wrapWords(String text, float size, float maxw, int maxLines) {
   return lines;
 }
 
-// how many lines wrapWords would need for the whole text, without cutting it
-int linesNeeded(String text, float size, float maxw) {
-  int n = 1;
-  String cur = "";
-  for (String w : text.split("\\s+")) {
-    String t = (cur + " " + w).trim();
-    if (textW(WIDE, size, t, 1) <= maxw || cur.length() == 0) cur = t;
-    else { n++; cur = w; }
-    if (textW(WIDE, size, cur, 1) > maxw) return Integer.MAX_VALUE;  // a single word too wide
-  }
-  return n;
-}
-
-// the largest text size from 17 down to 13 at which the text fits in maxLines
-float fitSize(String text, float maxw, int maxLines) {
-  for (float size = 17; size > 13; size--) if (linesNeeded(text, size, maxw) <= maxLines) return size;
-  return 13;
-}
-
 String fitText(String s, String file, float size, float maxw, float sp) {
   if (textW(file, size, s, sp) <= maxw) return s;
   String dots = font(file, size).getNative() != null && ((java.awt.Font) font(file, size).getNative()).canDisplay('…') ? "…" : "...";
@@ -372,11 +353,8 @@ Layer buildPlayer(Album al, PImage cover) {
   L.fillRect(fx0 - 8, IY0 + 18, IX1 - 18, IY0 + 36, STRIP1);
   putText(L, fx0, IY0 + 33, "ALBUM INFO", PIXEL, 14, LABEL, 3);
   float fy = IY0 + 44;
-  // title and artist share one size: the largest at which both fit their lines
-  float maxw = IX1 - 20 - fx0 - 30;
-  float size = min(fitSize(al.album.toUpperCase(), maxw, 4), fitSize(al.artist.toUpperCase(), maxw, 2));
-  fy = field(L, fx0, fy, IX1 - 20, "TITLE", al.album.toUpperCase(), size, 4) + 10;
-  fy = field(L, fx0, fy, IX1 - 20, "ARTIST", al.artist.toUpperCase(), size, 2) + 10;
+  fy = field(L, fx0, fy, IX1 - 20, "TITLE", al.album.toUpperCase(), 17, 4) + 10;
+  fy = field(L, fx0, fy, IX1 - 20, "ARTIST", al.artist.toUpperCase(), 17, 2) + 10;
   if (al.released.length() > 0) fy = field(L, fx0, fy, IX1 - 20, "RELEASED", al.released, 17, 1) + 10;
   fy = field(L, fx0, fy, IX1 - 20, "TRACKS", str(al.tracks.size()), 17, 1) + 10;
 
