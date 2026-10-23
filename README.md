@@ -6,8 +6,9 @@ post on Instagram and play on the radio show.
 
 ## Layout
 
-- `docs/` — process documentation: the steps in the pipeline, who/what does each
-  one, inputs and outputs, and decisions made along the way.
+- `docs/` — process documentation. Start at [`docs/README.md`](docs/README.md):
+  the pipeline, the systems involved, and each step's spec, decisions and
+  troubleshooting.
 - `intake/` — the automation code.
 - `scripts/` — launchers, like the one Task Scheduler runs.
 - `tests/` — run with `python -m pytest`; GitHub runs them on every push.

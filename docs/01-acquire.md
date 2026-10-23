@@ -2,6 +2,10 @@
 
 Getting a purchased album from Bandcamp into the MFYN library.
 
+See also: [decisions and how we got here](01-acquire-decisions.md) ·
+[troubleshooting](01-acquire-troubleshooting.md) ·
+[process overview](README.md)
+
 | | |
 |---|---|
 | **Trigger** | A Bandcamp purchase email arrives at mfyn@nothingflatdigital.com |
@@ -27,7 +31,8 @@ Purchases from [excluded pages](#excluded-purchases) are skipped and labelled
 Bandcamp shows a "Client Challenge" (bot protection) instead of the download
 page to anything that isn't a real browser. That rules out plain scripts and
 GitHub Actions. A normal Chrome window on the MFYN PC gets the real page.
-The approach is based on [bcdl](https://github.com/corbin-zip/bcdl).
+The approach is based on [bcdl](https://github.com/corbin-zip/bcdl). The
+[decision log](01-acquire-decisions.md) has the full story.
 
 Receipt links work without signing in to Bandcamp, so no Bandcamp password is
 stored anywhere. Chrome only opens when there's something to download.
@@ -128,6 +133,8 @@ To update the code later: `cd %USERPROFILE%\mfyn-process` then `git pull`.
 
 ## Running it by hand
 
+From the repo folder (`cd %USERPROFILE%\mfyn-process`):
+
 ```
 python -m intake.acquire [--backlog] [--dry-run] [--message-id ID]
 ```
@@ -139,6 +146,16 @@ python -m intake.acquire [--backlog] [--dry-run] [--message-id ID]
   the Gmail API ID (16 hex characters, like `1a0dacaede35264f`), not the ID in
   the Gmail web address. Ask Claude to look it up.
 
+## Day to day
+
+Nothing to do: buy on Bandcamp, and within the hour the album is in
+`MFYN_Library` and the receipt is labelled `MFYN/Downloaded`. If it isn't, see
+[troubleshooting](01-acquire-troubleshooting.md#an-album-didnt-arrive).
+
+Keep the PC on and signed in, with Drive for desktop running.
+
 ## Open questions
 
 - Multi-item purchases (more than one album on one receipt) are untested.
+- The ~30 purchases from before 2026-10-23 haven't been downloaded yet. Run
+  `--dry-run --backlog` first to see the list.
