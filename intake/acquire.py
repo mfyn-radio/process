@@ -3,6 +3,7 @@
     python -m intake.acquire              # new purchases (hourly job)
     python -m intake.acquire --backlog    # also purchases before START_DATE
     python -m intake.acquire --dry-run    # show what would happen, change nothing
+    python -m intake.acquire --message-id ID   # just this one purchase email
 """
 import argparse
 import datetime
@@ -88,6 +89,7 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--backlog", action="store_true", help=f"include purchases before {config.START_DATE}")
     parser.add_argument("--dry-run", action="store_true", help="don't download, upload or label anything")
+    parser.add_argument("--message-id", help="process only this Gmail message, whatever its date or label")
     args = parser.parse_args(argv)
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 
@@ -95,7 +97,7 @@ def main(argv=None):
     done_label = None if args.dry_run else label_id(gmail, config.DONE_LABEL)
     today = datetime.date.today()
 
-    message_ids = pending_message_ids(gmail, args.backlog)
+    message_ids = [args.message_id] if args.message_id else pending_message_ids(gmail, args.backlog)
     log.info("%d purchase email(s) to check", len(message_ids))
     failures = 0
     for message_id in message_ids:
