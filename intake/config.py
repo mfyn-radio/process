@@ -6,6 +6,13 @@ LIBRARY_FOLDER_ID = "1Anmx1Om4RZdmwujyu8fEb-lUJnEULKG5"
 
 # Added to a purchase email once it has been handled.
 DONE_LABEL = "MFYN/Downloaded"
+EXCLUDED_LABEL = "MFYN/Excluded"
+
+# Bandcamp pages whose purchases never go in the library. Matched against
+# "Thanks for purchasing from <seller>!" in the receipt, ignoring case.
+EXCLUDED_SELLERS = [
+    "Music for Your Neighbors - Archive",  # past episodes of the show, not music
+]
 
 # Only purchases on or after this date are picked up automatically.
 # Older ones need a backlog run (--backlog).

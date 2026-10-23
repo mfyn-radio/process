@@ -19,6 +19,9 @@ Getting a purchased album from Bandcamp into the MFYN library in Google Drive.
 4. Unzip it into `MFYN_Library/Artist - Album` and delete the zip.
 5. Label the email `MFYN/Downloaded` so it is never processed twice.
 
+Purchases from [excluded pages](#excluded-purchases) are skipped and labelled
+`MFYN/Excluded`.
+
 ## Details
 
 ### Identifying purchase emails
@@ -32,6 +35,15 @@ Bandcamp Friday promos). Those must be ignored.
 
 Gmail can group several purchases into one thread (five on one Bandcamp
 Friday), so each **message** is handled on its own, not each thread.
+
+### Excluded purchases
+
+Purchases from these Bandcamp pages never go in the library. Their emails are
+labelled `MFYN/Excluded` instead.
+
+- **Music for Your Neighbors - Archive**: past episodes of the show, not music.
+
+The list is `EXCLUDED_SELLERS` in [`intake/config.py`](../intake/config.py).
 
 ### Library location
 

@@ -27,9 +27,10 @@ def label_id(gmail, name):
 
 
 def pending_message_ids(gmail, backlog):
-    # Gmail search writes nested label names with "-" instead of "/".
-    label = config.DONE_LABEL.lower().replace("/", "-").replace(" ", "-")
-    query = f"{config.PURCHASE_QUERY} -label:{label}"
+    query = config.PURCHASE_QUERY
+    for name in (config.DONE_LABEL, config.EXCLUDED_LABEL):
+        # Gmail search writes nested label names with "-" instead of "/".
+        query += " -label:" + name.lower().replace("/", "-").replace(" ", "-")
     if not backlog:
         query += f" after:{config.START_DATE:%Y/%m/%d}"
     ids, page = [], None
@@ -53,20 +54,25 @@ def unpack(downloaded, work_dir):
 
 
 def handle(gmail, drive, message_id, today, dry_run):
-    """Process one purchase email. Returns True when it's finished and can be labelled."""
+    """Process one purchase email. Returns the label to add once it's finished
+    (DONE_LABEL or EXCLUDED_LABEL), or None to leave it for a later run."""
     msg = gmail.users().messages().get(userId="me", id=message_id, format="full").execute()
     purchase = purchase_email.parse(message_id, purchase_email.body_text(msg["payload"]))
     if purchase is None:
         log.warning("%s: no download link found, skipping", message_id)
-        return False
+        return None
+    excluded = {s.casefold() for s in config.EXCLUDED_SELLERS}
+    if purchase.seller and purchase.seller.casefold() in excluded:
+        log.info("%s: from %s, which is excluded", message_id, purchase.seller)
+        return config.EXCLUDED_LABEL
     if not purchase.is_released(today):
         log.info("%s: pre-order, releases %s; will retry then", message_id, purchase.release_date)
-        return False
+        return None
 
     items = bandcamp.items(purchase.download_url, config.AUDIO_FORMAT)
     if not items or any(item.format_url is None for item in items):
         log.info("%s: not downloadable yet; will retry next run", message_id)
-        return False
+        return None
 
     for item in items:
         name = library.folder_name(item.artist, item.title)
@@ -82,7 +88,7 @@ def handle(gmail, drive, message_id, today, dry_run):
             files = unpack(bandcamp.download(item.format_url, work_dir), work_dir)
             library.add_album(drive, config.LIBRARY_FOLDER_ID, name, files)
             log.info("%s: added '%s' (%d files)", message_id, name, len(files))
-    return True
+    return config.DONE_LABEL
 
 
 def main(argv=None):
@@ -94,7 +100,9 @@ def main(argv=None):
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 
     gmail, drive = google_clients.gmail(), google_clients.drive()
-    done_label = None if args.dry_run else label_id(gmail, config.DONE_LABEL)
+    label_ids = {} if args.dry_run else {
+        name: label_id(gmail, name) for name in (config.DONE_LABEL, config.EXCLUDED_LABEL)
+    }
     today = datetime.date.today()
 
     message_ids = [args.message_id] if args.message_id else pending_message_ids(gmail, args.backlog)
@@ -102,14 +110,14 @@ def main(argv=None):
     failures = 0
     for message_id in message_ids:
         try:
-            finished = handle(gmail, drive, message_id, today, args.dry_run)
+            label = handle(gmail, drive, message_id, today, args.dry_run)
         except Exception:
             log.exception("%s: failed; will retry next run", message_id)
             failures += 1
             continue
-        if finished and not args.dry_run:
+        if label and not args.dry_run:
             gmail.users().messages().modify(
-                userId="me", id=message_id, body={"addLabelIds": [done_label]}
+                userId="me", id=message_id, body={"addLabelIds": [label_ids[label]]}
             ).execute()
 
     if failures:
