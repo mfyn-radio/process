@@ -8,9 +8,12 @@ post on Instagram and play on the radio show.
 
 - `docs/` — process documentation: the steps in the pipeline, who/what does each
   one, inputs and outputs, and decisions made along the way.
-- Code (scripts, automations, integrations) will be added alongside as the steps
-  are built out.
+- `intake/` — the automation code, one module per step.
+- `.github/workflows/` — the scheduled jobs that run it.
+- `scripts/` — one-off helpers, like the Google sign-in script.
+- `tests/` — run with `pytest`.
 
-## Status
+## Steps
 
-Project started 2026-10-23. The process steps are being written up in `docs/`.
+1. [Acquire](docs/01-acquire.md) — download new Bandcamp purchases into
+   `MFYN_Library` on Google Drive. *(built, being tested)*
