@@ -30,7 +30,10 @@ def items(download_page_url, audio_format):
     page.raise_for_status()
     match = PAGEDATA.search(page.text)
     if not match:
-        raise RuntimeError("Bandcamp download page has no pagedata; the page layout may have changed")
+        raise RuntimeError(
+            "Bandcamp download page has no pagedata; the page layout may have changed.\n"
+            + describe(page)
+        )
     blob = json.loads(html.unescape(match.group(1)))
     result = []
     for item in blob.get("digital_items") or []:
@@ -79,3 +82,26 @@ def _filename(content_disposition):
         return requests.utils.unquote(match.group(1))
     match = re.search(r'filename="?([^";]+)"?', content_disposition)
     return match.group(1) if match else None
+
+
+def describe(page):
+    """Summarize a page's structure for the log, without its links or text,
+    which can include signed download URLs."""
+    text = page.text
+    final = requests.utils.urlparse(page.url)
+    title = re.search(r"<title[^>]*>(.*?)</title>", text, re.S | re.I)
+    ids = sorted(set(re.findall(r'\bid="([^"]{1,60})"', text)))
+    data_attrs = sorted(set(re.findall(r"\b(data-[a-z0-9-]{1,40})=", text)))
+    keywords = [k for k in (
+        "pagedata", "data-blob", "digital_items", "download_items", "statdownload",
+        "captcha", "cloudflare", "challenge", "log in", "login", "sign in", "expired",
+    ) if k in text.lower()]
+    return "\n".join([
+        f"  status: {page.status_code}, final URL: {final.netloc}{final.path}",
+        f"  redirects: {[r.status_code for r in page.history]}",
+        f"  content-type: {page.headers.get('Content-Type')}, length: {len(text)}",
+        f"  title: {title.group(1).strip()[:120] if title else None}",
+        f"  element ids: {ids[:60]}",
+        f"  data attributes: {data_attrs[:60]}",
+        f"  keywords present: {keywords}",
+    ])
