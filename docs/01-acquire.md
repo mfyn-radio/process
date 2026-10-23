@@ -8,6 +8,7 @@ Getting a purchased album from Bandcamp into the MFYN library.
 | **Input** | An album bought on Bandcamp. MFYN only uses music it owns. |
 | **Output** | One folder per album in `MFYN_Library`, with FLAC tracks and cover art |
 | **Runs on** | The MFYN Windows PC, hourly, from Task Scheduler |
+| **Status** | Live on the MFYN PC since 2026-10-23 (Task Scheduler task `MFYN Acquire`) |
 | **Code** | [`intake/acquire.py`](../intake/acquire.py), started by [`scripts/run_acquire.cmd`](../scripts/run_acquire.cmd) |
 
 ## What it does

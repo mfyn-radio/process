@@ -15,5 +15,5 @@ post on Instagram and play on the radio show.
 ## Steps
 
 1. [Acquire](docs/01-acquire.md) — download new Bandcamp purchases into
-   `MFYN_Library` on Google Drive. Runs hourly on the MFYN PC. *(built, being
-   tested)*
+   `MFYN_Library` on Google Drive. Runs hourly on the MFYN PC. *(live since
+   2026-10-23)*
