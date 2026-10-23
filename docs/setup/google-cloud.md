@@ -3,46 +3,41 @@
 One-time setup that lets the intake automation read the mfyn@ inbox and write
 to the `MFYN_Library` folder in mfyn@'s Drive, without anyone signed in.
 
-Takes about 15 minutes. You need a Windows PC with Python installed.
+Takes about 10 minutes. You need a Windows PC with Python installed.
 
-## 1. Create the project
+## 1–3. Project, APIs and consent screen (already done)
 
-1. Go to <https://console.cloud.google.com> and sign in with your
-   nothingflatdigital.com admin account.
-2. Create a new project named **mfyn-intake**. Under *Organization*, choose
-   **nothingflatdigital.com**. This is what makes the "Internal" option in
-   step 3 available.
+These already exist in the Google Cloud project **mfyn-library-agent**:
 
-## 2. Turn on the APIs
+- under the nothingflatdigital.com organization
+- **Gmail API** and **Google Drive API** enabled
+- consent screen **Audience: Internal**. Only nothingflatdigital.com accounts
+  can use it, Google doesn't review it, and its login doesn't expire after
+  7 days.
 
-In the new project, go to **APIs & Services → Library** and enable:
+The automation asks for these permissions when you sign in (step 5). An
+Internal app doesn't need them listed under **Data Access**.
 
-- **Gmail API**
-- **Google Drive API**
+- `https://www.googleapis.com/auth/gmail.modify`: read purchase emails and add
+  the `MFYN/Downloaded` label. It can't delete mail permanently.
+- `https://www.googleapis.com/auth/drive`: write album folders into the
+  existing `MFYN_Library` folder.
 
-## 3. Configure the consent screen
-
-Go to **Google Auth Platform** (sometimes shown as **OAuth consent screen**).
-
-1. **Branding:** App name `MFYN Intake`. Use admin@ as the support and
-   contact email.
-2. **Audience:** choose **Internal**.
-   - Only nothingflatdigital.com accounts can use it.
-   - Google doesn't need to review it.
-   - Its login doesn't expire after 7 days, as it would for an External app
-     in testing.
-3. **Data Access:** add these scopes:
-   - `https://www.googleapis.com/auth/gmail.modify`: read purchase emails
-     and add the `MFYN/Downloaded` label. It can't delete mail permanently.
-   - `https://www.googleapis.com/auth/drive`: write album folders into the
-     existing `MFYN_Library` folder.
+If you ever need to rebuild this from scratch: create the project under the
+nothingflatdigital.com organization, enable both APIs, then configure
+**Google Auth Platform** (or **APIs & Services → OAuth consent screen**) with
+Audience **Internal**.
 
 ## 4. Create the client
 
-1. Go to **Clients → Create client**.
+The client must be a **Desktop app**. The project already has a client named
+`mfyn-library-agent`. If it's a Desktop app and you still have its JSON file,
+use that file and skip to step 5. Otherwise:
+
+1. In **mfyn-library-agent**, go to **Google Auth Platform → Clients → Create client**.
 2. Application type: **Desktop app**. Name: `mfyn-intake-cli`.
-3. Download the JSON file, for example to
-   `C:\Users\<you>\Downloads\client_secret.json`.
+3. Download the JSON file straight away, because Google only offers it at
+   creation. For example, save it to `C:\Users\<you>\Downloads\client_secret.json`.
 
 Treat this file like a password. Don't put it in the repo (`.gitignore`
 already blocks `client_secret*.json`).
