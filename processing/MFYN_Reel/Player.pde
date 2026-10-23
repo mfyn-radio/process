@@ -124,13 +124,21 @@ void drawNowPlaying(Canvas cv) {
   for (int k = 0; k < 3; k++) dm(cv, notes[k][0], notes[k][1], NOTE, 8, k == 1 ? NOTE_MID : DIM, 0.3);
 }
 
+// Title and artist each get up to two lines. At the normal size there's room
+// for three lines above the progress bar; when both need two, they drop to
+// a smaller dot pitch with tighter spacing so all four fit.
 void drawTitle(Canvas cv, String title, String artist) {
-  int p = 6, gap = 98, artistGap = 104;
+  int p = 6, gap = 98, artistGap = 104, y = T2 + 566;
   String[] lines = wrapTitle(title, "F13", p, TEXT_MAXW);
-  int y = T2 + 566;
+  String[] artistLines = wrapTitle(artist, "F13", p, TEXT_MAXW);
+  if (lines.length + artistLines.length > 3) {
+    p = 5; gap = 80; artistGap = 88; y = T2 + 540;
+    lines = wrapTitle(title, "F13", p, TEXT_MAXW);
+    artistLines = wrapTitle(artist, "F13", p, TEXT_MAXW);
+  }
   for (String l : lines) { txt(cv, TEXT_X, y, l, "F13", p, LT); y += gap; }
   y += artistGap - gap;
-  txt(cv, TEXT_X, y, ellipsize(artist.toUpperCase(), "F13", p, TEXT_MAXW), "F13", p, OR);
+  for (String l : artistLines) { txt(cv, TEXT_X, y, l, "F13", p, OR); y += gap; }
 }
 
 
