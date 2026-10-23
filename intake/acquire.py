@@ -7,6 +7,7 @@ Runs on the MFYN PC (hourly, from Task Scheduler). See docs/01-acquire.md.
     python -m intake.acquire --backlog             # also purchases before START_DATE
     python -m intake.acquire --dry-run             # show what would happen, change nothing
     python -m intake.acquire --message-id ID       # just this one purchase email
+    python -m intake.acquire --artists             # add the library's artists to the MFYN Artists sheet
 """
 import argparse
 import datetime
@@ -16,7 +17,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-from . import bandcamp, config, gmail, library, purchase_email
+from . import artists, bandcamp, config, gmail, google_auth, library, purchase_email
 
 log = logging.getLogger("acquire")
 
@@ -37,7 +38,7 @@ def pending_message_ids(service, backlog):
             return list(reversed(ids))  # oldest first
 
 
-def handle(service, browser, message_id, today, dry_run):
+def handle(service, browser, sheet, message_id, today, dry_run):
     """Process one purchase email. Returns the label to add once it's finished
     (DONE_LABEL or EXCLUDED_LABEL), or None to leave it for a later run."""
     msg = service.users().messages().get(userId="me", id=message_id, format="full").execute()
@@ -69,7 +70,35 @@ def handle(service, browser, message_id, today, dry_run):
         return config.DONE_LABEL
     files = library.add(config.LIBRARY_DIR, name, downloaded)
     log.info("%s: added '%s' (%d files)", message_id, name, len(files))
+    record_artists(sheet, browser, config.LIBRARY_DIR / name)
     return config.DONE_LABEL
+
+
+def open_artists_sheet(creds):
+    # Downloading doesn't depend on the sheet, so carry on without it.
+    try:
+        return artists.Sheet(creds)
+    except Exception:
+        log.exception("couldn't open the %s sheet; artists won't be recorded this run", config.ARTISTS_SHEET)
+        return None
+
+
+def record_artists(sheet, browser, folder):
+    # The album is safely in the library by now, so a problem here is only
+    # logged; `--artists` fills in anything that was missed.
+    if sheet is None:
+        return
+    try:
+        artists.record(sheet, browser, folder, log)
+    except Exception:
+        log.exception("'%s': couldn't update the %s sheet", folder.name, config.ARTISTS_SHEET)
+
+
+def backfill_artists(sheet, browser):
+    """Add every artist already in the library that's missing from the sheet."""
+    for folder in sorted(p for p in config.LIBRARY_DIR.iterdir() if p.is_dir()):
+        if not folder.name.startswith(library.PARTIAL_PREFIX):
+            record_artists(sheet, browser, folder)
 
 
 def setup_logging():
@@ -85,36 +114,44 @@ def setup_logging():
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--setup", metavar="CLIENT_JSON", help="sign in to Gmail as mfyn@ using this OAuth client file")
+    parser.add_argument("--setup", metavar="CLIENT_JSON", help="sign in to Google as mfyn@ using this OAuth client file")
     parser.add_argument("--backlog", action="store_true", help=f"include purchases before {config.START_DATE}")
     parser.add_argument("--dry-run", action="store_true", help="don't download, add or label anything")
     parser.add_argument("--message-id", help="process only this Gmail message, whatever its date or label")
+    parser.add_argument("--artists", action="store_true", help=f"add the library's artists to the {config.ARTISTS_SHEET} sheet, then stop")
     args = parser.parse_args(argv)
     setup_logging()
 
     if args.setup:
-        gmail.setup(args.setup)
+        google_auth.setup(args.setup)
         log.info("Signed in. Token saved to %s", config.TOKEN_FILE)
         return 0
     if not config.LIBRARY_DIR.is_dir():
         log.error("Library folder %s not found. Is Google Drive for desktop running?", config.LIBRARY_DIR)
         return 1
 
-    service = gmail.client()
+    creds = google_auth.credentials()
+    service = gmail.client(creds)
+    sheet = None if args.dry_run else open_artists_sheet(creds)
     label_ids = {} if args.dry_run else {
         name: gmail.label_id(service, name) for name in (config.DONE_LABEL, config.EXCLUDED_LABEL)
     }
     today = datetime.date.today()
-    message_ids = [args.message_id] if args.message_id else pending_message_ids(service, args.backlog)
-    log.info("%d purchase email(s) to check", len(message_ids))
+    message_ids = [] if args.artists else (
+        [args.message_id] if args.message_id else pending_message_ids(service, args.backlog)
+    )
+    if not args.artists:
+        log.info("%d purchase email(s) to check", len(message_ids))
 
     failures = 0
     with tempfile.TemporaryDirectory(prefix="mfyn-") as tmp:
         browser = bandcamp.Browser(Path(tmp))
         try:
+            if args.artists and sheet:
+                backfill_artists(sheet, browser)
             for message_id in message_ids:
                 try:
-                    label = handle(service, browser, message_id, today, args.dry_run)
+                    label = handle(service, browser, sheet, message_id, today, args.dry_run)
                 except Exception:
                     log.exception("%s: failed; will retry next run", message_id)
                     failures += 1

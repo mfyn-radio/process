@@ -12,6 +12,10 @@ CLIENT_FILE = APP_DIR / "client_secret.json"
 TOKEN_FILE = APP_DIR / "token.json"
 LOG_FILE = APP_DIR / "acquire.log"
 
+# Google Sheet of artists and their Instagram handles, in mfyn@'s Drive.
+# Created by the automation on first use.
+ARTISTS_SHEET = "MFYN Artists"
+
 # Added to a purchase email once it has been handled.
 DONE_LABEL = "MFYN/Downloaded"
 EXCLUDED_LABEL = "MFYN/Excluded"

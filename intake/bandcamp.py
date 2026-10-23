@@ -73,6 +73,12 @@ class Browser:
             self._driver.quit()
             self._driver = None
 
+    def links(self, page_url):
+        """Every link address on a page, e.g. an artist's Bandcamp page."""
+        driver = self._chrome()
+        driver.get(page_url)
+        return [a.get_attribute("href") for a in driver.find_elements(By.TAG_NAME, "a")]
+
     def download(self, download_page_url, audio_format, prepare_timeout=600, download_timeout=1800):
         """Download one purchase and return the path of the downloaded file."""
         driver = self._chrome()

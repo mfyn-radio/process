@@ -1,7 +1,7 @@
 # Google Cloud setup
 
 What lets the intake automation on the MFYN PC read and label mail in the
-mfyn@ inbox.
+mfyn@ inbox, and keep the MFYN Artists sheet.
 
 **Status:** done. The project and client exist. The sign-in itself happens on
 the PC, as part of [setting up step 1](../01-acquire.md#setting-it-up-on-the-pc).
@@ -9,19 +9,24 @@ the PC, as part of [setting up step 1](../01-acquire.md#setting-it-up-on-the-pc)
 ## Project: mfyn-library-agent
 
 - under the nothingflatdigital.com organization
-- **Gmail API** enabled (the Google Drive API is enabled too, but no longer
-  used: Drive for desktop syncs the library instead)
+- APIs enabled:
+  - **Gmail API**
+  - **Google Drive API**
+  - **Google Sheets API** (needed for the MFYN Artists sheet)
 - consent screen **Audience: Internal**. Only nothingflatdigital.com accounts
   can use it, Google doesn't review it, and its login doesn't expire after
   7 days.
 
-Permission requested at sign-in:
+Permissions requested at sign-in:
 
 - `https://www.googleapis.com/auth/gmail.modify`: read purchase emails and add
   the `MFYN/…` labels. It can't delete mail permanently.
+- `https://www.googleapis.com/auth/drive.file`: only the files the automation
+  creates itself, the MFYN Artists sheet. It can't see the rest of the Drive.
+  The library itself is synced by Drive for desktop.
 
 If you ever need to rebuild this from scratch: create the project under the
-nothingflatdigital.com organization, enable the Gmail API, then configure
+nothingflatdigital.com organization, enable the Gmail, Drive and Sheets APIs, then configure
 **Google Auth Platform** (or **APIs & Services → OAuth consent screen**) with
 Audience **Internal**.
 
