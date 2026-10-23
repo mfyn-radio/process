@@ -4,6 +4,7 @@ Bandcamp only serves these pages to real browsers, so this drives a normal
 Chrome window: open the receipt's download link, pick the format, wait for
 Bandcamp to prepare the file, and let Chrome download it.
 """
+import re
 import time
 from pathlib import Path
 
@@ -13,11 +14,14 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select, WebDriverWait
 
+from .release_info import RawPage
+
 FORMAT_MENU = (By.ID, "format-type")
 # The link Bandcamp shows once the file is ready (its data-bind mentions
 # downloadUrl, as bcdl's selector expects).
 READY_LINK = (By.XPATH, "//a[contains(@data-bind, 'downloadUrl')]")
 PARTIAL_SUFFIXES = (".crdownload", ".tmp")
+ALBUM_URL = re.compile(r"https://[^/]+/(album|track)/[^/?#]+")
 
 
 def _ready_link(driver):
@@ -53,6 +57,7 @@ class Browser:
     def __init__(self, download_dir):
         self.download_dir = Path(download_dir)
         self._driver = None
+        self.last_album_url = None  # album page linked from the last download page
 
     def _chrome(self):
         if self._driver is None:
@@ -73,11 +78,44 @@ class Browser:
             self._driver.quit()
             self._driver = None
 
-    def links(self, page_url):
-        """Every link address on a page, e.g. an artist's Bandcamp page."""
+    def read_page(self, url):
+        """Read a Bandcamp album (or artist) page for the MFYN Artists sheet."""
         driver = self._chrome()
-        driver.get(page_url)
-        return [a.get_attribute("href") for a in driver.find_elements(By.TAG_NAME, "a")]
+        driver.get(url)
+        WebDriverWait(driver, 30).until(lambda d: d.execute_script("return document.readyState") == "complete")
+
+        def texts(css):
+            return [el.get_attribute("textContent").strip() for el in driver.find_elements(By.CSS_SELECTOR, css)]
+
+        def first_text(css):
+            found = [t for t in texts(css) if t]
+            return found[0] if found else None
+
+        seller_links = [a.get_attribute("href") for a in driver.find_elements(By.CSS_SELECTOR, "#band-links a")]
+        if not seller_links:
+            # Older or unusual layouts: fall back to every external link on the page.
+            seller_links = [a.get_attribute("href") for a in driver.find_elements(By.TAG_NAME, "a")]
+        return RawPage(
+            url=driver.current_url,
+            ld_json=texts('script[type="application/ld+json"]'),
+            seller_links=seller_links,
+            seller_name=first_text("#band-name-location .title"),
+            location=first_text("#band-name-location .location"),
+            bio=first_text("#bio-text"),
+            tags=[t for t in texts("a.tag") if t],
+        )
+
+    def find_album(self, seller_page, title):
+        """The album page for `title` on a seller's Bandcamp page, if listed."""
+        if not seller_page or not title:
+            return None
+        driver = self._chrome()
+        driver.get(seller_page.rstrip("/") + "/music")
+        wanted = title.casefold()
+        for a in driver.find_elements(By.CSS_SELECTOR, "a[href*='/album/'], a[href*='/track/']"):
+            if wanted in (a.get_attribute("textContent") or "").casefold():
+                return a.get_attribute("href").split("?")[0]
+        return None
 
     def download(self, download_page_url, audio_format, prepare_timeout=600, download_timeout=1800):
         """Download one purchase and return the path of the downloaded file."""
@@ -88,6 +126,12 @@ class Browser:
         except TimeoutException:
             raise NotAvailable(f"no format menu on the download page (title: {driver.title!r})")
         Select(menu).select_by_value(audio_format)
+        # The download page links to the album's own page; keep it for the sheet.
+        self.last_album_url = next((
+            href.split("?")[0] for href in
+            (a.get_attribute("href") or "" for a in driver.find_elements(By.TAG_NAME, "a"))
+            if ALBUM_URL.match(href)
+        ), None)
 
         try:
             link = WebDriverWait(driver, prepare_timeout).until(_ready_link)

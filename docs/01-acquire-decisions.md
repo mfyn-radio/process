@@ -102,23 +102,34 @@ tracks arrive as one file and get the same treatment.
 - Emails are only labelled after success.
 - So an interrupted or failed run is simply retried next hour.
 
-### Artist directory for Instagram tags
+### The MFYN Artists sheet
 
 FLAC tags don't include Instagram handles, but posts should tag the artist
-when they have an account.
+(and label) when they have an account. Chrome is already on Bandcamp in step
+1, so the step also collects what's useful for captions and the show.
 
-- Step 1 now adds each new artist to the **MFYN Artists** Google Sheet, with
-  a handle suggested from the album's Bandcamp page. This is automatic, with
-  no review.
-- The handle is confirmed when Reels are made (step 3).
-- It's used when posts are scheduled (step 4), so a handle fixed late still
+- **What's kept:**
+  - **Artists** (the artist library): Instagram, location, tags, website,
+    other links and bio.
+  - **Releases:** album, artist, label, release date, tags, album link,
+    credits, purchase date and library folder.
+  - **Labels:** each label's Instagram, so posts can tag the label too.
+  - **Tags:** one row per tag per release, because a spreadsheet can't sort
+    by a cell that holds several tags.
+- **Automatic, no review.** Handles are confirmed when Reels are made (step
+  3) and used when posts are scheduled (step 4), so a handle fixed late still
   gets used.
-
-Two details:
-
-- **Labels and compilations.** The Bandcamp page belongs to the seller, so for
-  compilations no handle is suggested. On a label release the suggestion may
-  be the label's account, which confirmation catches.
+- **Never overwrite typed values.** Only empty cells are filled, and tags are
+  added to.
+- **Non-Instagram links** are kept for crediting in captions, because
+  Instagram can only tag Instagram accounts. Spotify (and Apple Music) are
+  left out.
+- **Not kept:** a "new release" flag, since the release and purchase dates
+  are enough; track-level details, which step 3 reads from the FLACs; and
+  artist photos (maybe later).
+- **The seller's page decides whose details they are.** On a self-release,
+  the Bandcamp sidebar is the artist's. On a label release it's the label's,
+  so it goes to the Labels tab rather than being mistaken for the artist's.
 - **Narrow access.** The sheet uses the `drive.file` permission, which only
   reaches files the automation created itself.
 

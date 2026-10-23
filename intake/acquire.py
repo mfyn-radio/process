@@ -7,7 +7,7 @@ Runs on the MFYN PC (hourly, from Task Scheduler). See docs/01-acquire.md.
     python -m intake.acquire --backlog             # also purchases before START_DATE
     python -m intake.acquire --dry-run             # show what would happen, change nothing
     python -m intake.acquire --message-id ID       # just this one purchase email
-    python -m intake.acquire --artists             # add the library's artists to the MFYN Artists sheet
+    python -m intake.acquire --artists             # fill the MFYN Artists sheet from the whole library
 """
 import argparse
 import datetime
@@ -17,7 +17,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-from . import artists, bandcamp, config, gmail, google_auth, library, purchase_email
+from . import bandcamp, catalog, config, gmail, google_auth, library, purchase_email
 
 log = logging.getLogger("acquire")
 
@@ -70,32 +70,33 @@ def handle(service, browser, sheet, message_id, today, dry_run):
         return config.DONE_LABEL
     files = library.add(config.LIBRARY_DIR, name, downloaded)
     log.info("%s: added '%s' (%d files)", message_id, name, len(files))
-    record_artists(sheet, browser, config.LIBRARY_DIR / name)
+    purchased = datetime.datetime.fromtimestamp(int(msg["internalDate"]) / 1000).date().isoformat()
+    record_artists(sheet, browser, config.LIBRARY_DIR / name, purchased, browser.last_album_url)
     return config.DONE_LABEL
 
 
 def open_artists_sheet(creds):
     # Downloading doesn't depend on the sheet, so carry on without it.
     try:
-        return artists.Sheet(creds)
+        return catalog.Catalog(creds)
     except Exception:
         log.exception("couldn't open the %s sheet; artists won't be recorded this run", config.ARTISTS_SHEET)
         return None
 
 
-def record_artists(sheet, browser, folder):
+def record_artists(sheet, browser, folder, purchased=None, album_url=None):
     # The album is safely in the library by now, so a problem here is only
     # logged; `--artists` fills in anything that was missed.
     if sheet is None:
         return
     try:
-        artists.record(sheet, browser, folder, log)
+        catalog.record(sheet, browser, folder, log, purchased, album_url)
     except Exception:
         log.exception("'%s': couldn't update the %s sheet", folder.name, config.ARTISTS_SHEET)
 
 
 def backfill_artists(sheet, browser):
-    """Add every artist already in the library that's missing from the sheet."""
+    """Fill in the sheet from every album already in the library."""
     for folder in sorted(p for p in config.LIBRARY_DIR.iterdir() if p.is_dir()):
         if not folder.name.startswith(library.PARTIAL_PREFIX):
             record_artists(sheet, browser, folder)
@@ -118,7 +119,7 @@ def main(argv=None):
     parser.add_argument("--backlog", action="store_true", help=f"include purchases before {config.START_DATE}")
     parser.add_argument("--dry-run", action="store_true", help="don't download, add or label anything")
     parser.add_argument("--message-id", help="process only this Gmail message, whatever its date or label")
-    parser.add_argument("--artists", action="store_true", help=f"add the library's artists to the {config.ARTISTS_SHEET} sheet, then stop")
+    parser.add_argument("--artists", action="store_true", help=f"fill the {config.ARTISTS_SHEET} sheet from the whole library, then stop")
     args = parser.parse_args(argv)
     setup_logging()
 
