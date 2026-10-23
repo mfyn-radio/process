@@ -14,8 +14,8 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select, WebDriverWait
 
 FORMAT_MENU = (By.ID, "format-type")
-# The link Bandcamp shows once the file is ready. bcdl matches its exact
-# data-bind; this only needs it to mention downloadUrl.
+# The link Bandcamp shows once the file is ready (its data-bind mentions
+# downloadUrl, as bcdl's selector expects).
 READY_LINK = (By.XPATH, "//a[contains(@data-bind, 'downloadUrl')]")
 PARTIAL_SUFFIXES = (".crdownload", ".tmp")
 
@@ -88,7 +88,9 @@ class Browser:
         except TimeoutException:
             raise TimeoutError("the download link never appeared.\n" + describe_links(driver))
         before = set(self.download_dir.iterdir())
-        link.click()
+        # Click through JavaScript: Bandcamp's page footer can sit on top of the
+        # link, and a normal click would land on the footer instead.
+        driver.execute_script("arguments[0].click();", link)
         return self._wait_for_file(before, download_timeout)
 
     def _wait_for_file(self, before, timeout):
