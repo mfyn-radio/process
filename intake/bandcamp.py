@@ -14,9 +14,33 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select, WebDriverWait
 
 FORMAT_MENU = (By.ID, "format-type")
-# The link Bandcamp shows once the file is ready (same selector as bcdl).
-READY_LINK = (By.XPATH, "//a[@data-bind='attr: { href: downloadUrl }, visible: downloadReady() && !downloadError()']")
+# The link Bandcamp shows once the file is ready. bcdl matches its exact
+# data-bind; this only needs it to mention downloadUrl.
+READY_LINK = (By.XPATH, "//a[contains(@data-bind, 'downloadUrl')]")
 PARTIAL_SUFFIXES = (".crdownload", ".tmp")
+
+
+def _ready_link(driver):
+    """The first visible download link with a real address, once Bandcamp has one."""
+    for link in driver.find_elements(*READY_LINK):
+        href = link.get_attribute("href") or ""
+        if link.is_displayed() and href.startswith("http"):
+            return link
+    return False
+
+
+def describe_links(driver):
+    """Summarize the page's visible links and buttons for the log, without
+    their addresses, which are signed download URLs."""
+    lines = [f"  page title: {driver.title!r}"]
+    for el in driver.find_elements(By.XPATH, "//a | //button"):
+        if not el.is_displayed():
+            continue
+        lines.append("  <{}> text={!r} class={!r} data-bind={!r} has-href={}".format(
+            el.tag_name, el.text.strip()[:40], el.get_attribute("class"),
+            (el.get_attribute("data-bind") or "")[:100], bool(el.get_attribute("href")),
+        ))
+    return "\n".join(lines[:40])
 
 
 class NotAvailable(Exception):
@@ -33,6 +57,9 @@ class Browser:
     def _chrome(self):
         if self._driver is None:
             options = webdriver.ChromeOptions()
+            # Keep Chrome's own console messages out of the log.
+            options.add_argument("--log-level=3")
+            options.add_experimental_option("excludeSwitches", ["enable-logging"])
             options.add_experimental_option("prefs", {
                 "download.default_directory": str(self.download_dir),
                 "download.prompt_for_download": False,
@@ -56,7 +83,10 @@ class Browser:
             raise NotAvailable(f"no format menu on the download page (title: {driver.title!r})")
         Select(menu).select_by_value(audio_format)
 
-        link = WebDriverWait(driver, prepare_timeout).until(EC.element_to_be_clickable(READY_LINK))
+        try:
+            link = WebDriverWait(driver, prepare_timeout).until(_ready_link)
+        except TimeoutException:
+            raise TimeoutError("the download link never appeared.\n" + describe_links(driver))
         before = set(self.download_dir.iterdir())
         link.click()
         return self._wait_for_file(before, download_timeout)
