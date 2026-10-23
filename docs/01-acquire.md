@@ -80,12 +80,15 @@ The job runs every hour, at 17 minutes past. To run it by hand:
    - **Backlog**: also download purchases from before 2026-10-23.
    - **Dry run**: list what would be downloaded without downloading,
      uploading or labelling anything.
+   - **Message ID**: handle just one purchase email, whatever its date. This
+     is the Gmail API ID (16 hex characters, like `1a12586490c98e61`), not
+     the ID in the Gmail web address. Ask Claude to look it up.
 
 From a terminal with the three `GOOGLE_*` values set as environment variables:
 
 ```
 pip install -r requirements.txt
-python -m intake.acquire [--backlog] [--dry-run]
+python -m intake.acquire [--backlog] [--dry-run] [--message-id ID]
 ```
 
 ## Open questions

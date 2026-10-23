@@ -13,6 +13,10 @@ on:
         description: Dry run (show what would happen, change nothing)
         type: boolean
         default: false
+      message_id:
+        description: Only this Gmail message ID (leave empty for all)
+        type: string
+        default: ""
 
 concurrency:
   group: acquire
@@ -23,8 +27,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
           cache: pip
@@ -34,7 +38,9 @@ jobs:
           GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
           GOOGLE_REFRESH_TOKEN: ${{ secrets.GOOGLE_REFRESH_TOKEN }}
+          MESSAGE_ID: ${{ inputs.message_id }}
         run: >
           python -m intake.acquire
           ${{ inputs.backlog && '--backlog' || '' }}
           ${{ inputs.dry_run && '--dry-run' || '' }}
+          ${MESSAGE_ID:+--message-id "$MESSAGE_ID"}
