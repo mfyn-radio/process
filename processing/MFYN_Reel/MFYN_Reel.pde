@@ -6,10 +6,14 @@
 // sketch closes itself when the queue is empty.
 //
 // Needs ffmpeg + ffprobe installed (brew install ffmpeg).
+//
+// The Make Reels automation (intake/reels.py) runs this from the command
+// line with  input=<folder> output=<folder> seconds=<n>  to override the
+// settings below.
 // ------------------------------------------------------------
 
 // ---------- settings ----------
-float CLIP_SECONDS   = 15;      // reel length (max 60)
+float CLIP_SECONDS   = 30;      // reel length (max 60)
 float START_OVERRIDE = -1;      // -1 = auto-pick the loudest stretch, otherwise seconds into the track
 int   FPS            = 30;
 boolean PREVIEW      = true;    // draw frames in the window while rendering (slightly slower)
@@ -32,6 +36,7 @@ void settings() {
 
 void setup() {
   frameRate(1000);
+  readArgs();
   findTools();
   loadFonts();
   File in = new File(sketchPath(INPUT_DIR));
@@ -78,6 +83,19 @@ void startJob(File f) {
   frameIdx = 0;
   frameCount_ = round(job.dur * FPS);
   enc = new Encoder(outputFor(f), f, job.start, job.dur);
+}
+
+// command-line overrides: input=<folder> output=<folder> seconds=<n>
+void readArgs() {
+  if (args == null) return;
+  for (String a : args) {
+    int eq = a.indexOf('=');
+    if (eq < 0) continue;
+    String key = a.substring(0, eq), value = a.substring(eq + 1);
+    if (key.equals("input")) INPUT_DIR = value;
+    else if (key.equals("output")) OUTPUT_DIR = value;
+    else if (key.equals("seconds")) CLIP_SECONDS = float(value);
+  }
 }
 
 File outputFor(File audio) {

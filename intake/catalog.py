@@ -18,6 +18,8 @@ from . import config, release_info, tags
 from .table import Table
 
 SUGGESTED, NOT_FOUND = "Suggested", "Not found"
+# Set when handles are confirmed in step 3.
+CONFIRMED, NO_INSTAGRAM = "Confirmed", "No Instagram"
 
 ARTISTS = ["Artist", "Instagram", "Status", "Location", "Tags", "Website", "Other links",
            "Bandcamp page", "Bio", "Added"]

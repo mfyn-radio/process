@@ -54,7 +54,7 @@ adding files to `input/` and re-run.
 
 | Setting | Default | |
 |---|---|---|
-| `CLIP_SECONDS` | 15 | reel length, max 60 |
+| `CLIP_SECONDS` | 30 | reel length, max 60 |
 | `START_OVERRIDE` | -1 | -1 = auto, or a number of seconds into the track |
 | `PREVIEW` | true | draw frames in the window while rendering |
 
@@ -77,6 +77,18 @@ You can call that command from anything that can run a shell command:
 a Shortcuts automation, a Folder Action on `input/`, a `launchd` job, or a
 cron entry. A window opens briefly while it renders, so the Mac needs to be
 logged in.
+
+## Command-line options
+
+The Make Reels automation (`intake/reels.py`, step 3 of the intake process)
+runs the sketch with options that override the settings:
+
+```
+processing-java --sketch=".../MFYN_Reel" --run input="<folder>" output="<folder>" seconds=30
+```
+
+`input` and `output` can be absolute paths; relative ones are inside the
+sketch folder, as before.
 
 ## Files
 
