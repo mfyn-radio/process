@@ -24,6 +24,10 @@ TOKEN_FILE = APP_DIR / "token.json"
 LOG_FILE = APP_DIR / "acquire.log"
 REELS_LOG_FILE = APP_DIR / "reels.log"
 CREATE_SHOW_LOG_FILE = APP_DIR / "create_show.log"
+# Create Show's own Chrome profile, signed in to Bandcamp so it can read
+# MFYN's private playlists. Acquire doesn't use it.
+CHROME_PROFILE_DIR = APP_DIR / "chrome-profile"
+BANDCAMP_LOGIN = "https://bandcamp.com/login"
 
 # Google Sheet of artists and their Instagram handles, in mfyn@'s Drive.
 # Created by the automation on first use.

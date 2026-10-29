@@ -14,13 +14,13 @@ tracks copied from `MFYN_Library`. Then it goes straight on to Make Reels.
 
 ## What happens
 
-1. **Make the playlist on Bandcamp** from tracks MFYN owns, in running order,
-   and make it **public**. The automation's Chrome isn't signed in to
-   Bandcamp, so it can't see a private playlist.
+1. **Make the playlist on Bandcamp** from tracks MFYN owns, in running order.
+   It can stay private (see [the Chrome profile](#the-chrome-profile)).
 2. **Double-click MFYN – Create Show** and paste the playlist's link. The
    `?from=collection…` part of the link doesn't matter.
 3. **Read the playlist:** Chrome opens the link, because Bandcamp blocks plain
-   scripts, and the tracks are read in order.
+   scripts, and the tracks are read in order. It uses its own Chrome profile,
+   signed in to Bandcamp.
 4. **Find each track in the library:**
    1. Look for the `Artist - Album` folder.
    2. Inside it, match the FLAC by its title tag, then by its file name.
@@ -71,19 +71,38 @@ python -m intake.create_show LINK --no-reels         # stop once the tracks are 
 python -m intake.create_show LINK --dry-run          # list the tracks and folder, change nothing
 ```
 
+## The Chrome profile
+
+The playlists are private, so only the signed-in `music_for_your_neighbors`
+account can see them. Create Show therefore keeps its own Chrome profile in
+`%APPDATA%\mfyn-intake\chrome-profile`, separate from your everyday Chrome and
+from Acquire's, which starts blank every run.
+
+- **First run, or whenever Bandcamp signs it out:** Bandcamp answers "Sorry,
+  that something isn't here". Create Show then opens Bandcamp's sign-in page in
+  its Chrome window and waits. Sign in as `music_for_your_neighbors` in that
+  window, then press Enter in the black window. It reads the playlist again.
+- **After that:** the profile stays signed in, and nothing is asked.
+- **To sign it out,** close every Create Show window and delete the
+  `chrome-profile` folder. The next run asks you to sign in again.
+
 ## Setup
 
 Make a desktop shortcut to `scripts\create_show.cmd` named
 **MFYN – Create Show**, like the Make Reels one. Nothing else: it uses the
-Chrome and Python set up for step 1.
+Chrome and Python set up for step 1. Sign in to Bandcamp the first time it
+asks.
 
 ## Troubleshooting
 
 The log is `%APPDATA%\mfyn-intake\create_show.log`.
 
-- **"Bandcamp says this playlist is private":** make it public on Bandcamp.
-  Bandcamp shows a private playlist to anyone else as "Sorry, that something
-  isn't here".
+- **"Bandcamp still won't show the playlist":** the Chrome window wasn't
+  signed in as `music_for_your_neighbors`, the account that owns the
+  playlist, when you pressed Enter. Run it again and sign in when asked.
+- **Chrome won't start, saying the profile is in use:** a Create Show Chrome
+  window is still open, maybe from a run that crashed. Close it (or end
+  `chrome.exe` in Task Manager) and try again.
 - **"Couldn't find any tracks on the playlist page":** Bandcamp's playlist
   pages are new and their layout may change. A copy of the page is saved as
   `%APPDATA%\mfyn-intake\playlist-page.html`. Send it to Claude to adjust

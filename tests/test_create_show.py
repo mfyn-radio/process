@@ -110,14 +110,14 @@ def test_create_show_end_to_end(tmp_path, monkeypatch):
     monkeypatch.setattr(reels, "main", lambda argv, ask: handed_over.append(argv) or 0)
 
     tracks = playlist.parse([LD_PLAYLIST])
-    assert create_show.main(["https://bandcamp.com/x/playlist/y"], read=lambda url: tracks) == 0
+    assert create_show.main(["https://bandcamp.com/x/playlist/y"], read=lambda url, ask: tracks) == 0
     copied = sorted(p.name for p in (archive / "5_11_2026- Normal Show" / "Tracks").iterdir())
     assert copied == ["Daufødt - Glitter - 01 Glitter.flac", "Daufødt - Glitter - 03 Toxic.flac"]
     assert handed_over == [["--episode", "5_11_2026- Normal Show"]]
 
     # A missing track stops it before anything is created.
     missing = tracks + [playlist.PlaylistTrack("Nobody", "Nothing", "None")]
-    assert create_show.main(["link", "--date", "19_11_2026"], read=lambda url: missing) == 1
+    assert create_show.main(["link", "--date", "19_11_2026"], read=lambda url, ask: missing) == 1
     assert not (archive / "19_11_2026- Normal Show 1").exists()
     assert len(handed_over) == 1
 
@@ -127,3 +127,27 @@ def test_find_prefers_the_exact_folder(tmp_path):
         (tmp_path / name).mkdir()
     assert create_show.episode.find(tmp_path, "5_11_2026- Normal Show").name == "Normal Show"
     assert create_show.episode.find(tmp_path, "normal show").name == "Normal Show 1"
+
+
+def test_private_playlist_asks_to_sign_in_once(tmp_path, monkeypatch):
+    monkeypatch.setattr(config, "APP_DIR", tmp_path)
+    monkeypatch.setattr(config, "CHROME_PROFILE_DIR", tmp_path / "chrome-profile")
+    pages = iter([([], [], "Endpoints::AccessError private_viewing_screened"), ([LD_PLAYLIST], [], "<html>")])
+    seen = []
+
+    class FakeBrowser:
+        def __init__(self, download_dir, profile_dir=None):
+            seen.append(("profile", profile_dir))
+        def read_playlist(self, url):
+            return next(pages)
+        def open(self, url):
+            seen.append(("open", url))
+        def close(self):
+            seen.append(("close",))
+
+    monkeypatch.setattr(create_show.bandcamp, "Browser", FakeBrowser)
+    asked = []
+    tracks = create_show.read_playlist("link", ask=asked.append)
+    assert [t.title for t in tracks] == ["Glitter", "Toxic"]
+    assert len(asked) == 1
+    assert seen == [("profile", tmp_path / "chrome-profile"), ("open", config.BANDCAMP_LOGIN), ("close",)]

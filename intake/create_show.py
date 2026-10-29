@@ -111,16 +111,25 @@ def parse_date(text):
         raise argparse.ArgumentTypeError(str(e))
 
 
-def read_playlist(url):
+def read_playlist(url, ask=input):
+    """The playlist's tracks, read in Create Show's own Chrome profile. If
+    Bandcamp won't show it because it's private, you're asked to sign in to
+    Bandcamp in that window once; the profile stays signed in after that."""
     with tempfile.TemporaryDirectory(prefix="mfyn-") as tmp:
-        browser = bandcamp.Browser(Path(tmp))
+        browser = bandcamp.Browser(Path(tmp), profile_dir=config.CHROME_PROFILE_DIR)
         try:
             ld_json, blobs, page = browser.read_playlist(url)
+            if playlist.is_private(page):
+                browser.open(config.BANDCAMP_LOGIN)
+                ask("\nThe playlist is private, and this Chrome window isn't signed in to Bandcamp.\n"
+                    "Sign in as music_for_your_neighbors in the Chrome window, then press Enter here. ")
+                ld_json, blobs, page = browser.read_playlist(url)
         finally:
             browser.close()
     tracks = playlist.parse(ld_json, blobs)
     if not tracks and playlist.is_private(page):
-        log.error("Bandcamp says this playlist is private. Make it public on Bandcamp, then try again.")
+        log.error("Bandcamp still won't show the playlist. Check that the Chrome window was signed in "
+                  "as music_for_your_neighbors, the account that owns it, then try again.")
     elif not tracks:
         saved = config.APP_DIR / "playlist-page.html"
         saved.write_text(page, encoding="utf-8")
@@ -159,7 +168,7 @@ def main(argv=None, ask=input, read=read_playlist):
         return 1
 
     log.info("Reading the playlist…")
-    tracks = read(link)
+    tracks = read(link, ask)
     if not tracks:
         return 1
     found = {i: find_file(config.LIBRARY_DIR, t) for i, t in enumerate(tracks)}

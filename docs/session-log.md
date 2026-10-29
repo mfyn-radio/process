@@ -13,14 +13,17 @@ session is first.
 - Episodes get a placeholder name: `Normal Show`, `Normal Show 1`… dated
   today unless `--date` is given. An empty `Normal Show` folder is reused.
 - Make Reels' `--episode` now takes an exact folder name first.
+- The playlists stay **private**. Create Show keeps its own Chrome profile in
+  `%APPDATA%\mfyn-intake\chrome-profile`, signed in to Bandcamp. The first run
+  asks you to sign in, in its Chrome window.
 
 ### Open items
 
 - [ ] **Try it on the PC** with
       <https://bandcamp.com/music_for_your_neighbors/playlist/mfynnov2026>,
-      first with `--dry-run`. The playlist reader couldn't be checked against
-      the real page (bandcamp.com isn't reachable from Claude's cloud
-      session). If it finds no tracks, send
+      first with `--dry-run`, signing in to Bandcamp when asked. The playlist
+      reader couldn't be checked against the real page (bandcamp.com isn't
+      reachable from Claude's cloud session). If it finds no tracks, send
       `%APPDATA%\mfyn-intake\playlist-page.html` to Claude.
 - [ ] **Desktop shortcut** to `scripts\create_show.cmd`, named
       **MFYN – Create Show**.

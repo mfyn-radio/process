@@ -54,8 +54,11 @@ class NotAvailable(Exception):
 class Browser:
     """One Chrome window, opened on first use and reused for every purchase."""
 
-    def __init__(self, download_dir):
+    def __init__(self, download_dir, profile_dir=None):
         self.download_dir = Path(download_dir)
+        # A Chrome profile kept between runs, e.g. to stay signed in to Bandcamp.
+        # Without one, Chrome starts from a blank profile every time.
+        self.profile_dir = profile_dir
         self._driver = None
         self.last_album_url = None  # album page linked from the last download page
 
@@ -64,6 +67,8 @@ class Browser:
             options = webdriver.ChromeOptions()
             # Keep Chrome's own console messages out of the log.
             options.add_argument("--log-level=3")
+            if self.profile_dir:
+                options.add_argument(f"--user-data-dir={self.profile_dir}")
             options.add_experimental_option("excludeSwitches", ["enable-logging"])
             options.add_experimental_option("prefs", {
                 "download.default_directory": str(self.download_dir),
@@ -117,6 +122,10 @@ class Browser:
         for attr in ("data-blob", "data-tralbum", "data-playlist", "data-player-data"):
             blobs += [el.get_attribute(attr) for el in driver.find_elements(By.CSS_SELECTOR, f"[{attr}]")]
         return ld_json, [b for b in blobs if b], driver.page_source
+
+    def open(self, url):
+        """Show a page in the Chrome window, e.g. for signing in by hand."""
+        self._chrome().get(url)
 
     def find_album(self, seller_page, title):
         """The album page for `title` on a seller's Bandcamp page, if listed."""
