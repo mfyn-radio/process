@@ -40,4 +40,5 @@ you trigger the Publishing Process (scheduling the posts, among other things).
 Every automation, what starts it and where it runs is listed in
 [`docs/README.md`](docs/README.md#automations).
 
-Where we left off, and what's next: [`docs/session-log.md`](docs/session-log.md).
+Where we left off: [`docs/session-log.md`](docs/session-log.md). Open work and
+open questions: [GitHub Issues](https://github.com/mfyn-radio/process/issues).
