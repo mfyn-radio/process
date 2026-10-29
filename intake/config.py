@@ -8,7 +8,7 @@ LIBRARY_DIR = Path(os.environ.get("MFYN_LIBRARY", r"H:\My Drive\MFYN_Library"))
 
 # Step 2 ends with the finished episode here, as "D_M_YYYY- Episode Name\Tracks".
 SHOW_ARCHIVE_DIR = Path(os.environ.get("MFYN_SHOW_ARCHIVE", r"H:\My Drive\MFYN_Show_Archive"))
-# Step 2a writes each episode's Reels here, for step 2c to schedule.
+# Step 2a writes each episode's Reels here, for review, then Publishing.
 REELS_DIR = Path(os.environ.get("MFYN_REELS", r"H:\My Drive\MFYN_Reels"))
 REEL_SECONDS = 30
 

@@ -65,7 +65,7 @@ A window opens briefly while it renders, so the PC needs to be signed in.
 
 ## Command-line options
 
-The Make Reels automation (`intake/reels.py`, step 2a of the intake process)
+The Make Reels automation (`intake/reels.py`, step 2a of the intake and production process)
 runs the sketch with options that override the settings:
 
 ```

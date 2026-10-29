@@ -1,7 +1,9 @@
-# MFYN intake process
+# MFYN intake and production process
 
-How a song or artist goes from being *discovered* to having content ready to
-post on Instagram and play on Music for Your Neighbors (MFYN).
+How a song or artist goes from being *discovered* to having all the content
+for a post ready, and a show ready to play on Music for Your Neighbors (MFYN).
+It ends at a manual stop, where you review everything. The Publishing Process
+starts after that.
 
 ## The pipeline
 
@@ -11,10 +13,13 @@ post on Instagram and play on Music for Your Neighbors (MFYN).
 | 2 | [Create the show](02-create-show.md) | **The parent.** Pick tracks, make the episode, archive it in `MFYN_Show_Archive`, then start the sub-automations below | Manual today |
 | 2a | [Make Reels](02a-make-reels.md) | The episode's tracks become 30-second Reels in `MFYN_Reels` | Built, being tested |
 | 2b | *Instagram copy* | A caption for each Reel, from its details and the MFYN Artists sheet | Next up |
-| 2c | *Schedule posts* | Reels in `MFYN_Reels` are scheduled on Instagram | Not built yet |
+| — | **Manual stop** | You review everything made for a post, then trigger Publishing | Not built yet |
+| → | *Publishing Process* | Starts after your review: scheduling the posts on Instagram, among other things | Separate process, not built yet |
 
-Steps 2a to 2c are sub-automations of step 2: when a show is ready, step 2
-runs and triggers them. Each is its own step, with its own doc.
+Steps 2a and 2b are sub-automations of step 2: when a show is ready, step 2
+runs and triggers them. Each is its own step, with its own doc. Together they
+produce all the content for a post, so they belong to production. What they
+leave in `MFYN_Reels` is what you review at the manual stop.
 
 Ground rule: **MFYN only uses music it owns.** Everything starts with a
 Bandcamp purchase.
@@ -31,8 +36,8 @@ misbehaves.
 | Tests | GitHub Actions, on pull requests and pushes to `main` (`.github/workflows/tests.yml`) | GitHub | the Actions tab | `python -m pytest` locally |
 
 Not automated: the parent [step 2](02-create-show.md), which you still do by
-hand, and the Album Story sketch. Not built: steps 2b and 2c. Both logs keep four files of up to 1 MB
-each, and Make Reels also prints to its window.
+hand, and the Album Story sketch. Not built: step 2b, the manual stop's hand-off, and the Publishing Process.
+Both logs keep four files of up to 1 MB each, and Make Reels also prints to its window.
 
 ## Systems and accounts
 
@@ -42,7 +47,7 @@ each, and Make Reels also prints to its window.
 | admin@nothingflatdigital.com | Google Workspace | Workspace and Google Cloud administration |
 | MFYN Artists | Google Sheet in mfyn@'s Drive, kept by the automation | The artist library (Instagram handles, tags, links), releases and labels |
 | `MFYN_Show_Archive` | mfyn@'s My Drive, `H:\My Drive\MFYN_Show_Archive` | Finished episodes, `D_M_YYYY- Episode Name\Tracks` |
-| `MFYN_Reels` | mfyn@'s My Drive, `H:\My Drive\MFYN_Reels` | Each episode's Reels and their details, for step 2c |
+| `MFYN_Reels` | mfyn@'s My Drive, `H:\My Drive\MFYN_Reels` | Each episode's Reels and their details, for your review and then Publishing |
 | Processing sketches | this repo, `processing\` | `MFYN_Reel` makes the Reels; `MFYN_Album` (not automated yet) |
 | `MFYN_Library` | mfyn@'s My Drive, synced to `H:\My Drive\MFYN_Library` on the MFYN PC | The music library, one folder per album |
 | MFYN PC | Windows, signed in, running Google Drive for desktop and Chrome | Runs the automation (Task Scheduler) |

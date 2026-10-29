@@ -1,8 +1,11 @@
-# MFYN Intake Process
+# MFYN Intake and Production Process
 
-Code and documentation for the **Music for Your Neighbors (MFYN)** intake process:
-how a song or artist goes from being *discovered* to having content ready to
-post on Instagram and play on the radio show.
+Code and documentation for the **Music for Your Neighbors (MFYN)** intake and
+production process: how a song or artist goes from being *discovered* to having
+all the content for a post ready, and a show ready to play on the radio.
+
+It ends at a manual stop, where you review everything. The separate
+**Publishing Process** starts after that. It isn't part of this repo yet.
 
 ## Layout
 
@@ -29,7 +32,10 @@ post on Instagram and play on the radio show.
    - 2a. [Make Reels](docs/02a-make-reels.md) — the episode's tracks become
      30-second Instagram Reels. Double-click to start. *(built, being tested)*
    - 2b. Instagram copy — a caption for each Reel. *(not built yet; next up)*
-   - 2c. Schedule posts — *(not built yet)*
+
+**Manual stop:** you review all the content made for a post. When you're happy,
+you trigger the Publishing Process (scheduling the posts, among other things).
+*(The hand-off isn't built yet.)*
 
 Every automation, what starts it and where it runs is listed in
 [`docs/README.md`](docs/README.md#automations).

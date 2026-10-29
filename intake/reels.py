@@ -116,8 +116,8 @@ def render(tracks, out_dir, seconds):
 
 
 def details(track, ep, cat, seconds):
-    """What step 2c needs to write the post. Handles are as of now; step 2c
-    looks them up again in case they've changed since."""
+    """What the caption and Publishing need to write the post. Handles are as of
+    now; they look them up again in case they've changed since."""
     artist, release, label = {}, {}, {}
     if cat:
         _, artist = cat.artists.find({"Artist": track.artist})

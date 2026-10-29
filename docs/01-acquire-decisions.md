@@ -117,7 +117,7 @@ FLAC tags don't include Instagram handles, but posts should tag the artist
   - **Tags:** one row per tag per release, because a spreadsheet can't sort
     by a cell that holds several tags.
 - **Automatic, no review.** Handles are confirmed when Reels are made (step
-  3) and used when posts are scheduled (step 2c), so a handle fixed late still
+  2a) and used when posts are scheduled (Publishing), so a handle fixed late still
   gets used.
 - **Never overwrite typed values.** Only empty cells are filled, and tags are
   added to.
