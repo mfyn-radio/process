@@ -24,6 +24,8 @@ See also: [process overview](README.md) ·
    releases, and asks only about those not settled yet. It shows the
    suggested handle and their links (website, SoundCloud…) to help check.
    - **Enter:** confirm the suggested handle. Status becomes `Confirmed`.
+     When there's no suggestion (`Not found`), Enter does nothing: type a
+     handle or `-`.
    - **Type a handle** (with or without `@`): replace it. Status becomes
      `Confirmed`.
    - **`-`:** they have no Instagram. Status becomes `No Instagram`, and
@@ -36,7 +38,9 @@ See also: [process overview](README.md) ·
    - It shows the title and artist from the tags, the embedded cover, the
      scope line, a progress bar and the ON AIR pulse.
    - A preview window shows each Reel as it renders, and closes when done.
-4. **File the Reels** in `H:\My Drive\MFYN_Reels\<episode folder>\`:
+4. **File the Reels** in `H:\My Drive\MFYN_Reels\<episode folder>\`, named
+   `Artist - Title` (characters Windows doesn't allow become `_`; two tracks
+   with the same name get ` (2)`, ` (3)`…):
    ```
    applied communications - donna deegan.mp4
    applied communications - donna deegan.json
@@ -95,10 +99,16 @@ skipped. To remake one, delete its `.mp4` and `.json`, then run again.
   `%USERPROFILE%\mfyn-process`. Changes reach the PC with `git pull`.
   `H:\My Drive\MFYN_Processing` is no longer used.
 - Google Drive for desktop running, for `MFYN_Show_Archive` and `MFYN_Reels`.
+- The Google sign-in from [setting up step 1](01-acquire.md#setting-it-up-on-the-pc),
+  to read the MFYN Artists sheet. Without it the Reels are still made, with
+  no handles.
+- The Python packages in `requirements.txt` (Make Reels reads tags with
+  `mutagen`).
 
 ## Troubleshooting
 
-The log is `%APPDATA%\mfyn-intake\reels.log`.
+The log is `%APPDATA%\mfyn-intake\reels.log`. The run exits with an error
+if any Reel failed.
 
 | Message | What to do |
 |---|---|

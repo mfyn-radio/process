@@ -8,7 +8,7 @@ See also: [decisions and how we got here](01-acquire-decisions.md) ·
 
 | | |
 |---|---|
-| **Trigger** | A Bandcamp purchase email arrives at mfyn@nothingflatdigital.com |
+| **Trigger** | The hourly run finds a new Bandcamp purchase email in the mfyn@nothingflatdigital.com inbox |
 | **Input** | An album bought on Bandcamp. MFYN only uses music it owns. |
 | **Output** | One folder per album in `MFYN_Library`, with FLAC tracks and cover art |
 | **Runs on** | The MFYN Windows PC, hourly, from Task Scheduler |
@@ -150,7 +150,8 @@ to count the library by tag. Bandcamp tags mix genres with places like
 - `Artist - Album`, taken from the name Bandcamp gives the zip.
 - A single track bought now and then: `Artist - Track`.
 - Characters Windows doesn't allow in names (`\ / : * ? " < > |`) become `_`.
-- If the folder already exists, the album isn't added again.
+- If the folder already exists, the album isn't added again. The download
+  is thrown away and the email is still labelled `MFYN/Downloaded`.
 
 ### Pre-orders
 
@@ -165,7 +166,10 @@ The email is left unlabelled and retried after the release date.
   is renamed once complete. If a run is interrupted, the half-finished folder
   is replaced on the next try, so a folder without the prefix is always
   complete.
-- Everything is logged to `%APPDATA%\mfyn-intake\acquire.log`.
+- Everything is logged to `%APPDATA%\mfyn-intake\acquire.log` (it rolls
+  over at 1 MB and keeps three older files).
+- The run exits with an error if any album failed, which shows in Task
+  Scheduler's last result.
 
 ### Scope
 
@@ -175,7 +179,8 @@ The email is left unlabelled and retried after the release date.
 
 ## Setting it up on the PC
 
-One time only. Needs Python and Google Chrome, both already installed.
+One time only. Needs Python 3.10 or newer and Google Chrome, both already
+installed.
 
 1. **Get the code.** Install Git (`winget install Git.Git`), then:
    ```

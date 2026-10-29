@@ -79,8 +79,9 @@ artist directory built along the way:
 
 ### Open items
 
-- [ ] **Merge mfyn-radio/process#12.** It restores the Album Story sketch,
-      which mfyn-radio/process#11 changed by mistake. Then `git pull` on the PC.
+- [x] **Merge mfyn-radio/process#12.** It restores the Album Story sketch,
+      which mfyn-radio/process#11 changed by mistake. Merged; `git pull` on the
+      PC if it hasn't been done.
 - [ ] **Finish tuning the Reel sketch** locally: long titles and artists,
       the smaller text size. Commit and push it from the PC.
 - [ ] **Test Make Reels end to end** on a real episode, and check the

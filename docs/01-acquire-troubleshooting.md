@@ -45,9 +45,9 @@ python -m pip install -r requirements.txt
 If it's still missing, the change isn't on `main` yet: check that its pull
 request is merged.
 
-### `Not signed in to Gmail yet` or `invalid_grant`
+### `Not signed in to Google yet` or `invalid_grant`
 
-The Gmail token is missing or no longer valid. This happens if:
+The Google sign-in token is missing or no longer valid. This happens if:
 
 - the mfyn@ password changed,
 - access was removed at <https://myaccount.google.com/permissions>
@@ -72,7 +72,7 @@ access to the MFYN Artists sheet). Sign in again with `--setup`, as above.
 
 ### `couldn't open the MFYN Artists sheet` or `couldn't update the MFYN Artists sheet`
 
-Downloads carry on without it. Check the error that follows:
+Downloads carry on without it. (Make Reels carries on too, just without handles.) Check the error that follows:
 
 - `Google Sheets API has not been used in project …`: enable the **Google
   Sheets API** in the `mfyn-library-agent` Cloud project

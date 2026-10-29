@@ -14,7 +14,8 @@ post on Instagram and play on the radio show.
   Story, not automated yet).
 - `scripts/` — launchers: the hourly Acquire task, and the Make Reels
   double-click.
-- `tests/` — run with `python -m pytest`; GitHub runs them on every push.
+- `tests/` — run with `python -m pytest`; GitHub runs them on pull requests
+  and on pushes to `main`.
 
 ## Steps
 
@@ -26,5 +27,8 @@ post on Instagram and play on the radio show.
 3. [Make Reels](docs/03-make-reels.md) — the episode's tracks become
    30-second Instagram Reels. Double-click to start. *(built, being tested)*
 4. Schedule posts — *(not built yet; Instagram captions come first)*
+
+Every automation, what starts it and where it runs is listed in
+[`docs/README.md`](docs/README.md#automations).
 
 Where we left off, and what's next: [`docs/session-log.md`](docs/session-log.md).

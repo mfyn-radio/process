@@ -16,7 +16,7 @@ Manual. Picking tracks from the library, making the episode, and archiving it.
 3. Archive it in `H:\My Drive\MFYN_Show_Archive`, in a folder named
    `D_M_YYYY- Episode Name`, for example `5_11_2026- Official Unofficial`.
 4. Put the episode's tracks (the FLACs, copied from the library) in its
-   `Tracks` folder.
+   `Tracks` folder. Step 3 also reads MP3, WAV, M4A, AIFF and OGG files.
 5. **Last action:** double-click **MFYN – Make Reels** on the desktop.
 
 ## The episode folder

@@ -16,6 +16,21 @@ post on Instagram and play on Music for Your Neighbors (MFYN).
 Ground rule: **MFYN only uses music it owns.** Everything starts with a
 Bandcamp purchase.
 
+## Automations
+
+Everything that runs by itself or on a button press, and where to look when it
+misbehaves.
+
+| Automation | Started by | Runs on | Log | Docs |
+|---|---|---|---|---|
+| Acquire (`intake.acquire`) | Task Scheduler task `MFYN Acquire`, hourly, via `scripts\run_acquire.cmd` | MFYN PC, while signed in | `%APPDATA%\mfyn-intake\acquire.log` | [Step 1](01-acquire.md), [troubleshooting](01-acquire-troubleshooting.md) |
+| Make Reels (`intake.reels`) | You, double-clicking **MFYN – Make Reels** (`scripts\make_reels.cmd`) | MFYN PC | `%APPDATA%\mfyn-intake\reels.log` | [Step 3](03-make-reels.md) |
+| Tests | GitHub Actions, on pull requests and pushes to `main` (`.github/workflows/tests.yml`) | GitHub | the Actions tab | `python -m pytest` locally |
+
+Not automated: [step 2](02-create-show.md), and the Album Story sketch. Not
+built: Instagram captions and step 4. Both logs keep four files of up to 1 MB
+each, and Make Reels also prints to its window.
+
 ## Systems and accounts
 
 | What | Where | Used for |
