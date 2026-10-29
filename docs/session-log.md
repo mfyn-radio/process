@@ -44,6 +44,17 @@ session is first.
       `5_11_2026- Normal Show` and go on to Make Reels.
 - [ ] **Open a pull request** for `claude/laughing-dirac-y7q041` once it
       works. Until then the PC stays on that branch, not `main`.
+- [ ] **Decide:** should Create Show refuse links that aren't
+      `bandcamp.com/.../playlist/...`, so its signed-in Chrome profile never
+      opens another site? (Offered, not built.) Also: stay signed in, or
+      sign out after every run?
+- [ ] **Keep Create Show's Chrome window Bandcamp-only:**
+  - sign in there with email and password, not "Sign in with Google";
+  - never sign Chrome itself in or turn on sync;
+  - decline "Save password?" and "Save card?".
+
+  Anything signed in there stays signed in for the automation. Check whether
+  the Bandcamp account has a saved card.
 - [ ] Delete the old `playlist-page.html` (the private-playlist error page)
       from `MFYN_Show_Archive`.
 - [ ] **Desktop shortcut** to `scripts\create_show.cmd`, named
