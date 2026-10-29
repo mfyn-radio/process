@@ -9,7 +9,7 @@ import time
 from pathlib import Path
 
 from selenium import webdriver
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import SessionNotCreatedException, TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select, WebDriverWait
@@ -47,6 +47,11 @@ def describe_links(driver):
     return "\n".join(lines[:40])
 
 
+class ProfileInUse(Exception):
+    """Chrome wouldn't start on the kept profile, usually because another
+    window is still using it."""
+
+
 class NotAvailable(Exception):
     """The download page has nothing to download yet (e.g. a pre-order)."""
 
@@ -75,7 +80,12 @@ class Browser:
                 "download.prompt_for_download": False,
                 "download.directory_upgrade": True,
             })
-            self._driver = webdriver.Chrome(options=options)
+            try:
+                self._driver = webdriver.Chrome(options=options)
+            except SessionNotCreatedException as e:
+                if self.profile_dir:
+                    raise ProfileInUse(str(e).splitlines()[0]) from e
+                raise
         return self._driver
 
     def close(self):

@@ -151,3 +151,19 @@ def test_private_playlist_asks_to_sign_in_once(tmp_path, monkeypatch):
     assert [t.title for t in tracks] == ["Glitter", "Toxic"]
     assert len(asked) == 1
     assert seen == [("profile", tmp_path / "chrome-profile"), ("open", config.BANDCAMP_LOGIN), ("close",)]
+
+
+def test_profile_in_use_is_reported_not_raised(tmp_path, monkeypatch, caplog):
+    monkeypatch.setattr(config, "CHROME_PROFILE_DIR", tmp_path / "chrome-profile")
+
+    class BusyBrowser:
+        def __init__(self, download_dir, profile_dir=None):
+            pass
+        def read_playlist(self, url):
+            raise create_show.bandcamp.ProfileInUse("session not created: Chrome failed to start: crashed.")
+        def close(self):
+            pass
+
+    monkeypatch.setattr(create_show.bandcamp, "Browser", BusyBrowser)
+    assert create_show.read_playlist("link", ask=lambda p: "") == []
+    assert "still open" in caplog.text

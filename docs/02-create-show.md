@@ -97,12 +97,23 @@ asks.
 
 The log is `%APPDATA%\mfyn-intake\create_show.log`.
 
+With Python from the Microsoft Store (as on the MFYN PC), Windows keeps that
+folder somewhere else:
+`%LOCALAPPDATA%\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\Roaming\mfyn-intake`.
+To get the log and any saved page onto Drive for Claude to read, run this in
+`%USERPROFILE%\mfyn-process`:
+
+```
+python -c "import shutil; from intake import config; [print(shutil.copy(p, config.SHOW_ARCHIVE_DIR)) for p in (config.CREATE_SHOW_LOG_FILE, config.APP_DIR / 'playlist-page.html') if p.exists()]"
+```
+
 - **"Bandcamp still won't show the playlist":** the Chrome window wasn't
   signed in as `music_for_your_neighbors`, the account that owns the
   playlist, when you pressed Enter. Run it again and sign in when asked.
-- **Chrome won't start, saying the profile is in use:** a Create Show Chrome
-  window is still open, maybe from a run that crashed. Close it (or end
-  `chrome.exe` in Task Manager) and try again.
+- **"Chrome wouldn't start":** a Create Show Chrome window is still open,
+  maybe from a run still waiting for Enter in its black window, or one that
+  crashed. Its profile can only be used by one window at a time. Close it,
+  and that black window, or end `chrome.exe` in Task Manager, and try again.
 - **"Couldn't find any tracks on the playlist page":** Bandcamp's playlist
   pages are new and their layout may change. A copy of the page is saved as
   `%APPDATA%\mfyn-intake\playlist-page.html`. Send it to Claude to adjust

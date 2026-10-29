@@ -118,7 +118,13 @@ def read_playlist(url, ask=input):
     with tempfile.TemporaryDirectory(prefix="mfyn-") as tmp:
         browser = bandcamp.Browser(Path(tmp), profile_dir=config.CHROME_PROFILE_DIR)
         try:
-            ld_json, blobs, page = browser.read_playlist(url)
+            try:
+                ld_json, blobs, page = browser.read_playlist(url)
+            except bandcamp.ProfileInUse as e:
+                log.error("Chrome wouldn't start (%s). Usually a Create Show Chrome window is still open, "
+                          "from an earlier run: close it, and any Create Show window still waiting for "
+                          "Enter, then try again.", e)
+                return []
             if playlist.is_private(page):
                 browser.open(config.BANDCAMP_LOGIN)
                 ask("\nThe playlist is private, and this Chrome window isn't signed in to Bandcamp.\n"
