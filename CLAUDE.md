@@ -36,7 +36,9 @@ When you spot one:
    that session.
 
 Never create, edit, comment on or close an issue without the user's
-confirmation. Don't write a bare `@name` in an issue or comment, since it
+confirmation. Creating an issue or sub-issue always needs a yes first, with
+no exceptions. (The one thing the `claude-task` label authorizes is working
+that issue, below.) Don't write a bare `@name` in an issue or comment, since it
 notifies that person.
 
 When work finishes an issue, say so and suggest closing it. Don't close it
@@ -77,22 +79,16 @@ should be tracked, suggest it as above.
 
 ### When the user steps away
 
-If the user says they're stepping away (or are otherwise unavailable) in the
-middle of a session, you may hand work to yourself by creating a Claude task
-without asking first. They can't confirm, and saying so is their go-ahead for
-this case only.
+Always ask before creating an issue or sub-issue. Stepping away is no
+exception.
 
-- **Only continue what we were doing.** The task is the unfinished part of the
-  work already discussed in this session, or an existing issue's next piece.
-  Don't invent new scope, and don't pick up other ideas while they're away.
-- **Make it a sub-issue** of the issue it belongs to, if there is one.
-  Otherwise a standalone Claude task. Fill in the whole form (Goal, Done when,
-  Where it touches, Constraints, How to check it) from what we decided, so it
-  makes sense without this conversation. Search the open issues first, and use
-  an existing one instead if it already covers this.
-- **Then work it** under the rules above: a branch, a PR that says `Closes #N`,
-  no merging. If a choice is the user's to make, comment with the question and
-  add `needs-human`, and stop on that piece.
-- **Tell them when they're back:** what you created, what you did, the PR link
-  and anything left for them.
-- Everything else about issues still needs their confirmation.
+- **If they say they're about to step away**, offer to hand the rest of the
+  work to a Claude task: show the proposed title, body and parent (a
+  sub-issue of the issue it belongs to, if any), and wait for their yes. Fill
+  in the whole form from what we decided, so it makes sense without this
+  conversation.
+- **If they've already gone**, don't create anything. Carry on with the work
+  already agreed on its branch, or work an existing `claude-task` issue as
+  above. Keep a short list of any issues you'd suggest, and put it in your
+  last message for them to confirm when they're back.
+- Don't invent new scope while they're away.
