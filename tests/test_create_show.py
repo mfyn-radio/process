@@ -39,6 +39,15 @@ def test_parse_embedded_blob_prefers_the_playlist_list():
     assert tracks[0].album == "bites the big one"
 
 
+def test_private_playlist_page():
+    # What Bandcamp answered for a private playlist, trimmed.
+    page = ('<title>Error</title><h2>Sorry, that something isn’t here.</h2><script data-status="404" '
+            'data-class="&quot;Endpoints::AccessError&quot;" data-message="&quot;failed private_viewing_screened '
+            'before_call&quot;"></script>')
+    assert playlist.is_private(page)
+    assert not playlist.is_private("<html>a normal page</html>")
+
+
 def test_parse_nothing():
     assert playlist.parse(["not json"], ['{"a": 1}']) == []
 

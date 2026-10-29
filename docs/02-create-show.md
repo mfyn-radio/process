@@ -14,7 +14,9 @@ tracks copied from `MFYN_Library`. Then it goes straight on to Make Reels.
 
 ## What happens
 
-1. **Make the playlist on Bandcamp** from tracks MFYN owns, in running order.
+1. **Make the playlist on Bandcamp** from tracks MFYN owns, in running order,
+   and make it **public**. The automation's Chrome isn't signed in to
+   Bandcamp, so it can't see a private playlist.
 2. **Double-click MFYN – Create Show** and paste the playlist's link. The
    `?from=collection…` part of the link doesn't matter.
 3. **Read the playlist:** Chrome opens the link, because Bandcamp blocks plain
@@ -79,6 +81,9 @@ Chrome and Python set up for step 1.
 
 The log is `%APPDATA%\mfyn-intake\create_show.log`.
 
+- **"Bandcamp says this playlist is private":** make it public on Bandcamp.
+  Bandcamp shows a private playlist to anyone else as "Sorry, that something
+  isn't here".
 - **"Couldn't find any tracks on the playlist page":** Bandcamp's playlist
   pages are new and their layout may change. A copy of the page is saved as
   `%APPDATA%\mfyn-intake\playlist-page.html`. Send it to Claude to adjust

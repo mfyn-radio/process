@@ -99,6 +99,12 @@ def _load(text):
         return None
 
 
+def is_private(page):
+    """Whether Bandcamp refused to show the playlist because it isn't public.
+    (It answers with a "Sorry, that something isn't here" page.)"""
+    return "private_viewing" in (page or "") or "Endpoints::AccessError" in (page or "")
+
+
 def parse(ld_json=(), blobs=()):
     """The playlist's tracks, from the page's JSON-LD scripts and embedded data attributes."""
     for text in ld_json:

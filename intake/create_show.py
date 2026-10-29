@@ -119,7 +119,9 @@ def read_playlist(url):
         finally:
             browser.close()
     tracks = playlist.parse(ld_json, blobs)
-    if not tracks:
+    if not tracks and playlist.is_private(page):
+        log.error("Bandcamp says this playlist is private. Make it public on Bandcamp, then try again.")
+    elif not tracks:
         saved = config.APP_DIR / "playlist-page.html"
         saved.write_text(page, encoding="utf-8")
         log.error("Couldn't find any tracks on the playlist page. A copy of it is in %s", saved)
