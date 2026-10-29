@@ -74,3 +74,25 @@ request without asking again.
 
 Staying inside the issue: don't widen it. If you find something else that
 should be tracked, suggest it as above.
+
+### When the user steps away
+
+If the user says they're stepping away (or are otherwise unavailable) in the
+middle of a session, you may hand work to yourself by creating a Claude task
+without asking first. They can't confirm, and saying so is their go-ahead for
+this case only.
+
+- **Only continue what we were doing.** The task is the unfinished part of the
+  work already discussed in this session, or an existing issue's next piece.
+  Don't invent new scope, and don't pick up other ideas while they're away.
+- **Make it a sub-issue** of the issue it belongs to, if there is one.
+  Otherwise a standalone Claude task. Fill in the whole form (Goal, Done when,
+  Where it touches, Constraints, How to check it) from what we decided, so it
+  makes sense without this conversation. Search the open issues first, and use
+  an existing one instead if it already covers this.
+- **Then work it** under the rules above: a branch, a PR that says `Closes #N`,
+  no merging. If a choice is the user's to make, comment with the question and
+  add `needs-human`, and stop on that piece.
+- **Tell them when they're back:** what you created, what you did, the PR link
+  and anything left for them.
+- Everything else about issues still needs their confirmation.
