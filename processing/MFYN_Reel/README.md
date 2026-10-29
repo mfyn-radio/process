@@ -80,7 +80,7 @@ logged in.
 
 ## Command-line options
 
-The Make Reels automation (`intake/reels.py`, step 3 of the intake process)
+The Make Reels automation (`intake/reels.py`, step 2a of the intake process)
 runs the sketch with options that override the settings:
 
 ```

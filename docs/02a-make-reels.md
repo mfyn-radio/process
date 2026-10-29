@@ -1,18 +1,19 @@
-# Step 3: Make Reels
+# Step 2a: Make Reels
 
-Turning an episode's tracks into 30-second Instagram Reels.
+Turning an episode's tracks into 30-second Instagram Reels. A sub-automation of
+[step 2, Create the show](02-create-show.md).
 
 See also: [process overview](README.md) ·
 [the Reel sketch](../processing/MFYN_Reel/README.md)
 
 | | |
 |---|---|
-| **Trigger** | You double-click **MFYN – Make Reels**, the last action of [step 2](02-create-show.md) |
+| **Trigger** | Step 2 triggers it once a show is ready. Until step 2 is automated, you double-click **MFYN – Make Reels** as step 2's last action |
 | **Input** | The newest episode's `Tracks` folder in `MFYN_Show_Archive` |
 | **Output** | One `Artist - Title.mp4` Reel per track, plus a `.json` of its details, in `MFYN_Reels\<episode>` |
 | **Runs on** | The MFYN PC (Processing 4 and ffmpeg) |
 | **Code** | [`intake/reels.py`](../intake/reels.py), the sketch [`processing/MFYN_Reel`](../processing/MFYN_Reel), started by [`scripts/make_reels.cmd`](../scripts/make_reels.cmd) |
-| **Next** | Step 4: schedule the posts (separate automation, not built yet) |
+| **Next** | Siblings under step 2: 2b, Instagram copy, then 2c, schedule the posts (neither built yet) |
 
 ## What it does
 
@@ -46,7 +47,7 @@ See also: [process overview](README.md) ·
    applied communications - donna deegan.json
    ```
 
-## The details file (for step 4)
+## The details file (for step 2c)
 
 Instagram strips metadata from uploads, so each Reel gets a `.json` file
 beside it with what the post needs:
@@ -60,7 +61,7 @@ beside it with what the post needs:
 | `episode` | `name` and `air_date` from the folder name, and the `folder` itself |
 | `source_track`, `clip_seconds`, `made` | the run itself |
 
-The handles are as they were when the Reel was made. Step 4 should look them
+The handles are as they were when the Reel was made. Step 2c should look them
 up again in the sheet, in case one was corrected later.
 
 ## Running it
@@ -123,5 +124,5 @@ if any Reel failed.
 
 - **The Album Story** (`processing\MFYN_Album`): a media-player Story for a
   featured album. It's in the repo but not automated.
-- **Scheduling posts:** step 4, a separate automation that reads
-  `MFYN_Reels`.
+- **Instagram copy and scheduling posts:** steps 2b and 2c, separate
+  sub-automations of step 2 that read `MFYN_Reels`.

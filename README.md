@@ -24,9 +24,12 @@ post on Instagram and play on the radio show.
    2026-10-23)*
 2. [Create the show](docs/02-create-show.md) — pick tracks, make the episode,
    archive it. *(manual)*
-3. [Make Reels](docs/03-make-reels.md) — the episode's tracks become
-   30-second Instagram Reels. Double-click to start. *(built, being tested)*
-4. Schedule posts — *(not built yet; Instagram captions come first)*
+   When you're ready to make a show, step 2 is the parent: it starts the
+   sub-automations below, each its own step.
+   - 2a. [Make Reels](docs/02a-make-reels.md) — the episode's tracks become
+     30-second Instagram Reels. Double-click to start. *(built, being tested)*
+   - 2b. Instagram copy — a caption for each Reel. *(not built yet; next up)*
+   - 2c. Schedule posts — *(not built yet)*
 
 Every automation, what starts it and where it runs is listed in
 [`docs/README.md`](docs/README.md#automations).

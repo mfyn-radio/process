@@ -14,9 +14,12 @@ artist directory built along the way:
 |---|---|---|
 | 1 | [Acquire](01-acquire.md): Bandcamp purchase → `MFYN_Library` + the MFYN Artists sheet | **Live**, hourly on the MFYN PC |
 | 2 | [Create the show](02-create-show.md) → `MFYN_Show_Archive\D_M_YYYY- Episode Name\Tracks` | Manual |
-| 3 | [Make Reels](03-make-reels.md): episode tracks → 30-second Reels + `.json` details in `MFYN_Reels` | **Built**, runs on the PC; sketch layout being tuned |
-| — | Instagram copy (captions) | **Not built.** Next up. |
-| 4 | Schedule posts | **Not built** |
+| 2a | [Make Reels](02a-make-reels.md): episode tracks → 30-second Reels + `.json` details in `MFYN_Reels` | **Built**, runs on the PC; sketch layout being tuned |
+| 2b | Instagram copy (captions) | **Not built.** Next up. |
+| 2c | Schedule posts | **Not built** |
+
+Steps 2a to 2c are sub-automations of step 2, the parent that runs when a show
+is ready.
 
 ### What was built
 
@@ -43,7 +46,7 @@ artist directory built along the way:
     the artist.
 - **First album:** *applied communications – bites the big one*.
 
-**Step 3, Make Reels** (`intake/reels.py`, double-click
+**Step 2a, Make Reels** (`intake/reels.py`, double-click
 `scripts\make_reels.cmd` / "MFYN – Make Reels")
 1. Picks the newest episode by air date.
 2. Confirms the Instagram handles of its artists and labels:
@@ -109,7 +112,7 @@ artist directory built along the way:
    caption is saved (e.g. `Artist - Title.txt` next to the Reel, or in a
    sheet for review), and whether you review or edit captions before
    scheduling.
-2. **Step 4, schedule posts.** To decide:
+2. **Step 2c, schedule posts.** To decide:
    - **Which tool:** Instagram's own API (needs a Business or Creator
      account linked to a Facebook Page) or a scheduler such as Buffer or
      Later.
@@ -128,7 +131,7 @@ artist directory built along the way:
 | Show archive | `H:\My Drive\MFYN_Show_Archive` |
 | Reels | `H:\My Drive\MFYN_Reels` |
 | Google Cloud project | `mfyn-library-agent`, client `mfyn-intake-cli` |
-| Troubleshooting | [step 1](01-acquire-troubleshooting.md), [step 3](03-make-reels.md#troubleshooting) |
+| Troubleshooting | [step 1](01-acquire-troubleshooting.md), [step 2a](02a-make-reels.md#troubleshooting) |
 
 **Saving sketch changes from the PC:**
 ```

@@ -112,7 +112,7 @@ to count the library by tag. Bandcamp tags mix genres with places like
 |---|---|
 | `Suggested` | A handle was found on Bandcamp, not yet checked |
 | `Not found` | No Instagram link was found |
-| *(set in step 3)* | Confirmed or corrected when Reels are made |
+| *(set in step 2a)* | Confirmed or corrected when Reels are made |
 
 #### How it's filled in
 
@@ -239,8 +239,8 @@ Keep the PC on and signed in, with Drive for desktop running.
 
 ## Open questions
 
-- The `Status` values step 3 writes when a handle is confirmed (designed with
-  step 3).
+- The `Status` values step 2a writes when a handle is confirmed (designed with
+  step 2a).
 - Bandcamp's page layout was read from what's known of it, not confirmed. If
   fields stay empty after `--artists`, the page reading needs adjusting.
 - Multi-item purchases (more than one album on one receipt) are untested.
