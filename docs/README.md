@@ -75,7 +75,10 @@ Both logs keep four files of up to 1 MB each, and Make Reels also prints to its 
 
 ## Docs
 
-- **[Session log](session-log.md): where we left off, and what's next.**
+- **[Session log](session-log.md): where we left off.** Open work and open
+  questions are tracked in the repo's
+  [GitHub Issues](https://github.com/mfyn-radio/process/issues), the single
+  list.
 - Step 1, Acquire:
   - [What it does and how to set it up](01-acquire.md)
   - [Decisions and how we got here](01-acquire-decisions.md)
