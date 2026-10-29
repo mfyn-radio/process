@@ -19,12 +19,33 @@ session is first.
 
 ### Open items
 
-- [ ] **Try it on the PC** with
-      <https://bandcamp.com/music_for_your_neighbors/playlist/mfynnov2026>,
-      first with `--dry-run`, signing in to Bandcamp when asked. The playlist
-      reader couldn't be checked against the real page (bandcamp.com isn't
-      reachable from Claude's cloud session). If it finds no tracks, send
-      `%APPDATA%\mfyn-intake\playlist-page.html` to Claude.
+- [ ] **Pick up here: finish the first test on the PC.** So far:
+  - The first run found the playlist private. Bandcamp answers that with a
+    404 "isn't here" page. That's why the Chrome profile was added.
+  - You signed in to Bandcamp in Create Show's Chrome window.
+  - The next run crashed (`Chrome failed to start: crashed`). The earlier
+    Chrome window was most likely still open and holding the profile. The
+    script now says so instead of crashing.
+  - **We haven't yet seen the playlist read while signed in.**
+
+  Next time, close any leftover Chrome windows marked "controlled by
+  automated test software", then:
+  ```
+  cd %USERPROFILE%\mfyn-process
+  git pull
+  python -m intake.create_show "https://bandcamp.com/music_for_your_neighbors/playlist/mfynnov2026" --dry-run
+  ```
+  If it doesn't list the tracks, copy the log and the page to Drive for
+  Claude (the command is in [step 2's troubleshooting](02-create-show.md#troubleshooting)).
+  The playlist reader still hasn't been checked against a real signed-in page
+  (bandcamp.com isn't reachable from Claude's cloud session), so it may need
+  adjusting.
+- [ ] Then run it without `--dry-run`. It should fill the empty
+      `5_11_2026- Normal Show` and go on to Make Reels.
+- [ ] **Open a pull request** for `claude/laughing-dirac-y7q041` once it
+      works. Until then the PC stays on that branch, not `main`.
+- [ ] Delete the old `playlist-page.html` (the private-playlist error page)
+      from `MFYN_Show_Archive`.
 - [ ] **Desktop shortcut** to `scripts\create_show.cmd`, named
       **MFYN – Create Show**.
 
