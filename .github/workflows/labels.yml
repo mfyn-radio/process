@@ -1,0 +1,22 @@
+name: Labels
+
+# Keeps the labels the issue forms and CLAUDE.md rely on in existence.
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/labels.yml]
+  workflow_dispatch:
+
+permissions:
+  issues: write
+
+jobs:
+  labels:
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh label create claude-task --force --color 7057ff --description "Claude works on this on its own and opens a PR"
+          gh label create needs-human --force --color d93f0b --description "Blocked on an answer or decision from you"

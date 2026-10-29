@@ -41,3 +41,36 @@ notifies that person.
 
 When work finishes an issue, say so and suggest closing it. Don't close it
 yourself.
+
+When you suggest an issue, say which kind it is: a general issue (the
+default, a free-form note for work or ideas) or a **Claude task** (below).
+
+## Two kinds of issue
+
+- **General issues** are the default: a work and ideas tracker. They are the
+  user's. Don't work on one unless asked.
+- **Claude tasks** are issues labelled `claude-task`, made from the "Claude
+  task" issue form. They are yours to work on independently.
+
+### Working Claude tasks
+
+At the start of a session, list the open issues labelled `claude-task` that
+aren't labelled `needs-human`. Tell the user which are ready. If the user
+gave you something else to do, ask which comes first. Otherwise work them.
+
+The `claude-task` label is the user's confirmation for that issue. For it,
+and only it, you may comment on the issue, create a branch and open a pull
+request without asking again.
+
+1. Read the issue's Goal, Done when, Where it touches and Constraints.
+2. Work on a branch from the latest `main`, one issue per branch.
+3. Open a pull request that says `Closes #N`. Never merge it, and don't close
+   the issue: the user reviews, merges and closes.
+4. Say in the PR what you could not check. Anything that needs the MFYN PC
+   (Bandcamp, Chrome, Processing, Google Drive) can't be run here.
+5. If the issue is unclear, or a choice is the user's to make, don't guess.
+   Comment on the issue with the question and add `needs-human`. The user
+   removes `needs-human` when they've answered.
+
+Staying inside the issue: don't widen it. If you find something else that
+should be tracked, suggest it as above.

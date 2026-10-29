@@ -34,6 +34,7 @@ misbehaves.
 | Acquire (`intake.acquire`) | Task Scheduler task `MFYN Acquire`, hourly, via `scripts\run_acquire.cmd` | MFYN PC, while signed in | `%APPDATA%\mfyn-intake\acquire.log` | [Step 1](01-acquire.md), [troubleshooting](01-acquire-troubleshooting.md) |
 | Make Reels (`intake.reels`) | You, double-clicking **MFYN – Make Reels** (`scripts\make_reels.cmd`), until step 2 starts it itself | MFYN PC | `%APPDATA%\mfyn-intake\reels.log` | [Step 2a](02a-make-reels.md) |
 | Tests | GitHub Actions, on pull requests and pushes to `main` (`.github/workflows/tests.yml`) | GitHub | the Actions tab | `python -m pytest` locally |
+| Labels | GitHub Actions, when `.github/workflows/labels.yml` changes on `main`, or run by hand (`workflow_dispatch`) | GitHub | the Actions tab | [Issues](#issues) |
 
 Not automated: the parent [step 2](02-create-show.md), which you still do by
 hand, and the Album Story sketch. Not built: step 2b, the manual stop's hand-off, and the Publishing Process.
@@ -53,6 +54,19 @@ Both logs keep four files of up to 1 MB each, and Make Reels also prints to its 
 | MFYN PC | Windows, signed in, running Google Drive for desktop and Chrome | Runs the automation (Task Scheduler) |
 | `mfyn-library-agent` | Google Cloud project, Internal audience | Lets the automation read and label mail ([setup](setup/google-cloud.md)) |
 | `mfyn-radio/process` | GitHub, this repo | Code and docs; GitHub only runs the tests |
+
+## Issues
+
+[GitHub Issues](https://github.com/mfyn-radio/process/issues) are the single
+list of open work. There are two kinds:
+
+- **General issues:** the default, a free-form tracker for work and ideas.
+  They're yours.
+- **Claude tasks:** made from the **Claude task** form, labelled
+  `claude-task`. Claude works these on its own, at the start of a session, and
+  opens a pull request that closes the issue. You review and merge. If Claude
+  needs an answer it comments and adds `needs-human`; remove that label once
+  you've answered. [`CLAUDE.md`](../CLAUDE.md) has the full rules.
 
 ## Conventions
 

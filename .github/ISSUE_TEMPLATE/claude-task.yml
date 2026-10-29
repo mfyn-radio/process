@@ -1,0 +1,43 @@
+name: Claude task
+description: Work for Claude to do on its own. Claude opens a pull request; you review and merge.
+title: "[Claude] "
+labels: ["claude-task"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Claude picks this up at the start of a session, works on a branch and
+        opens a pull request that closes this issue. Claude never merges.
+        If something is unclear, Claude comments here and adds `needs-human`.
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What should be true when this is done?
+    validations:
+      required: true
+  - type: textarea
+    id: done
+    attributes:
+      label: Done when
+      description: Acceptance criteria, one per line.
+      placeholder: |
+        - A caption .txt is written next to each Reel
+        - Tests cover the template
+    validations:
+      required: true
+  - type: textarea
+    id: where
+    attributes:
+      label: Where it touches
+      description: Files, docs, steps or issues this relates to, if you know.
+  - type: textarea
+    id: constraints
+    attributes:
+      label: Constraints
+      description: Things Claude must not change, or choices already made.
+  - type: textarea
+    id: verify
+    attributes:
+      label: How to check it
+      description: Anything that can only be tested on the MFYN PC (Bandcamp, Chrome, Processing) should be listed here, since Claude can't run those.
