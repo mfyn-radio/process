@@ -8,13 +8,31 @@ post on Instagram and play on Music for Your Neighbors (MFYN).
 | # | Step | What happens | Status |
 |---|---|---|---|
 | 1 | [Acquire](01-acquire.md) | A Bandcamp purchase is downloaded as FLAC into `MFYN_Library` | Live (2026-10-23) |
-| 2 | [Create the show](02-create-show.md) | Pick tracks, make the episode, archive it in `MFYN_Show_Archive` | Manual |
-| 3 | [Make Reels](03-make-reels.md) | The episode's tracks become 30-second Reels in `MFYN_Reels` | Built, being tested |
-| — | *Instagram copy* | A caption for each Reel, from its details and the MFYN Artists sheet | Next up |
-| 4 | *Schedule posts* | Reels in `MFYN_Reels` are scheduled on Instagram | Not built yet |
+| 2 | [Create the show](02-create-show.md) | **The parent.** Pick tracks, make the episode, archive it in `MFYN_Show_Archive`, then start the sub-automations below | Manual today |
+| 2a | [Make Reels](02a-make-reels.md) | The episode's tracks become 30-second Reels in `MFYN_Reels` | Built, being tested |
+| 2b | *Instagram copy* | A caption for each Reel, from its details and the MFYN Artists sheet | Next up |
+| 2c | *Schedule posts* | Reels in `MFYN_Reels` are scheduled on Instagram | Not built yet |
+
+Steps 2a to 2c are sub-automations of step 2: when a show is ready, step 2
+runs and triggers them. Each is its own step, with its own doc.
 
 Ground rule: **MFYN only uses music it owns.** Everything starts with a
 Bandcamp purchase.
+
+## Automations
+
+Everything that runs by itself or on a button press, and where to look when it
+misbehaves.
+
+| Automation | Started by | Runs on | Log | Docs |
+|---|---|---|---|---|
+| Acquire (`intake.acquire`) | Task Scheduler task `MFYN Acquire`, hourly, via `scripts\run_acquire.cmd` | MFYN PC, while signed in | `%APPDATA%\mfyn-intake\acquire.log` | [Step 1](01-acquire.md), [troubleshooting](01-acquire-troubleshooting.md) |
+| Make Reels (`intake.reels`) | You, double-clicking **MFYN – Make Reels** (`scripts\make_reels.cmd`), until step 2 starts it itself | MFYN PC | `%APPDATA%\mfyn-intake\reels.log` | [Step 2a](02a-make-reels.md) |
+| Tests | GitHub Actions, on pull requests and pushes to `main` (`.github/workflows/tests.yml`) | GitHub | the Actions tab | `python -m pytest` locally |
+
+Not automated: the parent [step 2](02-create-show.md), which you still do by
+hand, and the Album Story sketch. Not built: steps 2b and 2c. Both logs keep four files of up to 1 MB
+each, and Make Reels also prints to its window.
 
 ## Systems and accounts
 
@@ -24,7 +42,7 @@ Bandcamp purchase.
 | admin@nothingflatdigital.com | Google Workspace | Workspace and Google Cloud administration |
 | MFYN Artists | Google Sheet in mfyn@'s Drive, kept by the automation | The artist library (Instagram handles, tags, links), releases and labels |
 | `MFYN_Show_Archive` | mfyn@'s My Drive, `H:\My Drive\MFYN_Show_Archive` | Finished episodes, `D_M_YYYY- Episode Name\Tracks` |
-| `MFYN_Reels` | mfyn@'s My Drive, `H:\My Drive\MFYN_Reels` | Each episode's Reels and their details, for step 4 |
+| `MFYN_Reels` | mfyn@'s My Drive, `H:\My Drive\MFYN_Reels` | Each episode's Reels and their details, for step 2c |
 | Processing sketches | this repo, `processing\` | `MFYN_Reel` makes the Reels; `MFYN_Album` (not automated yet) |
 | `MFYN_Library` | mfyn@'s My Drive, synced to `H:\My Drive\MFYN_Library` on the MFYN PC | The music library, one folder per album |
 | MFYN PC | Windows, signed in, running Google Drive for desktop and Chrome | Runs the automation (Task Scheduler) |
@@ -41,7 +59,7 @@ Bandcamp purchase.
     [excluded purchases](01-acquire.md#excluded-purchases)).
 - **Instagram status** in the MFYN Artists sheet:
   - `Suggested` or `Not found`: set by step 1.
-  - `Confirmed` or `No Instagram`: set by you in step 3.
+  - `Confirmed` or `No Instagram`: set by you in step 2a.
 - **Episode folders:** `D_M_YYYY- Episode Name`, using the air date.
 - **Reels:** `MFYN_Reels\<episode folder>\Artist - Title.mp4`, plus `.json`
   details.
@@ -58,5 +76,5 @@ Bandcamp purchase.
   - [Decisions and how we got here](01-acquire-decisions.md)
   - [Troubleshooting](01-acquire-troubleshooting.md)
 - Step 2: [Create the show](02-create-show.md)
-- Step 3: [Make Reels](03-make-reels.md)
+  - Step 2a: [Make Reels](02a-make-reels.md)
 - Setup: [Google Cloud](setup/google-cloud.md)

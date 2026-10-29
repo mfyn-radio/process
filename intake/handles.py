@@ -1,4 +1,4 @@
-"""Confirming Instagram handles in the MFYN Artists sheet (step 3).
+"""Confirming Instagram handles in the MFYN Artists sheet (step 2a).
 
 For each artist and label in an episode whose handle isn't settled yet, show
 the suggestion and ask: Enter confirms it, a typed @handle replaces it, and

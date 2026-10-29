@@ -1,4 +1,4 @@
-"""Step 3, Make Reels: turn an episode's tracks into 30-second Instagram Reels.
+"""Step 2a, Make Reels: turn an episode's tracks into 30-second Instagram Reels.
 
 Double-click scripts\\make_reels.cmd (or its desktop shortcut), or run:
 
@@ -6,7 +6,7 @@ Double-click scripts\\make_reels.cmd (or its desktop shortcut), or run:
     python -m intake.reels --episode NAME     # the episode whose folder name contains NAME
     python -m intake.reels --skip-handles     # don't stop to confirm Instagram handles
 
-See docs/03-make-reels.md.
+See docs/02a-make-reels.md.
 """
 import argparse
 import datetime
@@ -116,7 +116,7 @@ def render(tracks, out_dir, seconds):
 
 
 def details(track, ep, cat, seconds):
-    """What step 4 needs to write the post. Handles are as of now; step 4
+    """What step 2c needs to write the post. Handles are as of now; step 2c
     looks them up again in case they've changed since."""
     artist, release, label = {}, {}, {}
     if cat:

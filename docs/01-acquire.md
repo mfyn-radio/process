@@ -8,7 +8,7 @@ See also: [decisions and how we got here](01-acquire-decisions.md) ·
 
 | | |
 |---|---|
-| **Trigger** | A Bandcamp purchase email arrives at mfyn@nothingflatdigital.com |
+| **Trigger** | The hourly run finds a new Bandcamp purchase email in the mfyn@nothingflatdigital.com inbox |
 | **Input** | An album bought on Bandcamp. MFYN only uses music it owns. |
 | **Output** | One folder per album in `MFYN_Library`, with FLAC tracks and cover art |
 | **Runs on** | The MFYN Windows PC, hourly, from Task Scheduler |
@@ -112,7 +112,7 @@ to count the library by tag. Bandcamp tags mix genres with places like
 |---|---|
 | `Suggested` | A handle was found on Bandcamp, not yet checked |
 | `Not found` | No Instagram link was found |
-| *(set in step 3)* | Confirmed or corrected when Reels are made |
+| *(set in step 2a)* | Confirmed or corrected when Reels are made |
 
 #### How it's filled in
 
@@ -150,7 +150,8 @@ to count the library by tag. Bandcamp tags mix genres with places like
 - `Artist - Album`, taken from the name Bandcamp gives the zip.
 - A single track bought now and then: `Artist - Track`.
 - Characters Windows doesn't allow in names (`\ / : * ? " < > |`) become `_`.
-- If the folder already exists, the album isn't added again.
+- If the folder already exists, the album isn't added again. The download
+  is thrown away and the email is still labelled `MFYN/Downloaded`.
 
 ### Pre-orders
 
@@ -165,7 +166,10 @@ The email is left unlabelled and retried after the release date.
   is renamed once complete. If a run is interrupted, the half-finished folder
   is replaced on the next try, so a folder without the prefix is always
   complete.
-- Everything is logged to `%APPDATA%\mfyn-intake\acquire.log`.
+- Everything is logged to `%APPDATA%\mfyn-intake\acquire.log` (it rolls
+  over at 1 MB and keeps three older files).
+- The run exits with an error if any album failed, which shows in Task
+  Scheduler's last result.
 
 ### Scope
 
@@ -175,7 +179,8 @@ The email is left unlabelled and retried after the release date.
 
 ## Setting it up on the PC
 
-One time only. Needs Python and Google Chrome, both already installed.
+One time only. Needs Python 3.10 or newer and Google Chrome, both already
+installed.
 
 1. **Get the code.** Install Git (`winget install Git.Git`), then:
    ```
@@ -234,8 +239,8 @@ Keep the PC on and signed in, with Drive for desktop running.
 
 ## Open questions
 
-- The `Status` values step 3 writes when a handle is confirmed (designed with
-  step 3).
+- The `Status` values step 2a writes when a handle is confirmed (designed with
+  step 2a).
 - Bandcamp's page layout was read from what's known of it, not confirmed. If
   fields stay empty after `--artists`, the page reading needs adjusting.
 - Multi-item purchases (more than one album on one receipt) are untested.

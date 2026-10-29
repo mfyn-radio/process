@@ -1,18 +1,19 @@
-# Step 3: Make Reels
+# Step 2a: Make Reels
 
-Turning an episode's tracks into 30-second Instagram Reels.
+Turning an episode's tracks into 30-second Instagram Reels. A sub-automation of
+[step 2, Create the show](02-create-show.md).
 
 See also: [process overview](README.md) ·
 [the Reel sketch](../processing/MFYN_Reel/README.md)
 
 | | |
 |---|---|
-| **Trigger** | You double-click **MFYN – Make Reels**, the last action of [step 2](02-create-show.md) |
+| **Trigger** | Step 2 triggers it once a show is ready. Until step 2 is automated, you double-click **MFYN – Make Reels** as step 2's last action |
 | **Input** | The newest episode's `Tracks` folder in `MFYN_Show_Archive` |
 | **Output** | One `Artist - Title.mp4` Reel per track, plus a `.json` of its details, in `MFYN_Reels\<episode>` |
 | **Runs on** | The MFYN PC (Processing 4 and ffmpeg) |
 | **Code** | [`intake/reels.py`](../intake/reels.py), the sketch [`processing/MFYN_Reel`](../processing/MFYN_Reel), started by [`scripts/make_reels.cmd`](../scripts/make_reels.cmd) |
-| **Next** | Step 4: schedule the posts (separate automation, not built yet) |
+| **Next** | Siblings under step 2: 2b, Instagram copy, then 2c, schedule the posts (neither built yet) |
 
 ## What it does
 
@@ -24,6 +25,8 @@ See also: [process overview](README.md) ·
    releases, and asks only about those not settled yet. It shows the
    suggested handle and their links (website, SoundCloud…) to help check.
    - **Enter:** confirm the suggested handle. Status becomes `Confirmed`.
+     When there's no suggestion (`Not found`), Enter does nothing: type a
+     handle or `-`.
    - **Type a handle** (with or without `@`): replace it. Status becomes
      `Confirmed`.
    - **`-`:** they have no Instagram. Status becomes `No Instagram`, and
@@ -36,13 +39,15 @@ See also: [process overview](README.md) ·
    - It shows the title and artist from the tags, the embedded cover, the
      scope line, a progress bar and the ON AIR pulse.
    - A preview window shows each Reel as it renders, and closes when done.
-4. **File the Reels** in `H:\My Drive\MFYN_Reels\<episode folder>\`:
+4. **File the Reels** in `H:\My Drive\MFYN_Reels\<episode folder>\`, named
+   `Artist - Title` (characters Windows doesn't allow become `_`; two tracks
+   with the same name get ` (2)`, ` (3)`…):
    ```
    applied communications - donna deegan.mp4
    applied communications - donna deegan.json
    ```
 
-## The details file (for step 4)
+## The details file (for step 2c)
 
 Instagram strips metadata from uploads, so each Reel gets a `.json` file
 beside it with what the post needs:
@@ -56,7 +61,7 @@ beside it with what the post needs:
 | `episode` | `name` and `air_date` from the folder name, and the `folder` itself |
 | `source_track`, `clip_seconds`, `made` | the run itself |
 
-The handles are as they were when the Reel was made. Step 4 should look them
+The handles are as they were when the Reel was made. Step 2c should look them
 up again in the sheet, in case one was corrected later.
 
 ## Running it
@@ -95,10 +100,16 @@ skipped. To remake one, delete its `.mp4` and `.json`, then run again.
   `%USERPROFILE%\mfyn-process`. Changes reach the PC with `git pull`.
   `H:\My Drive\MFYN_Processing` is no longer used.
 - Google Drive for desktop running, for `MFYN_Show_Archive` and `MFYN_Reels`.
+- The Google sign-in from [setting up step 1](01-acquire.md#setting-it-up-on-the-pc),
+  to read the MFYN Artists sheet. Without it the Reels are still made, with
+  no handles.
+- The Python packages in `requirements.txt` (Make Reels reads tags with
+  `mutagen`).
 
 ## Troubleshooting
 
-The log is `%APPDATA%\mfyn-intake\reels.log`.
+The log is `%APPDATA%\mfyn-intake\reels.log`. The run exits with an error
+if any Reel failed.
 
 | Message | What to do |
 |---|---|
@@ -113,5 +124,5 @@ The log is `%APPDATA%\mfyn-intake\reels.log`.
 
 - **The Album Story** (`processing\MFYN_Album`): a media-player Story for a
   featured album. It's in the repo but not automated.
-- **Scheduling posts:** step 4, a separate automation that reads
-  `MFYN_Reels`.
+- **Instagram copy and scheduling posts:** steps 2b and 2c, separate
+  sub-automations of step 2 that read `MFYN_Reels`.

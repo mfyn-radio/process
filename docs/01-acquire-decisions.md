@@ -117,7 +117,7 @@ FLAC tags don't include Instagram handles, but posts should tag the artist
   - **Tags:** one row per tag per release, because a spreadsheet can't sort
     by a cell that holds several tags.
 - **Automatic, no review.** Handles are confirmed when Reels are made (step
-  3) and used when posts are scheduled (step 4), so a handle fixed late still
+  3) and used when posts are scheduled (step 2c), so a handle fixed late still
   gets used.
 - **Never overwrite typed values.** Only empty cells are filled, and tags are
   added to.
@@ -125,7 +125,7 @@ FLAC tags don't include Instagram handles, but posts should tag the artist
   Instagram can only tag Instagram accounts. Spotify (and Apple Music) are
   left out.
 - **Not kept:** a "new release" flag, since the release and purchase dates
-  are enough; track-level details, which step 3 reads from the FLACs; and
+  are enough; track-level details, which step 2a reads from the FLACs; and
   artist photos (maybe later).
 - **The seller's page decides whose details they are.** On a self-release,
   the Bandcamp sidebar is the artist's. On a label release it's the label's,

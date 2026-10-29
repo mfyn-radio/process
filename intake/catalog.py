@@ -7,7 +7,7 @@ Tabs:
 - Tags: one row per Bandcamp tag per release, for sorting and filtering.
 
 Step 1 fills it in automatically, with Instagram handles marked "Suggested"
-or "Not found". Step 3 is where handles are confirmed. The automation only
+or "Not found". Step 2a is where handles are confirmed. The automation only
 fills empty cells and adds tags; it never overwrites what someone typed.
 """
 import datetime
@@ -18,7 +18,7 @@ from . import config, release_info, tags
 from .table import Table
 
 SUGGESTED, NOT_FOUND = "Suggested", "Not found"
-# Set when handles are confirmed in step 3.
+# Set when handles are confirmed in step 2a.
 CONFIRMED, NO_INSTAGRAM = "Confirmed", "No Instagram"
 
 ARTISTS = ["Artist", "Instagram", "Status", "Location", "Tags", "Website", "Other links",
