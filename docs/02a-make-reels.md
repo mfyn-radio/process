@@ -13,7 +13,7 @@ See also: [process overview](README.md) ·
 | **Output** | One `Artist - Title.mp4` Reel per track, plus a `.json` of its details, in `MFYN_Reels\<episode>` |
 | **Runs on** | The MFYN PC (Processing 4 and ffmpeg) |
 | **Code** | [`intake/reels.py`](../intake/reels.py), the sketch [`processing/MFYN_Reel`](../processing/MFYN_Reel), started by [`scripts/make_reels.cmd`](../scripts/make_reels.cmd) |
-| **Next** | Siblings under step 2: 2b, Instagram copy, then 2c, schedule the posts (neither built yet) |
+| **Next** | Its sibling under step 2, 2b (Instagram copy, not built yet). Then you review it all, before the Publishing Process starts |
 
 ## What it does
 
@@ -47,7 +47,7 @@ See also: [process overview](README.md) ·
    applied communications - donna deegan.json
    ```
 
-## The details file (for step 2c)
+## The details file (for captions and Publishing)
 
 Instagram strips metadata from uploads, so each Reel gets a `.json` file
 beside it with what the post needs:
@@ -61,8 +61,8 @@ beside it with what the post needs:
 | `episode` | `name` and `air_date` from the folder name, and the `folder` itself |
 | `source_track`, `clip_seconds`, `made` | the run itself |
 
-The handles are as they were when the Reel was made. Step 2c should look them
-up again in the sheet, in case one was corrected later.
+The handles are as they were when the Reel was made. Whatever uses them later should look
+them up again in the sheet, in case one was corrected later.
 
 ## Running it
 
@@ -124,5 +124,7 @@ if any Reel failed.
 
 - **The Album Story** (`processing\MFYN_Album`): a media-player Story for a
   featured album. It's in the repo but not automated.
-- **Instagram copy and scheduling posts:** steps 2b and 2c, separate
-  sub-automations of step 2 that read `MFYN_Reels`.
+- **Instagram copy:** step 2b, a separate sub-automation of step 2 that
+  reads `MFYN_Reels`.
+- **Scheduling posts:** part of the Publishing Process, which starts after
+  your review.

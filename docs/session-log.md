@@ -16,10 +16,13 @@ artist directory built along the way:
 | 2 | [Create the show](02-create-show.md) → `MFYN_Show_Archive\D_M_YYYY- Episode Name\Tracks` | Manual |
 | 2a | [Make Reels](02a-make-reels.md): episode tracks → 30-second Reels + `.json` details in `MFYN_Reels` | **Built**, runs on the PC; sketch layout being tuned |
 | 2b | Instagram copy (captions) | **Not built.** Next up. |
-| 2c | Schedule posts | **Not built** |
+| — | Manual stop: you review all the content | **Not built** (the hand-off) |
+| → | Publishing Process (schedule posts, …) | Separate process, **not built** |
 
-Steps 2a to 2c are sub-automations of step 2, the parent that runs when a show
-is ready.
+Steps 2a and 2b are sub-automations of step 2, the parent that runs when a show
+is ready. Together they produce all the content for a post, so they belong to
+this intake and production process. After your review, the Publishing Process
+takes over.
 
 ### What was built
 
@@ -77,8 +80,8 @@ is ready.
   The Sheets API is enabled.
 - **Instagram can only tag Instagram accounts.** Artists without one are
   credited by name, with their other links as a "find them on…".
-- **Making Reels and scheduling posts are separate automations**, with
-  `MFYN_Reels` between them.
+- **Production and Publishing are separate processes**, with your review
+  between them. `MFYN_Reels` holds what you review.
 
 ### Open items
 
@@ -112,7 +115,8 @@ is ready.
    caption is saved (e.g. `Artist - Title.txt` next to the Reel, or in a
    sheet for review), and whether you review or edit captions before
    scheduling.
-2. **Step 2c, schedule posts.** To decide:
+2. **The Publishing Process** (starts after your review; not part of this
+   repo's steps yet). First piece, scheduling posts. To decide:
    - **Which tool:** Instagram's own API (needs a Business or Creator
      account linked to a Facebook Page) or a scheduler such as Buffer or
      Later.
