@@ -8,7 +8,7 @@ post on Instagram and play on Music for Your Neighbors (MFYN).
 | # | Step | What happens | Status |
 |---|---|---|---|
 | 1 | [Acquire](01-acquire.md) | A Bandcamp purchase is downloaded as FLAC into `MFYN_Library` | Live (2026-10-23) |
-| 2 | [Create the show](02-create-show.md) | Pick tracks, make the episode, archive it in `MFYN_Show_Archive` | Manual |
+| 2 | [Create the show](02-create-show.md) | A Bandcamp playlist becomes an episode in `MFYN_Show_Archive`, then step 3 starts | Built, being tested |
 | 3 | [Make Reels](03-make-reels.md) | The episode's tracks become 30-second Reels in `MFYN_Reels` | Built, being tested |
 | — | *Instagram copy* | A caption for each Reel, from its details and the MFYN Artists sheet | Next up |
 | 4 | *Schedule posts* | Reels in `MFYN_Reels` are scheduled on Instagram | Not built yet |
@@ -42,7 +42,8 @@ Bandcamp purchase.
 - **Instagram status** in the MFYN Artists sheet:
   - `Suggested` or `Not found`: set by step 1.
   - `Confirmed` or `No Instagram`: set by you in step 3.
-- **Episode folders:** `D_M_YYYY- Episode Name`, using the air date.
+- **Episode folders:** `D_M_YYYY- Episode Name`, using the air date. Step 2
+  names new ones `Normal Show`, `Normal Show 1`… until you rename them.
 - **Reels:** `MFYN_Reels\<episode folder>\Artist - Title.mp4`, plus `.json`
   details.
 - **Secrets:** never in the repo. Google sign-in tokens live on the PC in

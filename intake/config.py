@@ -6,7 +6,7 @@ from pathlib import Path
 # Synced to MFYN_Library in mfyn@'s My Drive by Google Drive for desktop.
 LIBRARY_DIR = Path(os.environ.get("MFYN_LIBRARY", r"H:\My Drive\MFYN_Library"))
 
-# Step 2 ends with the finished episode here, as "D_M_YYYY- Episode Name\Tracks".
+# Step 2 puts each episode here, as "D_M_YYYY- Episode Name\Tracks".
 SHOW_ARCHIVE_DIR = Path(os.environ.get("MFYN_SHOW_ARCHIVE", r"H:\My Drive\MFYN_Show_Archive"))
 # Step 3 writes each episode's Reels here, for step 4 to schedule.
 REELS_DIR = Path(os.environ.get("MFYN_REELS", r"H:\My Drive\MFYN_Reels"))
@@ -23,6 +23,7 @@ CLIENT_FILE = APP_DIR / "client_secret.json"
 TOKEN_FILE = APP_DIR / "token.json"
 LOG_FILE = APP_DIR / "acquire.log"
 REELS_LOG_FILE = APP_DIR / "reels.log"
+CREATE_SHOW_LOG_FILE = APP_DIR / "create_show.log"
 
 # Google Sheet of artists and their Instagram handles, in mfyn@'s Drive.
 # Created by the automation on first use.

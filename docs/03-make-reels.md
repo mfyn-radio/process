@@ -7,7 +7,7 @@ See also: [process overview](README.md) ·
 
 | | |
 |---|---|
-| **Trigger** | You double-click **MFYN – Make Reels**, the last action of [step 2](02-create-show.md) |
+| **Trigger** | [Step 2](02-create-show.md) starts it for the episode it made, or double-click **MFYN – Make Reels** |
 | **Input** | The newest episode's `Tracks` folder in `MFYN_Show_Archive` |
 | **Output** | One `Artist - Title.mp4` Reel per track, plus a `.json` of its details, in `MFYN_Reels\<episode>` |
 | **Runs on** | The MFYN PC (Processing 4 and ffmpeg) |
@@ -16,8 +16,8 @@ See also: [process overview](README.md) ·
 
 ## What it does
 
-1. **Find the episode:** the newest one in `MFYN_Show_Archive`, going by the
-   air date in its folder name. It lists the tracks and asks
+1. **Find the episode:** the one step 2 just made, or else the newest one in
+   `MFYN_Show_Archive`, going by the air date in its folder name. It lists the tracks and asks
    `Make Reels for these N track(s)? [Y/n]`.
 2. **Confirm Instagram handles** in the [MFYN Artists sheet](01-acquire.md#the-mfyn-artists-sheet).
    It goes through each artist in the episode, then each label of their

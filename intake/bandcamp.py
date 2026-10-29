@@ -105,6 +105,19 @@ class Browser:
             tags=[t for t in texts("a.tag") if t],
         )
 
+    def read_playlist(self, url):
+        """The raw material for playlist.parse(): (JSON-LD scripts, embedded
+        data attributes, the page's HTML for troubleshooting)."""
+        driver = self._chrome()
+        driver.get(url)
+        WebDriverWait(driver, 30).until(lambda d: d.execute_script("return document.readyState") == "complete")
+        ld_json = [el.get_attribute("textContent") for el in
+                   driver.find_elements(By.CSS_SELECTOR, 'script[type="application/ld+json"]')]
+        blobs = []
+        for attr in ("data-blob", "data-tralbum", "data-playlist", "data-player-data"):
+            blobs += [el.get_attribute(attr) for el in driver.find_elements(By.CSS_SELECTOR, f"[{attr}]")]
+        return ld_json, [b for b in blobs if b], driver.page_source
+
     def find_album(self, seller_page, title):
         """The album page for `title` on a seller's Bandcamp page, if listed."""
         if not seller_page or not title:

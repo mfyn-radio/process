@@ -3,6 +3,28 @@
 Where the MFYN intake project stands, and where to pick up. The newest
 session is first.
 
+## 2026-10-29: Create Show
+
+- **Step 2 is automated** ([Create the show](02-create-show.md),
+  `intake/create_show.py`, double-click `scripts\create_show.cmd`). Paste a
+  Bandcamp playlist link. It finds each track in `MFYN_Library`, copies them
+  into `MFYN_Show_Archive\D_M_YYYY- Normal Show N\Tracks`, then runs Make
+  Reels on that episode.
+- Episodes get a placeholder name: `Normal Show`, `Normal Show 1`… dated
+  today unless `--date` is given. An empty `Normal Show` folder is reused.
+- Make Reels' `--episode` now takes an exact folder name first.
+
+### Open items
+
+- [ ] **Try it on the PC** with
+      <https://bandcamp.com/music_for_your_neighbors/playlist/mfynnov2026>,
+      first with `--dry-run`. The playlist reader couldn't be checked against
+      the real page (bandcamp.com isn't reachable from Claude's cloud
+      session). If it finds no tracks, send
+      `%APPDATA%\mfyn-intake\playlist-page.html` to Claude.
+- [ ] **Desktop shortcut** to `scripts\create_show.cmd`, named
+      **MFYN – Create Show**.
+
 ## 2026-10-23: first session
 
 ### Where we got to
@@ -13,7 +35,7 @@ artist directory built along the way:
 | # | Step | State |
 |---|---|---|
 | 1 | [Acquire](01-acquire.md): Bandcamp purchase → `MFYN_Library` + the MFYN Artists sheet | **Live**, hourly on the MFYN PC |
-| 2 | [Create the show](02-create-show.md) → `MFYN_Show_Archive\D_M_YYYY- Episode Name\Tracks` | Manual |
+| 2 | [Create the show](02-create-show.md) → `MFYN_Show_Archive\D_M_YYYY- Episode Name\Tracks` | Manual (automated 2026-10-29, see above) |
 | 3 | [Make Reels](03-make-reels.md): episode tracks → 30-second Reels + `.json` details in `MFYN_Reels` | **Built**, runs on the PC; sketch layout being tuned |
 | — | Instagram copy (captions) | **Not built.** Next up. |
 | 4 | Schedule posts | **Not built** |
@@ -121,7 +143,7 @@ artist directory built along the way:
 | What | Where |
 |---|---|
 | Code on the PC | `%USERPROFILE%\mfyn-process` (`git pull` to update) |
-| Logs | `%APPDATA%\mfyn-intake\acquire.log`, `reels.log` |
+| Logs | `%APPDATA%\mfyn-intake\acquire.log`, `create_show.log`, `reels.log` |
 | MFYN Artists sheet | <https://docs.google.com/spreadsheets/d/1m95uKxvyNK2EfRtT1r6fZsaTapwVbyFqbc0AOxjnpHE/edit> |
 | Library | `H:\My Drive\MFYN_Library` (Drive folder `1Anmx1Om4RZdmwujyu8fEb-lUJnEULKG5`) |
 | Show archive | `H:\My Drive\MFYN_Show_Archive` |

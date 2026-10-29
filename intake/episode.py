@@ -43,8 +43,11 @@ def all_in(archive_dir):
 
 
 def find(archive_dir, wanted=None):
-    """The newest episode, or the one whose folder name contains `wanted`."""
+    """The newest episode, or the one whose folder name is (or else contains) `wanted`."""
     episodes = all_in(archive_dir)
+    exact = [e for e in episodes if wanted and e.folder.name.casefold() == wanted.strip().casefold()]
+    if exact:
+        return exact[0]
     if wanted:
         episodes = [e for e in episodes if wanted.casefold() in e.folder.name.casefold()]
     return episodes[-1] if episodes else None
