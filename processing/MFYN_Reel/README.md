@@ -4,32 +4,18 @@ Turns tagged audio files into 1080×1920 Instagram Reels in the MFYN orange
 dot-matrix player style. The reels include the track's audio, a live scope
 line, a progress bar and the ON AIR pulse.
 
-## One-time setup (macOS)
-
-1. Install **Processing 4** from processing.org.
-2. Install **ffmpeg**: `brew install ffmpeg`
-   (the sketch looks in `/opt/homebrew/bin` and `/usr/local/bin`; if yours is
-   elsewhere, set `FFMPEG` / `FFPROBE` at the top of `MFYN_Reel.pde`).
-3. Keep this folder named `MFYN_Reel` (Processing needs the folder and the
-   main `.pde` to share a name).
-
 ## One-time setup (Windows)
+
+Runs on the MFYN PC. The [Make Reels doc](../../docs/02a-make-reels.md)
+covers how the automation uses it.
 
 1. Install **Processing 4** from processing.org.
 2. Install **ffmpeg**: in a terminal run `winget install Gyan.FFmpeg`, then restart
    the PC (or log out and in) so Processing can find it. If it still can't, set
    `FFMPEG` / `FFPROBE` at the top of `MFYN_Reel.pde` to the full paths, e.g.
    `"C:\\ffmpeg\\bin\\ffmpeg.exe"` (note the double backslashes).
-3. Keep this folder named `MFYN_Reel`.
-
-To render from the command line on Windows, use `processing-java.exe` from the
-Processing install folder:
-
-```
-"C:\Program Files\Processing\processing-java.exe" --sketch="C:\path\to\MFYN_Reel" --run
-```
-
-Task Scheduler can run that command on a schedule.
+3. Keep this folder named `MFYN_Reel` (Processing needs the folder and the
+   main `.pde` to share a name).
 
 ## Making reels
 
@@ -66,17 +52,16 @@ Look settings live in their own tabs:
 
 ## Running it without opening the editor
 
-In Processing, choose **Tools → Install "processing-java"**. Then this
-renders everything in `input/` from Terminal:
+Normally the Make Reels automation does this for you. To do it by hand, use
+`processing-java.exe` from the Processing install folder (newer versions of
+Processing use `Processing.exe cli` instead). This renders everything in
+`input/`:
 
 ```
-processing-java --sketch="/path/to/MFYN_Reel" --run
+"C:\Program Files\Processing\processing-java.exe" --sketch="C:\path\to\MFYN_Reel" --run
 ```
 
-You can call that command from anything that can run a shell command:
-a Shortcuts automation, a Folder Action on `input/`, a `launchd` job, or a
-cron entry. A window opens briefly while it renders, so the Mac needs to be
-logged in.
+A window opens briefly while it renders, so the PC needs to be signed in.
 
 ## Command-line options
 
@@ -84,7 +69,7 @@ The Make Reels automation (`intake/reels.py`, step 2a of the intake process)
 runs the sketch with options that override the settings:
 
 ```
-processing-java --sketch=".../MFYN_Reel" --run input="<folder>" output="<folder>" seconds=30
+"C:\Program Files\Processing\processing-java.exe" --sketch="C:\path\to\MFYN_Reel" --run input="<folder>" output="<folder>" seconds=30
 ```
 
 `input` and `output` can be absolute paths; relative ones are inside the
