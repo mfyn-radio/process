@@ -1,6 +1,6 @@
 ---
 name: research
-description: Research an MFYN artist and their albums, and keep what's found in the artist's file in MFYN_Research, with sources, so it's never redone and builds up over time. Takes an artist, an album, an episode (all its artists), or "missing" (every artist in the MFYN Artists sheet without a file yet). Used by /show-prep; also use when asked to research or look up an artist or album.
+description: Research an MFYN artist and their albums, and keep what's found in the artist's file in MFYN_Research, with sources, so it's never redone and builds up over time. With no argument, researches everything new in the MFYN Artists sheet: artists with no file yet, and new albums of artists who have one. Or takes an artist, an album, or an episode (all its artists). Used by /show-prep; also use when asked to research or look up an artist or album.
 ---
 
 # Research: artists and albums, kept
@@ -17,14 +17,16 @@ the research file for the user to settle.
 
 ## 1. What to research
 
+- **Nothing named (the usual run): everything new in the sheet.**
+  `python -m intake.research --missing` lists `artists` with no research
+  file, and `releases` (albums) that have no section in their artist's file
+  yet. Research each new artist with all their releases in the sheet, and
+  each new release on its own. If there are many, tell the user how many and
+  ask before starting; offer to do them a few at a time.
 - **An artist:** `python -m intake.research --artist "NAME"`
 - **An album:** the same, for its artist; research only that album's section.
 - **An episode:** `python -m intake.show_notes [--episode NAME]`, then each
   artist in it, and only the albums the episode plays.
-- **Missing:** `python -m intake.research --missing` lists the sheet's
-  artists with no research file. Research each one, all their releases in
-  the sheet. If there are many, tell the user how many and ask before
-  starting; offer to do them a few at a time.
 
 Run these from the repo folder (`%USERPROFILE%\mfyn-process`). They print
 JSON with what the sheet knows (`sheet`, each release's `sheet` and `label`),
@@ -126,6 +128,8 @@ Last researched: <YYYY-MM-DD>
 - <YYYY-MM-DD>: <what was researched>, for <episode / on request>
 ```
 
+- Album headings start exactly `## Album: <Title as in the sheet>`: that's
+  how a new album is told apart from one already researched.
 - Number sources once per file and keep the numbers; add new ones at the end.
 - Sections for different albums stay in the file for good, including ones
   not played in the current episode.

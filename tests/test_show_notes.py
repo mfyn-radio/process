@@ -85,11 +85,14 @@ def test_artist_facts_cover_all_their_releases(tmp_path, monkeypatch, capsys):
     assert not out["research_exists"]
 
 
-def test_missing_lists_sheet_artists_without_a_file(tmp_path, monkeypatch, capsys):
+def test_missing_lists_new_artists_and_new_releases(tmp_path, monkeypatch, capsys):
     monkeypatch.setattr(config, "RESEARCH_DIR", tmp_path)
     sheet = SheetCatalog()
     sheet.artists.rows.append(dict(sheet.artists.rows[0], Artist="Has A File"))
-    (tmp_path / "Has A File.md").write_text("# Has A File")
+    sheet.releases.rows += [dict(sheet.releases.rows[0], Artist="Has A File", Album=a) for a in ("Old One", "New One")]
+    (tmp_path / "Has A File.md").write_text("# Has A File\n\n## Album: Old One (2020)\n", encoding="utf-8")
     monkeypatch.setattr(research, "open_catalog", lambda: sheet)
     assert research.main(["--missing"]) == 0
-    assert json.loads(capsys.readouterr().out)["missing"] == ["applied communications"]
+    out = json.loads(capsys.readouterr().out)
+    assert out["artists"] == ["applied communications"]
+    assert out["releases"] == [{"artist": "Has A File", "album": "New One"}]

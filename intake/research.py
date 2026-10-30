@@ -6,7 +6,7 @@ facts to start from, and the file to add to. It only reads.
 
     python -m intake.research --artist NAME     # what the sheet knows, and the artist's research file
     python -m intake.research --artist NAME --no-sheet
-    python -m intake.research --missing         # the sheet's artists that have no research file yet
+    python -m intake.research --missing         # what in the sheet hasn't been researched yet
 
 Prints JSON. See docs/research.md.
 """
@@ -59,10 +59,24 @@ def artist_facts(cat, artist):
     return facts
 
 
+def album_heading(title):
+    """How an album's section starts in a research file."""
+    return f"## Album: {title}"
+
+
 def missing(cat):
-    """The sheet's artists with no research file. Every one of them should have one."""
-    names = dict.fromkeys(r.get("Artist", "").strip() for r in cat.artists.rows)
-    return [n for n in names if n and not research_file(n).exists()]
+    """What in the sheet hasn't been researched: artists with no research file
+    (every one should have one), and releases with no section in their artist's file."""
+    artists = [n for n in dict.fromkeys(r.get("Artist", "").strip() for r in cat.artists.rows) if n]
+    new_artists = [n for n in artists if not research_file(n).exists()]
+    new_releases = []
+    for row in cat.releases.rows:
+        artist, album = row.get("Artist", "").strip(), row.get("Album", "").strip()
+        path = research_file(artist)
+        if artist and album and artist not in new_artists and path.exists():
+            if album_heading(album).casefold() not in path.read_text(encoding="utf-8").casefold():
+                new_releases.append({"artist": artist, "album": album})
+    return {"artists": new_artists, "releases": new_releases}
 
 
 def open_catalog():
@@ -91,7 +105,7 @@ def main(argv=None):
         cat = open_catalog()
         if cat is None:
             return 1
-        print_json({"research_dir": str(config.RESEARCH_DIR), "missing": missing(cat)})
+        print_json(dict(missing(cat), research_dir=str(config.RESEARCH_DIR)))
         return 0
     cat = None if args.no_sheet else open_catalog()
     print_json(dict(artist_facts(cat, args.artist), sheet_read=cat is not None))
