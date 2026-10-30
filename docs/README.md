@@ -13,11 +13,12 @@ starts after that.
 | 2 | [Create the show](02-create-show.md) | **The parent.** Pick tracks, make the episode, archive it in `MFYN_Show_Archive`, then start the sub-automations below | Manual today |
 | 2a | [Make Reels](02a-make-reels.md) | The episode's tracks become 30-second Reels in `MFYN_Reels` | Built, being tested |
 | 2b | *Instagram copy* | A caption for each Reel, from its details and the MFYN Artists sheet | Next up |
+| 2c | [Show notes](02c-show-notes.md) | Notes on each artist, album and track, researched, in the episode folder | Built, untested on the PC |
 | — | **Manual stop** | You review everything made for a post, then trigger Publishing | Not built yet |
 | → | *Publishing Process* | Starts after your review: scheduling the posts on Instagram, among other things | Separate process, not built yet |
 
-Steps 2a and 2b are sub-automations of step 2: when a show is ready, step 2
-runs and triggers them. Each is its own step, with its own doc. Together they
+Steps 2a, 2b and 2c are sub-automations of step 2: when a show is ready, step 2
+runs and triggers them. Show notes (2c) are for the show itself, not the post. Each is its own step, with its own doc. Together they
 produce all the content for a post, so they belong to production. What they
 leave in `MFYN_Reels` is what you review at the manual stop.
 
@@ -33,6 +34,7 @@ misbehaves.
 |---|---|---|---|---|
 | Acquire (`intake.acquire`) | Task Scheduler task `MFYN Acquire`, hourly, via `scripts\run_acquire.cmd` | MFYN PC, while signed in | `%APPDATA%\mfyn-intake\acquire.log` | [Step 1](01-acquire.md), [troubleshooting](01-acquire-troubleshooting.md) |
 | Make Reels (`intake.reels`) | You, double-clicking **MFYN – Make Reels** (`scripts\make_reels.cmd`), until step 2 starts it itself | MFYN PC | `%APPDATA%\mfyn-intake\reels.log` | [Step 2a](02a-make-reels.md) |
+| Show notes (`/show-prep` skill, `intake.show_notes`) | You, in Claude Code | MFYN PC | Claude Code's own output | [Step 2c](02c-show-notes.md) |
 | Tests | GitHub Actions, on pull requests and pushes to `main` (`.github/workflows/tests.yml`) | GitHub | the Actions tab | `python -m pytest` locally |
 | Labels | GitHub Actions, when `.github/workflows/labels.yml` changes on `main`, or run by hand (`workflow_dispatch`) | GitHub | the Actions tab | [Issues](#issues) |
 
@@ -99,4 +101,5 @@ list of open work. There are two kinds:
   - [Troubleshooting](01-acquire-troubleshooting.md)
 - Step 2: [Create the show](02-create-show.md)
   - Step 2a: [Make Reels](02a-make-reels.md)
+  - Step 2c: [Show notes](02c-show-notes.md)
 - Setup: [Google Cloud](setup/google-cloud.md)
