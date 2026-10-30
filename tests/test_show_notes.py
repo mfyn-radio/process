@@ -1,6 +1,6 @@
 import json
 
-from intake import catalog, config, show_notes
+from intake import catalog, config, research, show_notes
 from test_catalog import MemoryTable
 from test_reels import flac
 
@@ -32,8 +32,8 @@ def episode_folder(tmp_path):
 def test_facts_group_by_artist_and_album_with_sheet_rows(tmp_path, monkeypatch, capsys):
     archive = episode_folder(tmp_path)
     monkeypatch.setattr(config, "SHOW_ARCHIVE_DIR", archive)
-    monkeypatch.setattr(show_notes.google_auth, "credentials", lambda: None)
-    monkeypatch.setattr(show_notes.catalog, "Catalog", lambda creds: SheetCatalog())
+    monkeypatch.setattr(config, "RESEARCH_DIR", tmp_path / "research")
+    monkeypatch.setattr(research, "open_catalog", SheetCatalog)
 
     assert show_notes.main([]) == 0
     out = json.loads(capsys.readouterr().out)
@@ -46,6 +46,7 @@ def test_facts_group_by_artist_and_album_with_sheet_rows(tmp_path, monkeypatch, 
 
     applied, other = out["artists"]
     assert applied["sheet"]["Instagram"] == "@applied"
+    assert applied["research_file"].endswith("applied communications.md") and not applied["research_exists"]
     (album,) = applied["albums"]
     assert [t["position"] for t in album["tracks"]] == [1, 3]
     assert album["sheet"]["Label"] == "Some Label" and album["label"]["Instagram"] == "@somelabel"
@@ -56,8 +57,29 @@ def test_facts_without_the_sheet(tmp_path, monkeypatch, capsys):
     archive = episode_folder(tmp_path)
     (archive / "5_11_2026- Official Unofficial" / show_notes.NOTES_FILE).write_text("old notes")
     monkeypatch.setattr(config, "SHOW_ARCHIVE_DIR", archive)
+    monkeypatch.setattr(config, "RESEARCH_DIR", tmp_path / "research")
+    (tmp_path / "research").mkdir()
+    (tmp_path / "research" / "Other Artist.md").write_text("# Other Artist")
 
     assert show_notes.main(["--no-sheet"]) == 0
     out = json.loads(capsys.readouterr().out)
     assert not out["sheet_read"] and out["notes_exist"]
     assert [a["name"] for a in out["artists"]] == ["applied communications", "Other Artist"]
+    assert [a["research_exists"] for a in out["artists"]] == [False, True]
+
+
+def test_research_file_names_are_safe(tmp_path, monkeypatch):
+    monkeypatch.setattr(config, "RESEARCH_DIR", tmp_path)
+    assert research.research_file("AC/DC").name == "AC_DC.md"
+    assert research.research_file("Daufødt").name == "Daufødt.md"
+
+
+def test_artist_facts_cover_all_their_releases(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(config, "RESEARCH_DIR", tmp_path)
+    monkeypatch.setattr(research, "open_catalog", SheetCatalog)
+    assert research.main(["--artist", "applied communications"]) == 0
+    out = json.loads(capsys.readouterr().out)
+    assert out["sheet_read"] and out["sheet"]["Location"] == "Brooklyn, New York"
+    (release,) = out["releases"]
+    assert release["sheet"]["Album"] == "bites the big one" and release["label"]["Instagram"] == "@somelabel"
+    assert not out["research_exists"]

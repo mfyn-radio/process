@@ -11,6 +11,8 @@ SHOW_ARCHIVE_DIR = Path(os.environ.get("MFYN_SHOW_ARCHIVE", r"H:\My Drive\MFYN_S
 # Step 2a writes each episode's Reels here, for review, then Publishing.
 REELS_DIR = Path(os.environ.get("MFYN_REELS", r"H:\My Drive\MFYN_Reels"))
 REEL_SECONDS = 30
+# The /research skill keeps one file per artist here, so research is never redone.
+RESEARCH_DIR = Path(os.environ.get("MFYN_RESEARCH", r"H:\My Drive\MFYN_Research"))
 
 # The Reel sketch, in this repo. Processing's command-line runner is found
 # automatically; set MFYN_PROCESSING to its full path if it isn't.

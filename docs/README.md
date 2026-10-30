@@ -35,6 +35,7 @@ misbehaves.
 | Acquire (`intake.acquire`) | Task Scheduler task `MFYN Acquire`, hourly, via `scripts\run_acquire.cmd` | MFYN PC, while signed in | `%APPDATA%\mfyn-intake\acquire.log` | [Step 1](01-acquire.md), [troubleshooting](01-acquire-troubleshooting.md) |
 | Make Reels (`intake.reels`) | You, double-clicking **MFYN – Make Reels** (`scripts\make_reels.cmd`), until step 2 starts it itself | MFYN PC | `%APPDATA%\mfyn-intake\reels.log` | [Step 2a](02a-make-reels.md) |
 | Show notes (`/show-prep` skill, `intake.show_notes`) | You, in Claude Code | MFYN PC | Claude Code's own output | [Step 2c](02c-show-notes.md) |
+| Research (`/research` skill, `intake.research`) | You, in Claude Code, or `/show-prep` | MFYN PC | Claude Code's own output | [Research](research.md) |
 | Tests | GitHub Actions, on pull requests and pushes to `main` (`.github/workflows/tests.yml`) | GitHub | the Actions tab | `python -m pytest` locally |
 | Labels | GitHub Actions, when `.github/workflows/labels.yml` changes on `main`, or run by hand (`workflow_dispatch`) | GitHub | the Actions tab | [Issues](#issues) |
 
@@ -51,6 +52,7 @@ Both logs keep four files of up to 1 MB each, and Make Reels also prints to its 
 | MFYN Artists | Google Sheet in mfyn@'s Drive, kept by the automation | The artist library (Instagram handles, tags, links), releases and labels |
 | `MFYN_Show_Archive` | mfyn@'s My Drive, `H:\My Drive\MFYN_Show_Archive` | Finished episodes, `D_M_YYYY- Episode Name\Tracks` |
 | `MFYN_Reels` | mfyn@'s My Drive, `H:\My Drive\MFYN_Reels` | Each episode's Reels and their details, for your review and then Publishing |
+| `MFYN_Research` | mfyn@'s My Drive, `H:\My Drive\MFYN_Research` | What's been researched about each artist and album, one file per artist, kept for good |
 | Processing sketches | this repo, `processing\` | `MFYN_Reel` makes the Reels; `MFYN_Album` (not automated yet) |
 | `MFYN_Library` | mfyn@'s My Drive, synced to `H:\My Drive\MFYN_Library` on the MFYN PC | The music library, one folder per album |
 | MFYN PC | Windows, signed in, running Google Drive for desktop and Chrome | Runs the automation (Task Scheduler) |
@@ -84,6 +86,7 @@ list of open work. There are two kinds:
 - **Episode folders:** `D_M_YYYY- Episode Name`, using the air date.
 - **Reels:** `MFYN_Reels\<episode folder>\Artist - Title.mp4`, plus `.json`
   details.
+- **Research:** `MFYN_Research\Artist.md`, one per artist, only ever added to.
 - **Secrets:** never in the repo. Google sign-in tokens live on the PC in
   `%APPDATA%\mfyn-intake\`.
 - **Changing the code:** changes go through pull requests on GitHub. On the
@@ -102,4 +105,5 @@ list of open work. There are two kinds:
 - Step 2: [Create the show](02-create-show.md)
   - Step 2a: [Make Reels](02a-make-reels.md)
   - Step 2c: [Show notes](02c-show-notes.md)
+- [Research](research.md): kept research on artists and albums
 - Setup: [Google Cloud](setup/google-cloud.md)
