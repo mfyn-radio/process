@@ -10,7 +10,7 @@ See also: [process overview](README.md) ·
 
 | | |
 |---|---|
-| **Trigger** | You, in Claude Code on the MFYN PC: `/research <artist, album or episode>`. `/show-prep` also runs it for any artist not researched yet |
+| **Trigger** | You, in Claude Code on the MFYN PC: `/research <artist, album or episode>`, or `/research missing` for every artist in the sheet without a file. `/show-prep` also runs it for any artist not researched yet |
 | **Input** | The MFYN Artists sheet, the artist's Bandcamp page and links, and the web |
 | **Output** | One file per artist, `H:\My Drive\MFYN_Research\<Artist>.md`, added to over time |
 | **Runs on** | The MFYN PC, in Claude Code opened in `%USERPROFILE%\mfyn-process` |
@@ -30,7 +30,10 @@ See also: [process overview](README.md) ·
    date it was found. What wasn't found, and look-alike bands that turned out
    to be someone else, are written down too, so they aren't searched for
    again.
-4. **Report** what was added, what's still missing, and any conflicts.
+4. **Found in passing:** anything found about another artist who already
+   has a file is added to their file, with its source. If they have no
+   file, none is made: it stays in the file of the artist being researched.
+5. **Report** what was added, what's still missing, and any conflicts.
 
 ## The research files
 
@@ -41,6 +44,8 @@ MFYN_Research\
   ...
 ```
 
+- **Every artist in the MFYN Artists sheet should have one.**
+  `/research missing` researches the ones that don't yet.
 - **One per artist,** with a section per album. Albums stay in the file
   for good, whichever episode they were researched for.
 - **Nothing is deleted.** New findings are added with their date. A source

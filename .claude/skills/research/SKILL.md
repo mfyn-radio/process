@@ -1,6 +1,6 @@
 ---
 name: research
-description: Research an MFYN artist and their albums, and keep what's found in the artist's file in MFYN_Research, with sources, so it's never redone and builds up over time. Takes an artist, an album, or an episode (all its artists). Used by /show-prep; also use when asked to research or look up an artist or album.
+description: Research an MFYN artist and their albums, and keep what's found in the artist's file in MFYN_Research, with sources, so it's never redone and builds up over time. Takes an artist, an album, an episode (all its artists), or "missing" (every artist in the MFYN Artists sheet without a file yet). Used by /show-prep; also use when asked to research or look up an artist or album.
 ---
 
 # Research: artists and albums, kept
@@ -13,12 +13,18 @@ from these files.
 **Never write to the MFYN Artists sheet.** Disagreements with it are noted in
 the research file for the user to settle.
 
+**Every artist in the MFYN Artists sheet should have a research file.**
+
 ## 1. What to research
 
 - **An artist:** `python -m intake.research --artist "NAME"`
 - **An album:** the same, for its artist; research only that album's section.
 - **An episode:** `python -m intake.show_notes [--episode NAME]`, then each
   artist in it, and only the albums the episode plays.
+- **Missing:** `python -m intake.research --missing` lists the sheet's
+  artists with no research file. Research each one, all their releases in
+  the sheet. If there are many, tell the user how many and ask before
+  starting; offer to do them a few at a time.
 
 Run these from the repo folder (`%USERPROFILE%\mfyn-process`). They print
 JSON with what the sheet knows (`sheet`, each release's `sheet` and `label`),
@@ -124,8 +130,25 @@ Last researched: <YYYY-MM-DD>
 - Sections for different albums stay in the file for good, including ones
   not played in the current episode.
 
-## 4. Report
+## 4. Found in passing
 
-Tell the user which files were created or added to, what's still not found,
+While researching, you may find something about **another** artist, one
+outside what you were asked to research (a split release, a shared member,
+a tour together).
+
+- **If that artist has a research file,** add it there, with its source like
+  any finding, under a heading `## Found while researching <artist>
+  (<YYYY-MM-DD>)`. Apply the same name-clash check, and add anything that
+  contradicts their file to Conflicts. Don't change their "Last researched"
+  dates, and don't research them any further.
+- **If they have no file, don't create one.** Keep it in the current
+  artist's file, where it was found (for example under related projects).
+  If they're in the sheet, they're due a file anyway: mention them in the
+  report.
+
+## 5. Report
+
+Tell the user which files were created or added to (including other
+artists' files, from findings in passing), what's still not found,
 and every new conflict, especially with the sheet, so they can fix the sheet
 by hand.

@@ -6,6 +6,7 @@ facts to start from, and the file to add to. It only reads.
 
     python -m intake.research --artist NAME     # what the sheet knows, and the artist's research file
     python -m intake.research --artist NAME --no-sheet
+    python -m intake.research --missing         # the sheet's artists that have no research file yet
 
 Prints JSON. See docs/research.md.
 """
@@ -58,6 +59,12 @@ def artist_facts(cat, artist):
     return facts
 
 
+def missing(cat):
+    """The sheet's artists with no research file. Every one of them should have one."""
+    names = dict.fromkeys(r.get("Artist", "").strip() for r in cat.artists.rows)
+    return [n for n in names if n and not research_file(n).exists()]
+
+
 def open_catalog():
     """The MFYN Artists sheet, or None (with a note on stderr) if it can't be opened."""
     try:
@@ -74,10 +81,18 @@ def print_json(data):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--artist", required=True, help="the artist's name, as in the sheet or the tags")
+    which = parser.add_mutually_exclusive_group(required=True)
+    which.add_argument("--artist", help="the artist's name, as in the sheet or the tags")
+    which.add_argument("--missing", action="store_true", help="list the sheet's artists with no research file")
     parser.add_argument("--no-sheet", action="store_true", help="don't read the MFYN Artists sheet")
     args = parser.parse_args(argv)
 
+    if args.missing:
+        cat = open_catalog()
+        if cat is None:
+            return 1
+        print_json({"research_dir": str(config.RESEARCH_DIR), "missing": missing(cat)})
+        return 0
     cat = None if args.no_sheet else open_catalog()
     print_json(dict(artist_facts(cat, args.artist), sheet_read=cat is not None))
     return 0

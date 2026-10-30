@@ -83,3 +83,13 @@ def test_artist_facts_cover_all_their_releases(tmp_path, monkeypatch, capsys):
     (release,) = out["releases"]
     assert release["sheet"]["Album"] == "bites the big one" and release["label"]["Instagram"] == "@somelabel"
     assert not out["research_exists"]
+
+
+def test_missing_lists_sheet_artists_without_a_file(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(config, "RESEARCH_DIR", tmp_path)
+    sheet = SheetCatalog()
+    sheet.artists.rows.append(dict(sheet.artists.rows[0], Artist="Has A File"))
+    (tmp_path / "Has A File.md").write_text("# Has A File")
+    monkeypatch.setattr(research, "open_catalog", lambda: sheet)
+    assert research.main(["--missing"]) == 0
+    assert json.loads(capsys.readouterr().out)["missing"] == ["applied communications"]
