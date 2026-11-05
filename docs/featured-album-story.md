@@ -24,7 +24,7 @@ See also: [process overview](README.md) ·
 3. **Confirm Instagram handles** for the artist and label, if they aren't
    settled yet, the same way as [Make Reels](02a-make-reels.md#what-it-does).
 4. **Render:** the Album sketch runs on a copy of the album. The Story is
-   **15 seconds** from the loudest stretch of the featured track: the media
+   **30 seconds** from the loudest stretch of the featured track: the media
    player (cover, album info, tracklist with the featured track highlighted,
    moving seek bar) over the rotating dot-matrix globe, which pulses with the
    track. A preview window shows it as it renders.

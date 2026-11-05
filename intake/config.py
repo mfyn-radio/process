@@ -18,7 +18,7 @@ REEL_SKETCH = Path(__file__).resolve().parent.parent / "processing" / "MFYN_Reel
 
 # Make Album Story writes each featured-album Story here, for review, then Publishing.
 STORIES_DIR = Path(os.environ.get("MFYN_STORIES", r"H:\My Drive\MFYN_Stories"))
-STORY_SECONDS = 15
+STORY_SECONDS = 30
 ALBUM_SKETCH = Path(__file__).resolve().parent.parent / "processing" / "MFYN_Album"
 PROCESSING = os.environ.get("MFYN_PROCESSING", "")
 

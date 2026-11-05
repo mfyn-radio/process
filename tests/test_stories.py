@@ -10,7 +10,7 @@ import sys
 from pathlib import Path
 args = dict(a.split("=", 1) for a in sys.argv[1:] if "=" in a and not a.startswith("--"))
 assert "--run" in sys.argv and any(a.startswith("--sketch=") and "MFYN_Album" in a for a in sys.argv)
-assert args["seconds"] == "15"
+assert args["seconds"] == "30"
 for album in Path(args["input"]).iterdir():
     featured = (album / "featured.txt").read_text()
     (Path(args["output"]) / (album.name + "_story.mp4")).write_text("mp4 featuring " + featured)
@@ -75,7 +75,7 @@ def test_make_story_end_to_end(tmp_path, monkeypatch):
     info = json.loads((folder / f"{name}.json").read_text())
     assert info["album"] == "Limitations of the Human Form" and info["artist"] == "CADY"
     assert info["featured_track"]["title"] == "Constellation Indifference"
-    assert info["clip_seconds"] == 15
+    assert info["clip_seconds"] == 30
 
     # Same album and track again: nothing to do.
     assert stories.main(["--album", "cady", "--track", "3"], ask=lambda p: "", say=lambda *_: None) == 0
