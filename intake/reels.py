@@ -160,10 +160,11 @@ def labels_for(tracks, cat):
     return labels
 
 
-def setup_logging():
+def setup_logging(log_file=None):
     config.APP_DIR.mkdir(parents=True, exist_ok=True)
     fmt = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
-    file_handler = logging.handlers.RotatingFileHandler(config.REELS_LOG_FILE, maxBytes=1 << 20, backupCount=3, encoding="utf-8")
+    file_handler = logging.handlers.RotatingFileHandler(log_file or config.REELS_LOG_FILE, maxBytes=1 << 20,
+                                                        backupCount=3, encoding="utf-8")
     file_handler.setFormatter(fmt)
     console = logging.StreamHandler()
     console.setFormatter(logging.Formatter("%(message)s"))

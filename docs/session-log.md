@@ -3,6 +3,21 @@
 Where the MFYN intake project stands, and where to pick up. The newest
 session is first.
 
+## 2026-11-05
+
+- **Reel sketch finalized** (white design) and brought in from Drive:
+  mfyn-radio/process#28. Edit it in the repo from now on.
+- **Step 2b, Instagram copy, built:** a `.txt` caption next to each Reel,
+  written at the end of Make Reels. mfyn-radio/process#29, closing
+  mfyn-radio/process#20.
+- **Make Album Story built** ([doc](featured-album-story.md),
+  mfyn-radio/process#18): pick an album from `MFYN_Library` and a featured
+  track; the Story, a still and a `.json` (with the album link for the
+  sticker) go to `MFYN_Stories`. The Album sketch got `input=` / `output=`
+  options; its look is unchanged.
+- **Sketches can now be rendered in the cloud session**, for previews,
+  without Processing on the PC.
+
 ## 2026-10-23: first session
 
 ### Where we got to
