@@ -8,6 +8,7 @@ the one sub-automation that exists by hand.
 |---|---|---|
 | [2a. Make Reels](02a-make-reels.md) | The episode's tracks become Reels | Built |
 | [2b. Instagram copy](02b-instagram-copy.md) | A caption for each Reel | Built, runs at the end of 2a |
+| [Archive cover](archive-cover.md) | The orange `MFYN_archive_NN.png` in the episode folder | Built, runs at the start of 2a |
 
 When these have run, the production work is done and you reach the manual
 stop: you review everything made for the post. Triggering the Publishing

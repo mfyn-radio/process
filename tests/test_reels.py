@@ -68,6 +68,9 @@ import sys
 from pathlib import Path
 args = dict(a.split("=", 1) for a in sys.argv[1:] if "=" in a and not a.startswith("--"))
 assert "--run" in sys.argv and any(a.startswith("--sketch=") for a in sys.argv)
+if any("MFYN_Archive" in a for a in sys.argv):
+    (Path(args["output"]) / ("MFYN_archive_%02d.png" % int(args["number"]))).write_text(args["date"])
+    sys.exit(0)
 assert args["seconds"] == "30"
 for f in Path(args["input"]).iterdir():
     (Path(args["output"]) / (f.stem + "_reel.mp4")).write_bytes(b"mp4")
@@ -93,6 +96,8 @@ def test_make_reels_end_to_end(tmp_path, monkeypatch, capsys):
     monkeypatch.setattr(config, "TOKEN_FILE", tmp_path / "app" / "missing-token.json")
 
     assert reels.main([], ask=lambda prompt: "y") == 0
+    cover = archive / "5_11_2026- Official Unofficial" / "MFYN_archive_03.png"
+    assert cover.read_text() == "5 November 2026"
     ep_out = out / "5_11_2026- Official Unofficial"
     assert sorted(p.name for p in ep_out.iterdir()) == [
         "Other Artist - Song_Two.json", "Other Artist - Song_Two.mp4", "Other Artist - Song_Two.txt",

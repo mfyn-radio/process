@@ -32,7 +32,7 @@ misbehaves.
 | Automation | Started by | Runs on | Log | Docs |
 |---|---|---|---|---|
 | Acquire (`intake.acquire`) | Task Scheduler task `MFYN Acquire`, hourly, via `scripts\run_acquire.cmd` | MFYN PC, while signed in | `%APPDATA%\mfyn-intake\acquire.log` | [Step 1](01-acquire.md), [troubleshooting](01-acquire-troubleshooting.md) |
-| Make Reels (`intake.reels`), then Instagram copy (`intake.captions`) | You, double-clicking **MFYN – Make Reels** (`scripts\make_reels.cmd`), until step 2 starts it itself | MFYN PC | `%APPDATA%\mfyn-intake\reels.log` | [Step 2a](02a-make-reels.md), [step 2b](02b-instagram-copy.md) |
+| Make Reels (`intake.reels`), with the archive cover (`intake.archive_cover`) and Instagram copy (`intake.captions`) | You, double-clicking **MFYN – Make Reels** (`scripts\make_reels.cmd`), until step 2 starts it itself | MFYN PC | `%APPDATA%\mfyn-intake\reels.log` | [Step 2a](02a-make-reels.md), [step 2b](02b-instagram-copy.md), [archive cover](archive-cover.md) |
 | Make Album Story (`intake.stories`) | You, double-clicking **MFYN – Make Album Story** (`scripts\make_story.cmd`), to feature an album | MFYN PC | `%APPDATA%\mfyn-intake\stories.log` | [Make Album Story](featured-album-story.md) |
 | Tests | GitHub Actions, on pull requests and pushes to `main` (`.github/workflows/tests.yml`) | GitHub | the Actions tab | `python -m pytest` locally |
 | Labels | GitHub Actions, when `.github/workflows/labels.yml` changes on `main`, or run by hand (`workflow_dispatch`) | GitHub | the Actions tab | [Issues](#issues) |
@@ -51,7 +51,7 @@ The logs keep four files of up to 1 MB each, and Make Reels and Make Album Story
 | `MFYN_Show_Archive` | mfyn@'s My Drive, `H:\My Drive\MFYN_Show_Archive` | Finished episodes, `D_M_YYYY- Episode Name\Tracks` |
 | `MFYN_Reels` | mfyn@'s My Drive, `H:\My Drive\MFYN_Reels` | Each episode's Reels, their details and captions, for your review and then Publishing |
 | `MFYN_Stories` | mfyn@'s My Drive, `H:\My Drive\MFYN_Stories` | Featured-album Stories and their details, for your review and then Publishing |
-| Processing sketches | this repo, `processing\` | `MFYN_Reel` makes the Reels; `MFYN_Album` makes the featured-album Stories |
+| Processing sketches | this repo, `processing\` | `MFYN_Reel` makes the Reels; `MFYN_Album` makes the featured-album Stories; `MFYN_Archive` makes the archive episode covers ([automated](archive-cover.md), or by hand: [README](../processing/MFYN_Archive/README.md)) |
 | `MFYN_Library` | mfyn@'s My Drive, synced to `H:\My Drive\MFYN_Library` on the MFYN PC | The music library, one folder per album |
 | MFYN PC | Windows, signed in, running Google Drive for desktop and Chrome | Runs the automation (Task Scheduler) |
 | `mfyn-library-agent` | Google Cloud project, Internal audience | Lets the automation read and label mail ([setup](setup/google-cloud.md)) |
@@ -81,7 +81,8 @@ list of open work. There are two kinds:
 - **Instagram status** in the MFYN Artists sheet:
   - `Suggested` or `Not found`: set by step 1.
   - `Confirmed` or `No Instagram`: set by you in step 2a.
-- **Episode folders:** `D_M_YYYY- Episode Name`, using the air date.
+- **Episode folders:** `D_M_YYYY- Episode Name`, using the air date. Each gets
+  its archive cover, `MFYN_archive_NN.png`, numbered from No. 3 (5 November 2026).
 - **Reels:** `MFYN_Reels\<episode folder>\Artist - Title.mp4`, plus `.json`
   details and the `.txt` caption.
 - **Secrets:** never in the repo. Google sign-in tokens live on the PC in
@@ -102,5 +103,6 @@ list of open work. There are two kinds:
 - Step 2: [Create the show](02-create-show.md)
   - Step 2a: [Make Reels](02a-make-reels.md)
   - Step 2b: [Instagram copy](02b-instagram-copy.md)
+  - [Archive cover](archive-cover.md)
 - Featured albums: [Make Album Story](featured-album-story.md)
 - Setup: [Google Cloud](setup/google-cloud.md)

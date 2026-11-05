@@ -23,7 +23,7 @@ from pathlib import Path
 
 import mutagen
 
-from . import captions, catalog, config, episode, google_auth, handles, library
+from . import archive_cover, captions, catalog, config, episode, google_auth, handles, library
 
 log = logging.getLogger("reels")
 
@@ -198,6 +198,10 @@ def main(argv=None, ask=input):
     if ask(f"\nMake Reels for these {len(tracks)} track(s)? [Y/n] ").strip().lower() not in ("", "y", "yes"):
         return 0
 
+    # The episode's archive cover, saved in its folder in MFYN_Show_Archive.
+    cover_failed = archive_cover.number_for(ep, episode.all_in(config.SHOW_ARCHIVE_DIR)) is not None \
+        and archive_cover.make(ep, episode.all_in(config.SHOW_ARCHIVE_DIR), ask=ask) is None
+
     try:
         cat = catalog.Catalog(google_auth.credentials())
     except (Exception, SystemExit) as e:
@@ -235,7 +239,9 @@ def main(argv=None, ask=input):
     failed = len(pending) - len(made)
     log.info("\nDone: %d Reel(s) made, %d failed, %d caption(s) written. They're in %s",
              len(made), failed, written, out_dir)
-    return 1 if failed else 0
+    if cover_failed:
+        log.error("The archive cover wasn't made. Scroll up for Processing's messages.")
+    return 1 if failed or cover_failed else 0
 
 
 if __name__ == "__main__":

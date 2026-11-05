@@ -19,7 +19,17 @@ session is first.
   without Processing on the PC.
 - **Reel player centred in Instagram's safe area** (moved up 54 px), after a
   phone screenshot showed the progress bar touching the caption. The Album
-  Story is now 30 seconds, like the Reels.
+  Story is now 30 seconds, like the Reels. Captions' Air Date line has the
+  date only.
+- **Archive cover sketch** (`processing\MFYN_Archive`) built from the design
+  handoff: orange card, black ink, episode number and date. Run by hand from
+  `input/episodes.csv`. Matches the approved episode 2 cover on every
+  acceptance check.
+- **Archive covers are automatic** ([doc](archive-cover.md)): Make Reels
+  saves `MFYN_archive_NN.png` in the episode folder. The date comes from the
+  folder name; 5 November 2026 is No. 3 and later episodes count up. Covers
+  are 2160×2160 (the minimum is 1800), each with a random paper colour
+  that keeps the ink readable; you confirm each one, or make another.
 
 ## 2026-10-23: first session
 
