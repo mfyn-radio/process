@@ -13,7 +13,7 @@ See also: [the archive sketch](../processing/MFYN_Archive/README.md)
 | **Runs on** | The MFYN PC (Processing 4) |
 | **Code** | [`intake/archive_cover.py`](../intake/archive_cover.py) and the sketch [`processing/MFYN_Archive`](../processing/MFYN_Archive) |
 
-## Number and date
+## Number, date and colour
 
 - **Date:** from the folder name, written as it appears on the cover:
   `5_11_2026-...` becomes `5 NOVEMBER 2026`.
@@ -21,6 +21,9 @@ See also: [the archive sketch](../processing/MFYN_Archive/README.md)
   folder in `MFYN_Show_Archive` counts up by one, in air-date order: the next
   episode is No. 4, then No. 5. Episodes before 5 November 2026 get no cover
   automatically.
+- **Colour:** each episode gets its own paper colour, random but fixed per
+  number, so remaking a cover gives the same colour. See the
+  [sketch README](../processing/MFYN_Archive/README.md).
 - The start is set in `intake/config.py` (`ARCHIVE_FIRST_DATE`,
   `ARCHIVE_FIRST_NUMBER`).
 

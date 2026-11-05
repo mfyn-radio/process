@@ -7,7 +7,8 @@
 final int B = 1080;                                // design size
 
 // ---------- colours ----------
-final float[] PAPER = { 240, 124, 14 };            // #F07C0E, uncoated orange card
+final float[] PAPER = { 240, 124, 14 };            // #F07C0E, uncoated orange card. With RANDOM_COLOUR
+                                                   // on, each episode gets another hue at this lightness
 final float[] INK   = { 20, 18, 16 };              // #141210, warm near-black, never pure black
 
 // ---------- type (Inter, upper case, per-glyph, no kerning) ----------

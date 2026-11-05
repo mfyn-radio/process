@@ -1,10 +1,17 @@
 # MFYN archive cover (Processing)
 
-The cover for archived MFYN radio shows: `MFYN` in black ink on orange card,
+The cover for archived MFYN radio shows: `MFYN` in black ink on coloured card,
 with the episode number, the date and `RADIO ARCHIVE`. A 2160×2160 PNG: the
 cover must be at least 1800×1800, and 2160 is twice the 1080 design size, so
 the layout and grain scale exactly. Only the number and the date change per
 episode.
+
+**Each episode gets its own paper colour**, random but fixed per episode
+number, so remaking a cover gives the same colour. The hues step round the
+colour wheel from a random start, so neighbouring episodes always differ.
+Every colour has the same lightness as the original orange, so the black ink
+reads the same on all of them. Set `RANDOM_COLOUR` to false for the orange on
+every cover.
 
 This cover is the brand anchor, so it is kept apart from the Reel and Album
 sketches: it shares no code or settings with them, every look constant is in
@@ -51,6 +58,8 @@ travels with it.
 | `SIZE` | 2160 | the cover's width and height in pixels: a multiple of 1080, at least 1800 (so 2160 or 3240) |
 | `SEED` | 7 | the paper's random seed. Leave it, so every episode prints on the same paper |
 | `LABEL` | `RADIO ARCHIVE` | the bottom-right label |
+| `RANDOM_COLOUR` | true | a paper colour per episode; false = orange `#F07C0E` on every cover |
+| `COLOUR_SEED` | 1 | change it to get a different set of colours (it changes every cover's colour, including ones already made, if remade) |
 | `PREVIEW` | true | show each cover in the window |
 
 The design itself (colours, type, positions, paper and ink) is in `Spec.pde`.
@@ -75,6 +84,7 @@ The design itself (colours, type, positions, paper and ink) is in `Spec.pde`.
 - `MFYN_Archive.pde`: settings, the episode list, rendering a cover, the preview window
 - `Spec.pde`: every design constant
 - `Paper.pde`: the orange card (tooth, grain, mottling, fibres, light falloff, vignette)
+- `Colour.pde`: the paper colour per episode
 - `Ink.pde`: the type, drawn glyph by glyph at 4× and averaged down, and the ink treatment
 - `Fields.pde`: noise, Gaussian blur and bicubic upscaling
 - `data/`: Inter Display Black and Inter Bold (SIL Open Font License, `Inter-LICENSE.txt`)
@@ -82,7 +92,7 @@ The design itself (colours, type, positions, paper and ink) is in `Spec.pde`.
 ## How it was checked
 
 Against the approved episode 2 cover from the design handoff
-(`MFYN_archive_02_1080.png`):
+(`MFYN_archive_02_1080.png`), with the orange paper:
 
 - All four ink boxes match: `MFYN` x 83-1005, y 120-360; `NO. 02` x 80-225,
   y 909-937; the date x 80-455, y 969-997; `RADIO ARCHIVE` x 655-1000.

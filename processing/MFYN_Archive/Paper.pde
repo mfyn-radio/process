@@ -1,8 +1,8 @@
 // Uncoated orange cardstock: fine tooth, mid grain, slow mottling, fibres,
 // then a soft light from the top left and a gentle corner vignette.
-// Returns the paper as three float channels (r, g, b), 0..255.
+// Returns the paper in `colour` as three float channels (r, g, b), 0..255.
 
-float[][] makePaper(java.util.Random rng, int S) {
+float[][] makePaper(java.util.Random rng, int S, float[] colour) {
   int k = S / B;
 
   float[] fine = noise(rng, 0, 1, false);
@@ -49,7 +49,7 @@ float[][] makePaper(java.util.Random rng, int S) {
       float light = LIGHT_BASE - LIGHT_FALL * (xx * LIGHT_X + yy * LIGHT_Y);
       float vign = 1 - VIGNETTE * ((xx - 0.5) * (xx - 0.5) + (yy - 0.5) * (yy - 0.5)) * 2;
       int i = y * S + x;
-      for (int c = 0; c < 3; c++) img[c][i] = (PAPER[c] + tex[i]) * light * vign;
+      for (int c = 0; c < 3; c++) img[c][i] = (colour[c] + tex[i]) * light * vign;
     }
   }
   return img;

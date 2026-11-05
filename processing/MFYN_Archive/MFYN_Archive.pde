@@ -19,6 +19,8 @@
 int     SIZE    = 2160;              // pixels; a multiple of 1080. The cover must be at least 1800
 int     SEED    = 7;                 // fixed, so every episode prints on the same paper
 String  LABEL   = "RADIO ARCHIVE";
+boolean RANDOM_COLOUR = true;       // a random paper colour per episode (fixed per number); false = the orange
+int     COLOUR_SEED   = 1;          // change to pick a different set of colours
 boolean PREVIEW = true;              // show each cover in the window when it's done
 String  INPUT_DIR  = "input";
 String  OUTPUT_DIR = "output";
@@ -90,7 +92,9 @@ File outputFor(Episode ep) {
 PImage render(int number, String date) {
   int S = SIZE;
   java.util.Random rng = new java.util.Random(SEED);
-  float[][] img = makePaper(rng, S);
+  float[] colour = paperColour(number);
+  println("MFYN: NO. " + nf(number, 2) + " paper " + hex(colour));
+  float[][] img = makePaper(rng, S, colour);
 
   Line[] big = { new Line(WORDMARK, wordmarkFont, WORDMARK_SIZE, WORDMARK_TRACK, WORDMARK_X, WORDMARK_BASELINE) };
   applyInk(rng, img, textMask(big, S, WORDMARK_BASELINE - WORDMARK_SIZE, WORDMARK_BASELINE + WORDMARK_SIZE * 0.3), S);
