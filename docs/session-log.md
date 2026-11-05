@@ -17,6 +17,9 @@ session is first.
   options; its look is unchanged.
 - **Sketches can now be rendered in the cloud session**, for previews,
   without Processing on the PC.
+- **Reel player centred in Instagram's safe area** (moved up 54 px), after a
+  phone screenshot showed the progress bar touching the caption. The Album
+  Story is now 30 seconds, like the Reels.
 
 ## 2026-10-23: first session
 
