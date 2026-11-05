@@ -7,7 +7,7 @@ the one sub-automation that exists by hand.
 | Sub-step | What it does | State |
 |---|---|---|
 | [2a. Make Reels](02a-make-reels.md) | The episode's tracks become Reels | Built |
-| 2b. Instagram copy | A caption for each Reel | Not built |
+| [2b. Instagram copy](02b-instagram-copy.md) | A caption for each Reel | Built, runs at the end of 2a |
 
 When these have run, the production work is done and you reach the manual
 stop: you review everything made for the post. Triggering the Publishing
@@ -18,7 +18,7 @@ Process (separate, not built yet) is up to you after that.
 | **Input** | Albums in `MFYN_Library` |
 | **Output** | The finished episode in `MFYN_Show_Archive`, with its tracks |
 | **Done by** | You, for now. The parent automation isn't built yet. |
-| **Triggers** | [Step 2a: Make Reels](02a-make-reels.md), for now by double-click; 2b when built |
+| **Triggers** | [Step 2a: Make Reels](02a-make-reels.md), for now by double-click; it then runs [2b](02b-instagram-copy.md) |
 
 ## What happens
 
