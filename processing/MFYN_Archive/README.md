@@ -1,8 +1,10 @@
 # MFYN archive cover (Processing)
 
 The cover for archived MFYN radio shows: `MFYN` in black ink on orange card,
-with the episode number, the date and `RADIO ARCHIVE`. A 1080×1080 PNG (or
-2160×2160 for print). Only the number and the date change per episode.
+with the episode number, the date and `RADIO ARCHIVE`. A 2160×2160 PNG: the
+cover must be at least 1800×1800, and 2160 is twice the 1080 design size, so
+the layout and grain scale exactly. Only the number and the date change per
+episode.
 
 This cover is the brand anchor, so it is kept apart from the Reel and Album
 sketches: it shares no code or settings with them, every look constant is in
@@ -46,7 +48,7 @@ travels with it.
 
 | Setting | Default | |
 |---|---|---|
-| `SIZE` | 1080 | 1080 to post, 2160 for print (multiples of 1080). Larger covers are named `MFYN_archive_02_2160.png` |
+| `SIZE` | 2160 | the cover's width and height in pixels: a multiple of 1080, at least 1800 (so 2160 or 3240) |
 | `SEED` | 7 | the paper's random seed. Leave it, so every episode prints on the same paper |
 | `LABEL` | `RADIO ARCHIVE` | the bottom-right label |
 | `PREVIEW` | true | show each cover in the window |
@@ -89,6 +91,7 @@ Against the approved episode 2 cover from the design handoff
 - The grain has the same strength at 1080 and at 2160 as the handoff's
   references, so a print-size cover has the same grain, not finer grain.
 - Re-rendering gives an identical file.
+- A 2160 cover renders within 256 MB of memory (the text is drawn in slices).
 - The longest date, `28 SEPTEMBER 2026`, ends at x 535, about 120 px before
   `RADIO ARCHIVE`. `NO. 100` ends at x 248.
 

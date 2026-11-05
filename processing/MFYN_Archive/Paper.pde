@@ -35,8 +35,11 @@ float[][] makePaper(java.util.Random rng, int S) {
   fg.loadPixels();
   float[] fib = new float[S * S];
   for (int i = 0; i < fib.length; i++) fib[i] = (fg.pixels[i] & 255) / 255.0;
+  fg.dispose();
   gaussian(fib, S, S, FIBRE_BLUR * k);
   for (int i = 0; i < tex.length; i++) tex[i] += (fib[i] - FIBRE_OFFSET) * FIBRE_AMP * FIBRE_SIGN;
+  fib = null;
+  fine = mid = mott = null;
 
   float[][] img = new float[3][S * S];
   for (int y = 0; y < S; y++) {

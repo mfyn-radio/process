@@ -6,7 +6,7 @@
 //
 // List episodes in  input/episodes.csv , one per line:  2,8 October 2026
 // Press Run. Every episode without a cover in  output/  yet is rendered as
-// output/MFYN_archive_02.png, then the sketch closes itself.
+// output/MFYN_archive_02.png (2160 x 2160), then the sketch closes itself.
 //
 // From the command line, one cover:  number=2 date="8 October 2026"
 // (also input=<folder> output=<folder> size=<px>).
@@ -16,7 +16,7 @@
 // ------------------------------------------------------------
 
 // ---------- settings ----------
-int     SIZE    = 1080;              // 1080 to post, 2160 for print
+int     SIZE    = 2160;              // pixels; a multiple of 1080. The cover must be at least 1800
 int     SEED    = 7;                 // fixed, so every episode prints on the same paper
 String  LABEL   = "RADIO ARCHIVE";
 boolean PREVIEW = true;              // show each cover in the window when it's done
@@ -36,7 +36,7 @@ void settings() {
 
 void setup() {
   readArgs();
-  if (SIZE % B != 0) { println("MFYN: SIZE must be a multiple of 1080, using 1080"); SIZE = B; }
+  if (SIZE % B != 0 || SIZE < 1800) { println("MFYN: SIZE must be a multiple of 1080 and at least 1800, using 2160"); SIZE = 2 * B; }
   loadFonts();
   new File(sketchPath(OUTPUT_DIR)).mkdirs();
   if (argNumber != null || argDate != null) {
@@ -82,7 +82,7 @@ void readEpisodes(File csv) {
 }
 
 File outputFor(Episode ep) {
-  String name = "MFYN_archive_" + nf(ep.number, 2) + (SIZE == B ? "" : "_" + SIZE) + ".png";
+  String name = "MFYN_archive_" + nf(ep.number, 2) + ".png";
   return new File(sketchPath(OUTPUT_DIR), name);
 }
 

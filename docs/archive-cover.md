@@ -9,7 +9,7 @@ See also: [the archive sketch](../processing/MFYN_Archive/README.md)
 |---|---|
 | **Trigger** | The start of every **MFYN – Make Reels** run, after you confirm the tracks. No double-click of its own |
 | **Input** | The episode folder's name, e.g. `5_11_2026-Normal Show-Skramish` |
-| **Output** | `MFYN_archive_03.png` (1080×1080) in that episode folder |
+| **Output** | `MFYN_archive_03.png` (2160×2160; the minimum is 1800) in that episode folder |
 | **Runs on** | The MFYN PC (Processing 4) |
 | **Code** | [`intake/archive_cover.py`](../intake/archive_cover.py) and the sketch [`processing/MFYN_Archive`](../processing/MFYN_Archive) |
 
@@ -41,6 +41,6 @@ python -m intake.archive_cover                  # the newest episode
 python -m intake.archive_cover --episode NAME   # the episode whose folder name contains NAME
 ```
 
-For a cover the automation doesn't make (an older episode, or a print-size
-2160 version), use the sketch directly: see its
+For a cover the automation doesn't make (an older episode), use the sketch
+directly: see its
 [README](../processing/MFYN_Archive/README.md).
