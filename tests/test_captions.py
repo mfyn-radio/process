@@ -26,7 +26,7 @@ def test_caption_uses_the_template():
         "Album: bites the big one\n\n"
         "Label: @knifehits\n"
         "Release Date: 12 September 2026\n\n"
-        "Air Date: 5 November 2026 – Official Unofficial\n")
+        "Air Date: 5 November 2026\n")
 
 
 def test_handles_are_looked_up_again_and_only_confirmed_ones_tagged():

@@ -24,7 +24,7 @@ Album: bites the big one
 Label: @knifehits
 Release Date: 12 September 2026
 
-Air Date: 5 November 2026 – Official Unofficial
+Air Date: 5 November 2026
 ```
 
 - **Handles:** looked up again in the MFYN Artists sheet when the caption is

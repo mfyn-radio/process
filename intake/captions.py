@@ -65,8 +65,6 @@ def caption(details, cat=None):
         label = credit(label, label_handle, label_status)
     ep = details.get("episode") or {}
     air = nice_date(ep.get("air_date", ""))
-    if air and ep.get("name"):
-        air = f"{air} – {ep['name']}"
 
     blocks = [
         [OPENING],
