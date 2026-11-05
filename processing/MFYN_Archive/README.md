@@ -6,12 +6,11 @@ cover must be at least 1800×1800, and 2160 is twice the 1080 design size, so
 the layout and grain scale exactly. Only the number and the date change per
 episode.
 
-**Each episode gets its own paper colour**, random but fixed per episode
-number, so remaking a cover gives the same colour. The hues step round the
-colour wheel from a random start, so neighbouring episodes always differ.
-Every colour has the same lightness as the original orange, so the black ink
-reads the same on all of them. Set `RANDOM_COLOUR` to false for the orange on
-every cover.
+**Every cover gets a new random paper colour**: any hue, muted, picked fresh
+each time the cover is rendered. A colour is only used if the black ink reads
+well on it (a contrast ratio of at least 5 at the paper's darkest corner). The
+ranges are in `Spec.pde`. Set `RANDOM_COLOUR` to false for the original orange
+on every cover. The paper texture and the type are the same on every cover.
 
 This cover is the brand anchor, so it is kept apart from the Reel and Album
 sketches: it shares no code or settings with them, every look constant is in
@@ -58,8 +57,7 @@ travels with it.
 | `SIZE` | 2160 | the cover's width and height in pixels: a multiple of 1080, at least 1800 (so 2160 or 3240) |
 | `SEED` | 7 | the paper's random seed. Leave it, so every episode prints on the same paper |
 | `LABEL` | `RADIO ARCHIVE` | the bottom-right label |
-| `RANDOM_COLOUR` | true | a paper colour per episode; false = orange `#F07C0E` on every cover |
-| `COLOUR_SEED` | 1 | change it to get a different set of colours (it changes every cover's colour, including ones already made, if remade) |
+| `RANDOM_COLOUR` | true | a new random, muted paper colour on every cover; false = orange `#F07C0E` on every cover |
 | `PREVIEW` | true | show each cover in the window |
 
 The design itself (colours, type, positions, paper and ink) is in `Spec.pde`.
@@ -84,7 +82,7 @@ The design itself (colours, type, positions, paper and ink) is in `Spec.pde`.
 - `MFYN_Archive.pde`: settings, the episode list, rendering a cover, the preview window
 - `Spec.pde`: every design constant
 - `Paper.pde`: the orange card (tooth, grain, mottling, fibres, light falloff, vignette)
-- `Colour.pde`: the paper colour per episode
+- `Colour.pde`: the random paper colour and its contrast check
 - `Ink.pde`: the type, drawn glyph by glyph at 4× and averaged down, and the ink treatment
 - `Fields.pde`: noise, Gaussian blur and bicubic upscaling
 - `data/`: Inter Display Black and Inter Bold (SIL Open Font License, `Inter-LICENSE.txt`)
@@ -100,7 +98,7 @@ Against the approved episode 2 cover from the design handoff
   in the middle, (225, 116, 14) top left and (204, 106, 12) bottom right.
 - The grain has the same strength at 1080 and at 2160 as the handoff's
   references, so a print-size cover has the same grain, not finer grain.
-- Re-rendering gives an identical file.
+- With `RANDOM_COLOUR` off, re-rendering gives an identical file.
 - A 2160 cover renders within 256 MB of memory (the text is drawn in slices).
 - The longest date, `28 SEPTEMBER 2026`, ends at x 535, about 120 px before
   `RADIO ARCHIVE`. `NO. 100` ends at x 248.

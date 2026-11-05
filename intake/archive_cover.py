@@ -10,10 +10,15 @@ The date comes from the episode folder's name (5_11_2026-... is 5 November
 2026). The number counts up from config.ARCHIVE_FIRST_NUMBER (No. 3, the
 5 November 2026 episode), one per episode folder, in air-date order. The
 cover is saved in the episode folder as MFYN_archive_03.png; an episode that
-already has its cover is skipped. See docs/archive-cover.md.
+already has its cover is skipped.
+
+Each new cover gets a random paper colour. It opens so you can look at it,
+and you're asked whether to keep it; say no and another one is made. See
+docs/archive-cover.md.
 """
 import argparse
 import logging
+import os
 import shutil
 import subprocess
 import sys
@@ -44,9 +49,18 @@ def cover_name(number):
     return f"MFYN_archive_{number:02d}.png"
 
 
-def make(ep, episodes):
-    """Render the episode's cover into its folder. Returns the path, or None
-    if the episode gets no cover or it couldn't be made."""
+def open_image(path):
+    """Show the cover in the PC's image viewer."""
+    if hasattr(os, "startfile"):
+        os.startfile(path)
+    else:
+        log.info("Have a look at %s", path)
+
+
+def make(ep, episodes, ask=input, show=open_image):
+    """Render the episode's cover, show it, and save it into the episode
+    folder once you keep it; a new colour each time you don't. Returns the
+    path, or None if the episode gets no cover or it couldn't be made."""
     number = number_for(ep, episodes)
     if number is None:
         log.info("%s is before %s, so it gets no archive cover.", ep.folder.name, cover_date(config.ARCHIVE_FIRST_DATE))
@@ -55,19 +69,33 @@ def make(ep, episodes):
     if target.exists():
         log.info("Archive cover %s is already there.", target.name)
         return target
-    with tempfile.TemporaryDirectory(prefix="mfyn-archive-") as tmp:
-        cmd = reels.processing_command() + [
-            f"--sketch={config.ARCHIVE_SKETCH}", "--run",
-            f"number={number}", f"date={cover_date(ep.air_date)}", f"output={tmp}",
-        ]
-        log.info("Making archive cover No. %02d (%s).", number, cover_date(ep.air_date))
-        result = subprocess.run(cmd)
-        made = Path(tmp) / cover_name(number)
-        if result.returncode != 0 or not made.exists():
-            log.error("No archive cover was made for %s (Processing exited with code %d).",
-                      ep.folder.name, result.returncode)
-            return None
-        shutil.move(made, target)
+    # The image viewer may still have a shown cover open, which Windows won't
+    # let us move or delete: copy the kept one, and tidy up what we can.
+    tmp = tempfile.mkdtemp(prefix="mfyn-archive-")
+    try:
+        attempt = 0
+        while True:
+            attempt += 1
+            out = Path(tmp) / str(attempt)          # a new file each time, so the viewer shows the new one
+            out.mkdir()
+            cmd = reels.processing_command() + [
+                f"--sketch={config.ARCHIVE_SKETCH}", "--run",
+                f"number={number}", f"date={cover_date(ep.air_date)}", f"output={out}",
+            ]
+            log.info("Making archive cover No. %02d (%s).", number, cover_date(ep.air_date))
+            result = subprocess.run(cmd)
+            made = out / cover_name(number)
+            if result.returncode != 0 or not made.exists():
+                log.error("No archive cover was made for %s (Processing exited with code %d).",
+                          ep.folder.name, result.returncode)
+                return None
+            show(made)
+            answer = ask("Keep this cover? [Y = keep, n = make another with a new colour] ").strip().lower()
+            if answer in ("", "y", "yes"):
+                break
+        shutil.copyfile(made, target)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
     log.info("Made %s in %s", target.name, ep.folder)
     return target
 

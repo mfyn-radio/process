@@ -200,7 +200,7 @@ def main(argv=None, ask=input):
 
     # The episode's archive cover, saved in its folder in MFYN_Show_Archive.
     cover_failed = archive_cover.number_for(ep, episode.all_in(config.SHOW_ARCHIVE_DIR)) is not None \
-        and archive_cover.make(ep, episode.all_in(config.SHOW_ARCHIVE_DIR)) is None
+        and archive_cover.make(ep, episode.all_in(config.SHOW_ARCHIVE_DIR), ask=ask) is None
 
     try:
         cat = catalog.Catalog(google_auth.credentials())

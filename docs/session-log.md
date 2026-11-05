@@ -28,8 +28,8 @@ session is first.
 - **Archive covers are automatic** ([doc](archive-cover.md)): Make Reels
   saves `MFYN_archive_NN.png` in the episode folder. The date comes from the
   folder name; 5 November 2026 is No. 3 and later episodes count up. Covers
-  are 2160×2160 (the minimum is 1800), and each episode gets its own paper
-  colour, fixed per number.
+  are 2160×2160 (the minimum is 1800), each with a random muted paper colour
+  that keeps the ink readable; you confirm each one, or make another.
 
 ## 2026-10-23: first session
 

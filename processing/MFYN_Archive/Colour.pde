@@ -1,30 +1,32 @@
-// The paper colour. With RANDOM_COLOUR on, each episode gets its own colour,
-// picked from its number, so a cover always comes out in the same colour when
-// it's remade. The hues step round the colour wheel by the golden angle
-// (137.5 degrees) from a random start, so they look random but neighbouring
-// episodes are never alike. Every colour has the same lightness as the original orange
-// (in the OKLab colour space), so the black ink reads equally well on all of
-// them, and as much of the orange's colour strength as that hue allows.
+// The paper colour. With RANDOM_COLOUR on, every cover gets a new random,
+// muted colour: any hue, with lightness and colour strength picked at random
+// within the ranges in Spec.pde. A colour is only used if the black ink still
+// reads well on it, measured at the paper's darkest corner; otherwise another
+// one is picked. The paper texture and the type are the same on every cover.
 
-float[] paperColour(int number) {
+float[] paperColour() {
   if (!RANDOM_COLOUR) return PAPER;
-  float start = (mix(COLOUR_SEED) >>> 40) / (float) (1L << 24) * TWO_PI;
-  float hue = (start + number * radians(137.50776)) % TWO_PI;
-  float[] lab = srgbToOklab(PAPER);
-  float L = lab[0], C = sqrt(lab[1] * lab[1] + lab[2] * lab[2]);
-  for (; C > 0; C -= 0.002) {
-    float[] rgb = oklabToSrgb(L, C * cos(hue), C * sin(hue));
-    if (rgb != null) return rgb;
+  java.util.Random rng = new java.util.Random();     // a new colour every time
+  for (int tries = 0; tries < 10000; tries++) {
+    float L = PAPER_L_MIN + rng.nextFloat() * (PAPER_L_MAX - PAPER_L_MIN);
+    float C = PAPER_C_MIN + rng.nextFloat() * (PAPER_C_MAX - PAPER_C_MIN);
+    float h = rng.nextFloat() * TWO_PI;
+    float[] rgb = oklabToSrgb(L, C * cos(h), C * sin(h));
+    if (rgb == null) continue;                         // outside what a screen can show
+    float[] corner = { rgb[0] * DARKEST_CORNER, rgb[1] * DARKEST_CORNER, rgb[2] * DARKEST_CORNER };
+    if (contrast(corner, INK) >= MIN_CONTRAST) return rgb;
   }
-  return oklabToSrgb(L, 0, 0);
+  return PAPER;
 }
 
-// SplitMix64, for the random starting hue.
-long mix(long z) {
-  z += 0x9E3779B97F4A7C15L;
-  z = (z ^ (z >>> 30)) * 0xBF58476D1CE4E5B9L;
-  z = (z ^ (z >>> 27)) * 0x94D049BB133111EBL;
-  return z ^ (z >>> 31);
+// WCAG contrast ratio between two colours (1 to 21)
+float contrast(float[] a, float[] b) {
+  float la = luminance(a), lb = luminance(b);
+  return (max(la, lb) + 0.05) / (min(la, lb) + 0.05);
+}
+
+float luminance(float[] c) {
+  return 0.2126 * toLinear(c[0]) + 0.7152 * toLinear(c[1]) + 0.0722 * toLinear(c[2]);
 }
 
 String hex(float[] c) {
@@ -34,18 +36,7 @@ String hex(float[] c) {
 float toLinear(float v) { v /= 255; return v <= 0.04045 ? v / 12.92 : pow((v + 0.055) / 1.055, 2.4); }
 float toSrgb(float v)   { return 255 * (v <= 0.0031308 ? v * 12.92 : 1.055 * pow(v, 1 / 2.4) - 0.055); }
 
-float[] srgbToOklab(float[] c) {
-  float r = toLinear(c[0]), g = toLinear(c[1]), b = toLinear(c[2]);
-  float l = pow(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b, 1 / 3.0);
-  float m = pow(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b, 1 / 3.0);
-  float s = pow(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b, 1 / 3.0);
-  return new float[] {
-    0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * s,
-    1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s,
-    0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s };
-}
-
-// null when the colour is outside sRGB
+// OKLab to sRGB (0..255), or null when the colour is outside sRGB
 float[] oklabToSrgb(float L, float a, float b) {
   float l = pow(L + 0.3963377774 * a + 0.2158037573 * b, 3);
   float m = pow(L - 0.1055613458 * a - 0.0638541728 * b, 3);

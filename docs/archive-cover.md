@@ -21,9 +21,8 @@ See also: [the archive sketch](../processing/MFYN_Archive/README.md)
   folder in `MFYN_Show_Archive` counts up by one, in air-date order: the next
   episode is No. 4, then No. 5. Episodes before 5 November 2026 get no cover
   automatically.
-- **Colour:** each episode gets its own paper colour, random but fixed per
-  number, so remaking a cover gives the same colour. See the
-  [sketch README](../processing/MFYN_Archive/README.md).
+- **Colour:** a new random, muted paper colour every time, always one the
+  black ink reads well on. See the [sketch README](../processing/MFYN_Archive/README.md).
 - The start is set in `intake/config.py` (`ARCHIVE_FIRST_DATE`,
   `ARCHIVE_FIRST_NUMBER`).
 
@@ -34,8 +33,11 @@ order.
 
 ## Running it
 
-It runs at the start of **MFYN – Make Reels**. An episode that already has its
-cover is skipped. To remake one, delete its `MFYN_archive_NN.png` and run again.
+It runs at the start of **MFYN – Make Reels**. The new cover opens in the
+image viewer and you're asked `Keep this cover?`. Press Enter (or `y`) to keep
+it, and it's saved in the episode folder. Type `n` and another one is made with
+a new colour, until you keep one. An episode that already has its cover is
+skipped. To remake one, delete its `MFYN_archive_NN.png` and run again.
 
 From Command Prompt, in the repo folder, it can also run on its own:
 

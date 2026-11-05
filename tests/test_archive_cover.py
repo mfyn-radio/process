@@ -34,10 +34,12 @@ def test_make_saves_in_the_episode_folder_once(tmp_path, monkeypatch):
     archive = tmp_path / "archive"
     archive.mkdir()
     eps = archive_with(archive, "5_11_2026-Normal Show-Skramish", "12_11_2026- Next")
-    made = archive_cover.make(eps[1], eps)
+    answers, shown = iter(["n", "n", ""]), []
+    made = archive_cover.make(eps[1], eps, ask=lambda p: next(answers), show=shown.append)
     assert made == archive / "12_11_2026- Next" / "MFYN_archive_04.png"
     assert made.read_text() == "12 November 2026"
+    assert len(shown) == 3                       # two turned down, the third kept
 
     monkeypatch.setattr(config, "PROCESSING", str(tmp_path / "missing"))   # would fail if it ran again
-    assert archive_cover.make(eps[1], eps) == made
+    assert archive_cover.make(eps[1], eps, ask=None, show=None) == made
     assert archive_cover.make(archive_with(archive, "1_10_2026- Old")[0], episode.all_in(archive)) is None

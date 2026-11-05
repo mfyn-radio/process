@@ -7,8 +7,14 @@
 final int B = 1080;                                // design size
 
 // ---------- colours ----------
-final float[] PAPER = { 240, 124, 14 };            // #F07C0E, uncoated orange card. With RANDOM_COLOUR
-                                                   // on, each episode gets another hue at this lightness
+final float[] PAPER = { 240, 124, 14 };            // #F07C0E, the original orange card (RANDOM_COLOUR off)
+
+// random paper colours (RANDOM_COLOUR on), in OKLab: L is lightness (0-1),
+// C is colour strength. The orange is about L 0.70, C 0.18; these are muted.
+final float PAPER_L_MIN = 0.62, PAPER_L_MAX = 0.84;
+final float PAPER_C_MIN = 0.02, PAPER_C_MAX = 0.10;
+final float MIN_CONTRAST = 5.0;                    // ink against the paper, WCAG ratio (4.5 is the usual minimum)
+final float DARKEST_CORNER = 0.86;                 // the light falloff and vignette darken the bottom right this much
 final float[] INK   = { 20, 18, 16 };              // #141210, warm near-black, never pure black
 
 // ---------- type (Inter, upper case, per-glyph, no kerning) ----------
