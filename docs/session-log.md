@@ -14,7 +14,7 @@ artist directory built along the way:
 |---|---|---|
 | 1 | [Acquire](01-acquire.md): Bandcamp purchase → `MFYN_Library` + the MFYN Artists sheet | **Live**, hourly on the MFYN PC |
 | 2 | [Create the show](02-create-show.md) → `MFYN_Show_Archive\D_M_YYYY- Episode Name\Tracks` | Manual |
-| 2a | [Make Reels](02a-make-reels.md): episode tracks → 30-second Reels + `.json` details in `MFYN_Reels` | **Built**, runs on the PC; sketch layout being tuned |
+| 2a | [Make Reels](02a-make-reels.md): episode tracks → 30-second Reels + `.json` details in `MFYN_Reels` | **Built**, runs on the PC; sketch finalized 5 Nov (white design) |
 | 2b | Instagram copy (captions) | **Not built.** Next up. |
 | — | Manual stop: you review all the content | **Not built** (the hand-off) |
 | → | Publishing Process (schedule posts, …) | Separate process, **not built** |
@@ -110,9 +110,10 @@ Found along the way, still to do:
         isn't the artist, let the automation replace its own
         "Self-released", then re-run `--artists`.
       - **Waiting on:** confirmation that AT EASE is a label.
-- [ ] **The Reel's pixel font only has the 95 basic characters,** so ø, ù, é
-      and non-Latin text come out as `?` (Daufødt, FOSCØ, Put Pùrana,
-      *Nisemono 偽者*).
+- [ ] **The Reel's pixel font only has the 95 basic characters.** Since the
+      5 Nov sketch, Ø/ø, Æ, Œ and ß are handled and accents are dropped
+      (Daufødt, FOSCØ and Put Pùrana now render). Non-Latin text still comes
+      out as `?` (*Nisemono 偽者*).
       - **Proposed fix, in Make Reels, without touching the sketch:**
         1. check names against the sketch's `data/fonts.json`;
         2. write plain-letter versions (ø→O, é→E…) into the *temporary
@@ -134,8 +135,11 @@ Found along the way, still to do:
 - [x] **Merge mfyn-radio/process#12.** It restores the Album Story sketch,
       which mfyn-radio/process#11 changed by mistake. Merged; `git pull` on the
       PC if it hasn't been done.
-- [ ] **Finish tuning the Reel sketch** locally: long titles and artists,
-      the smaller text size. Commit and push it from the PC.
+- [x] **Finish tuning the Reel sketch.** Finalized 5 Nov in
+      `H:\My Drive\MFYN_Processing\MFYN_Reel` and brought into the repo
+      (white design, glow, title and artist sizes, accented letters). Make
+      future changes in `%USERPROFILE%\mfyn-process\processing\MFYN_Reel`,
+      which is what Make Reels runs.
 - [ ] **Test Make Reels end to end** on a real episode, and check the
       `.json` files.
 - [ ] **Backlog:** handled selectively. See "Selected backlog" above.

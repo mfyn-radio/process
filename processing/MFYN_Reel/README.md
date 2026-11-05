@@ -1,8 +1,9 @@
 # MFYN Reel generator (Processing)
 
-Turns tagged audio files into 1080×1920 Instagram Reels in the MFYN orange
-dot-matrix player style. The reels include the track's audio, a live scope
-line, a progress bar and the ON AIR pulse.
+Turns tagged audio files into 1080×1920 Instagram Reels in the MFYN white
+dot-matrix player style: white dots on black, five grey levels, with the song
+title the only element at full white. The reels include the track's audio, a
+live scope line, a progress bar and the ON AIR pulse.
 
 ## One-time setup (Windows)
 
@@ -31,10 +32,14 @@ adding files to `input/` and re-run.
 
 | Field | Source |
 |---|---|
-| Title, artist | the file's tags (`TITLE`, `ARTIST`, falls back to `ALBUMARTIST`) |
+| Title, artist | the file's tags (`TITLE`, `ARTIST`, falls back to `ALBUMARTIST`). The title takes up to two lines; the artist, 20% smaller, wraps onto as many lines as fit above the progress bar. Longer text is cut with "..." |
 | Length | the file itself |
 | Cover | embedded artwork, otherwise `<track name>.jpg/.png`, `cover.jpg/.png` or `folder.jpg/.png` next to the file |
 | Start point | the loudest stretch of the track, skipping the first and last 30 s |
+
+The pixel fonts only have the basic Latin letters. The sketch adds Ø, writes Æ,
+Œ and ß as AE, OE and SS, and drops accents (É → E, Ù → U). Anything else,
+such as non-Latin text, still comes out as `?`.
 
 ## Settings (top of `MFYN_Reel.pde`)
 
@@ -46,9 +51,11 @@ adding files to `input/` and re-run.
 
 Look settings live in their own tabs:
 
-- `Cover`: `COVER_TARGET` (brightness), `COVER_DIM`, `COVER_BLOCK` (pixel size)
+- `Cover`: `COVER_DIM` (cover brightness), `COVER_BLOOM` (glow on the cover's highlights)
 - `Scope`: `SCOPE_GAIN` (wave height), `SCOPE_LOWPASS_HZ` (smoothness)
-- `Player`: palette and layout positions
+- `Player`: the five grey levels, layout positions, `TITLE_P` (title size, 6 =
+  design size), `ARTIST_P` (artist size, 4.8 = 20% smaller)
+- `Glow`: `GLOW_TIGHT`, `GLOW_WIDE`, `GLOW_GAIN` (the halo around every lit dot)
 
 ## Running it without opening the editor
 
@@ -79,10 +86,11 @@ sketch folder, as before.
 
 - `MFYN_Reel.pde`: settings, the job queue, the preview window
 - `Job.pde`: reads tags, cover and audio for one track; builds the static frame; renders frames
-- `Player.pde`: layout, palette, header, title, progress bar, ON AIR pulse
-- `Cover.pde`: the album cover treatment
+- `Player.pde`: layout, grey levels, header, title, progress bar, ON AIR pulse
+- `Cover.pde`: the album cover, "Screen" treatment (full colour through the dot grid)
+- `Glow.pde`: the two-layer glow around every lit dot (none on the cover)
 - `Scope.pde`: the oscilloscope line
-- `DotMatrix.pde`: dot-matrix text, wrapping long titles and adding "..."
+- `DotMatrix.pde`: dot-matrix text, accented letters, wrapping long titles and adding "..."
 - `Canvas.pde`: image helpers (blending, blur, dot shapes)
 - `Encoder.pde`: streams frames into ffmpeg and adds the audio
 - `data/fonts.json`: PixelFonts (github.com/mcer12/PixelFonts) converted from BDF, which Processing can't read
