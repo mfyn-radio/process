@@ -20,6 +20,13 @@ REEL_SKETCH = Path(__file__).resolve().parent.parent / "processing" / "MFYN_Reel
 STORIES_DIR = Path(os.environ.get("MFYN_STORIES", r"H:\My Drive\MFYN_Stories"))
 STORY_SECONDS = 30
 ALBUM_SKETCH = Path(__file__).resolve().parent.parent / "processing" / "MFYN_Album"
+
+# The archive cover, made for each episode in MFYN_Show_Archive. Numbering
+# starts at No. 3 with the 5 November 2026 episode and counts up by one per
+# later episode, in air-date order. Earlier episodes get no automatic cover.
+ARCHIVE_SKETCH = Path(__file__).resolve().parent.parent / "processing" / "MFYN_Archive"
+ARCHIVE_FIRST_DATE = datetime.date(2026, 11, 5)
+ARCHIVE_FIRST_NUMBER = 3
 PROCESSING = os.environ.get("MFYN_PROCESSING", "")
 
 # Google sign-in and logs live outside the repo, on this PC only.

@@ -25,6 +25,9 @@ session is first.
   handoff: orange card, black ink, episode number and date. Run by hand from
   `input/episodes.csv`. Matches the approved episode 2 cover on every
   acceptance check.
+- **Archive covers are automatic** ([doc](archive-cover.md)): Make Reels
+  saves `MFYN_archive_NN.png` in the episode folder. The date comes from the
+  folder name; 5 November 2026 is No. 3 and later episodes count up.
 
 ## 2026-10-23: first session
 

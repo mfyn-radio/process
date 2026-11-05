@@ -20,6 +20,8 @@ See also: [process overview](README.md) ·
 1. **Find the episode:** the newest one in `MFYN_Show_Archive`, going by the
    air date in its folder name. It lists the tracks and asks
    `Make Reels for these N track(s)? [Y/n]`.
+   Once you confirm, it first makes the episode's
+   [archive cover](archive-cover.md) in its folder, if it isn't there yet.
 2. **Confirm Instagram handles** in the [MFYN Artists sheet](01-acquire.md#the-mfyn-artists-sheet).
    It goes through each artist in the episode, then each label of their
    releases, and asks only about those not settled yet. It shows the

@@ -9,6 +9,12 @@ sketches: it shares no code or settings with them, every look constant is in
 `Spec.pde`, the fonts are bundled in `data/`, and the paper uses a fixed random
 seed. Re-rendering an episode gives the identical file.
 
+Normally the [archive cover](../../docs/archive-cover.md) automation runs this
+for you: Make Reels makes each episode's cover in its folder in
+`MFYN_Show_Archive`, numbered from No. 3 (5 November 2026). The steps below
+are for running the sketch by hand, for example for an older episode or a
+print-size version.
+
 ## One-time setup (Windows)
 
 Install **Processing 4** from processing.org. Nothing else is needed: no
