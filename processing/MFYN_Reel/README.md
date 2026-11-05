@@ -53,7 +53,8 @@ Look settings live in their own tabs:
 
 - `Cover`: `COVER_DIM` (cover brightness), `COVER_BLOOM` (glow on the cover's highlights)
 - `Scope`: `SCOPE_GAIN` (wave height), `SCOPE_LOWPASS_HZ` (smoothness)
-- `Player`: the five grey levels, layout positions, `TITLE_P` (title size, 6 =
+- `Player`: the five grey levels, layout positions (the player is centred in
+  Instagram's safe area, between y 120 and 1575), `TITLE_P` (title size, 6 =
   design size), `ARTIST_P` (artist size, 4.8 = 20% smaller)
 - `Glow`: `GLOW_TIGHT`, `GLOW_WIDE`, `GLOW_GAIN` (the halo around every lit dot)
 

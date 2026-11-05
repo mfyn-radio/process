@@ -17,7 +17,7 @@
 // ------------------------------------------------------------
 
 // ---------- settings ----------
-float CLIP_SECONDS   = 15;      // story length (max 60)
+float CLIP_SECONDS   = 30;      // story length (max 60)
 float START_OVERRIDE = -1;      // -1 = auto-pick the loudest stretch, otherwise seconds into the featured track
 int   FPS            = 30;
 boolean PREVIEW      = true;    // draw frames in the window while rendering (slightly slower)

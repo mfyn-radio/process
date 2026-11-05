@@ -62,7 +62,7 @@ Top of `MFYN_Album.pde`:
 
 | Setting | Default | |
 |---|---|---|
-| `CLIP_SECONDS` | 15 | story length, max 60 |
+| `CLIP_SECONDS` | 30 | story length, max 60 |
 | `START_OVERRIDE` | -1 | -1 = auto, or a number of seconds into the featured track |
 | `PREVIEW` | true | draw frames in the window while rendering |
 | `SAVE_STILL` | true | also save the PNG |
@@ -89,7 +89,7 @@ Make Album Story (`intake/stories.py`) runs the sketch with options that
 override the settings:
 
 ```
-"C:\Program Files\Processing\processing-java.exe" --sketch="C:\path\to\MFYN_Album" --run input="<folder>" output="<folder>" seconds=15
+"C:\Program Files\Processing\processing-java.exe" --sketch="C:\path\to\MFYN_Album" --run input="<folder>" output="<folder>" seconds=30
 ```
 
 `input` and `output` can be absolute paths; relative ones are inside the

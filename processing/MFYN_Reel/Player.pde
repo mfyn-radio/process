@@ -12,9 +12,13 @@ float[] HIGHLIGHT = { 255, 255, 255 };   // song title
 float DOT_R = 0.36;                      // text dot radius, as a fraction of the dot pitch
 
 // ---------- layout (1080x1920, 6 px master dot grid) ----------
+// The player sits centred in Instagram's safe area for Reels: below the top
+// bar (y 120) and above the name and caption (y 1575), measured from a phone
+// screenshot. Everything else is placed relative to these edges; move them by
+// multiples of 6 so the player's dots stay on the background grid.
 final int X0 = 118, X1 = 872;            // panel left / right
-final int T1 = 250, B1 = 440;            // header panel (MFYN + ON AIR)
-final int T2 = 460, B2 = 1556;           // main panel
+final int T1 = 196, B1 = 386;            // header panel (MFYN + ON AIR)
+final int T2 = 406, B2 = 1502;           // main panel
 final int TEXT_X = 138, TEXT_R = 852;
 final int TEXT_MAXW = TEXT_R - TEXT_X;
 final int COVER_S = 480;
