@@ -9,7 +9,11 @@
 // cover, album info and tracklist, over the rotating dot-matrix globe
 // that pulses to the featured track. A still PNG is saved next to it.
 //
-// Needs ffmpeg + ffprobe installed (brew install ffmpeg).
+// Needs ffmpeg + ffprobe installed (winget install Gyan.FFmpeg).
+//
+// The Make Album Story automation (intake/stories.py) runs this from the
+// command line with  input=<folder> output=<folder>  to override the
+// settings below.
 // ------------------------------------------------------------
 
 // ---------- settings ----------
@@ -20,7 +24,7 @@ boolean PREVIEW      = true;    // draw frames in the window while rendering (sl
 boolean SAVE_STILL   = true;    // also save a PNG of the first frame
 String  INPUT_DIR    = "input";
 String  OUTPUT_DIR   = "output";
-// If Processing can't find ffmpeg, put the full path here, e.g. "/opt/homebrew/bin/ffmpeg"
+// If Processing can't find ffmpeg, put the full path here, e.g. "C:\\ffmpeg\\bin\\ffmpeg.exe"
 String FFMPEG  = "";
 String FFPROBE = "";
 
@@ -37,6 +41,7 @@ void settings() {
 
 void setup() {
   frameRate(1000);
+  readArgs();
   findTools();
   loadSkinFonts();
   File in = new File(sketchPath(INPUT_DIR));
@@ -93,6 +98,19 @@ File[] audioFiles(File dir) {
     if (n.endsWith(".flac") || n.endsWith(".mp3") || n.endsWith(".wav") || n.endsWith(".m4a") || n.endsWith(".aiff") || n.endsWith(".ogg")) out.add(f);
   }
   return out.toArray(new File[0]);
+}
+
+// command-line overrides: input=<folder> output=<folder> seconds=<n>
+void readArgs() {
+  if (args == null) return;
+  for (String a : args) {
+    int eq = a.indexOf('=');
+    if (eq < 0) continue;
+    String key = a.substring(0, eq), value = a.substring(eq + 1);
+    if (key.equals("input")) INPUT_DIR = value;
+    else if (key.equals("output")) OUTPUT_DIR = value;
+    else if (key.equals("seconds")) CLIP_SECONDS = float(value);
+  }
 }
 
 File outputFor(File folder) { return new File(sketchPath(OUTPUT_DIR), folder.getName() + "_story.mp4"); }

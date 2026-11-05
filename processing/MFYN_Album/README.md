@@ -7,14 +7,17 @@ glows and pulses with the featured track. The video has the featured
 track's audio. A still PNG of the first frame is saved next to it for posting
 as a static story.
 
-## One-time setup
+Normally the [Make Album Story](../../docs/featured-album-story.md)
+automation runs this for you: you pick an album from `MFYN_Library` and the
+featured track, and it does the rest. The steps below are for running the
+sketch by hand.
 
-Same as the Reel sketch:
+## One-time setup (Windows)
 
-- **macOS:** install Processing 4 from processing.org and ffmpeg with `brew install ffmpeg`.
-- **Windows:** install Processing 4, run `winget install Gyan.FFmpeg`, then restart the PC.
-  If Processing still can't find ffmpeg, set `FFMPEG` / `FFPROBE` at the top of
-  `MFYN_Album.pde` to the full paths, e.g. `"C:\\ffmpeg\\bin\\ffmpeg.exe"`.
+Same as the Reel sketch: install Processing 4, run `winget install Gyan.FFmpeg`,
+then restart the PC. If Processing still can't find ffmpeg, set `FFMPEG` /
+`FFPROBE` at the top of `MFYN_Album.pde` to the full paths, e.g.
+`"C:\\ffmpeg\\bin\\ffmpeg.exe"`.
 
 Keep this folder named `MFYN_Album` (Processing needs the folder and the main
 `.pde` to share a name).
@@ -73,13 +76,24 @@ Top of `Skin.pde`: the player's colours and layout.
 
 ## Running it without opening the editor
 
-Like the Reel sketch:
+Like the Reel sketch (newer versions of Processing use `Processing.exe cli`
+instead of `processing-java.exe`):
 
 ```
-processing-java --sketch="/path/to/MFYN_Album" --run
+"C:\Program Files\Processing\processing-java.exe" --sketch="C:\path\to\MFYN_Album" --run
 ```
 
-(on Windows: `"C:\Program Files\Processing\processing-java.exe" --sketch="C:\path\to\MFYN_Album" --run`)
+## Command-line options
+
+Make Album Story (`intake/stories.py`) runs the sketch with options that
+override the settings:
+
+```
+"C:\Program Files\Processing\processing-java.exe" --sketch="C:\path\to\MFYN_Album" --run input="<folder>" output="<folder>" seconds=15
+```
+
+`input` and `output` can be absolute paths; relative ones are inside the
+sketch folder, as before. Keep `readArgs()` in `MFYN_Album.pde`.
 
 ## Files
 

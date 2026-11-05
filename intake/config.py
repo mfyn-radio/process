@@ -15,6 +15,11 @@ REEL_SECONDS = 30
 # The Reel sketch, in this repo. Processing's command-line runner is found
 # automatically; set MFYN_PROCESSING to its full path if it isn't.
 REEL_SKETCH = Path(__file__).resolve().parent.parent / "processing" / "MFYN_Reel"
+
+# Make Album Story writes each featured-album Story here, for review, then Publishing.
+STORIES_DIR = Path(os.environ.get("MFYN_STORIES", r"H:\My Drive\MFYN_Stories"))
+STORY_SECONDS = 15
+ALBUM_SKETCH = Path(__file__).resolve().parent.parent / "processing" / "MFYN_Album"
 PROCESSING = os.environ.get("MFYN_PROCESSING", "")
 
 # Google sign-in and logs live outside the repo, on this PC only.
@@ -23,6 +28,7 @@ CLIENT_FILE = APP_DIR / "client_secret.json"
 TOKEN_FILE = APP_DIR / "token.json"
 LOG_FILE = APP_DIR / "acquire.log"
 REELS_LOG_FILE = APP_DIR / "reels.log"
+STORIES_LOG_FILE = APP_DIR / "stories.log"
 
 # Google Sheet of artists and their Instagram handles, in mfyn@'s Drive.
 # Created by the automation on first use.

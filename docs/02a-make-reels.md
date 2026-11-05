@@ -123,7 +123,7 @@ if any Reel failed.
 ## Not part of this step (yet)
 
 - **The Album Story** (`processing\MFYN_Album`): a media-player Story for a
-  featured album. It's in the repo but not automated.
+  featured album, made separately by [Make Album Story](featured-album-story.md).
 - **Instagram copy:** step 2b, a separate sub-automation of step 2 that
   reads `MFYN_Reels`. Make Reels runs it at the end; see
   [its doc](02b-instagram-copy.md).
