@@ -5,7 +5,7 @@
 // is rendered as a 1080x1920 Instagram Reel with its audio, then the
 // sketch closes itself when the queue is empty.
 //
-// Needs ffmpeg + ffprobe installed (brew install ffmpeg).
+// Needs ffmpeg + ffprobe installed (winget install Gyan.FFmpeg).
 //
 // The Make Reels automation (intake/reels.py) runs this from the command
 // line with  input=<folder> output=<folder> seconds=<n>  to override the
@@ -19,7 +19,7 @@ int   FPS            = 30;
 boolean PREVIEW      = true;    // draw frames in the window while rendering (slightly slower)
 String  INPUT_DIR    = "input";
 String  OUTPUT_DIR   = "output";
-// If Processing can't find ffmpeg, put the full path here, e.g. "/opt/homebrew/bin/ffmpeg"
+// If Processing can't find ffmpeg, put the full path here, e.g. "C:\\ffmpeg\\bin\\ffmpeg.exe"
 String FFMPEG  = "";
 String FFPROBE = "";
 
