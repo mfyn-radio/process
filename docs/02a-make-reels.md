@@ -13,7 +13,7 @@ See also: [process overview](README.md) ·
 | **Output** | One `Artist - Title.mp4` Reel per track, plus a `.json` of its details, in `MFYN_Reels\<episode>` |
 | **Runs on** | The MFYN PC (Processing 4 and ffmpeg) |
 | **Code** | [`intake/reels.py`](../intake/reels.py), the sketch [`processing/MFYN_Reel`](../processing/MFYN_Reel), started by [`scripts/make_reels.cmd`](../scripts/make_reels.cmd) |
-| **Next** | Its sibling under step 2, 2b (Instagram copy, not built yet). Then you review it all, before the Publishing Process starts |
+| **Next** | Its sibling under step 2, [2b, Instagram copy](02b-instagram-copy.md), which runs at the end of every Make Reels run. Then you review it all, before the Publishing Process starts |
 
 ## What it does
 
@@ -125,6 +125,7 @@ if any Reel failed.
 - **The Album Story** (`processing\MFYN_Album`): a media-player Story for a
   featured album. It's in the repo but not automated.
 - **Instagram copy:** step 2b, a separate sub-automation of step 2 that
-  reads `MFYN_Reels`.
+  reads `MFYN_Reels`. Make Reels runs it at the end; see
+  [its doc](02b-instagram-copy.md).
 - **Scheduling posts:** part of the Publishing Process, which starts after
   your review.

@@ -15,7 +15,7 @@ artist directory built along the way:
 | 1 | [Acquire](01-acquire.md): Bandcamp purchase → `MFYN_Library` + the MFYN Artists sheet | **Live**, hourly on the MFYN PC |
 | 2 | [Create the show](02-create-show.md) → `MFYN_Show_Archive\D_M_YYYY- Episode Name\Tracks` | Manual |
 | 2a | [Make Reels](02a-make-reels.md): episode tracks → 30-second Reels + `.json` details in `MFYN_Reels` | **Built**, runs on the PC; sketch finalized 5 Nov (white design) |
-| 2b | Instagram copy (captions) | **Not built.** Next up. |
+| 2b | [Instagram copy](02b-instagram-copy.md): a `.txt` caption next to each Reel | **Built** 5 Nov, runs at the end of Make Reels; not yet run on the PC |
 | — | Manual stop: you review all the content | **Not built** (the hand-off) |
 | → | Publishing Process (schedule posts, …) | Separate process, **not built** |
 
@@ -149,20 +149,11 @@ Found along the way, still to do:
 
 ### Next session
 
-1. **Instagram copy, then test it.** A generator that turns each Reel's
-   `.json`, plus fresh handles from the MFYN Artists sheet, into a caption
-   with:
-   - `@artist` and `@label` tags, or the artist's name and other links when
-     they have no Instagram;
-   - album and label credit;
-   - Bandcamp link wording;
-   - hashtags from the Bandcamp tags;
-   - the episode name and air date.
-
-   To decide: tone and template, hashtag rules, a fixed sign-off, where the
-   caption is saved (e.g. `Artist - Title.txt` next to the Reel, or in a
-   sheet for review), and whether you review or edit captions before
-   scheduling.
+1. **Test Instagram copy on the PC** ([step 2b](02b-instagram-copy.md),
+   built 5 Nov for [mfyn-radio/process#20](https://github.com/mfyn-radio/process/issues/20)).
+   It uses the issue's template under the opening line "Music worth paying
+   for, follow to find and support an artist", with no hashtags or link
+   wording, and saves `Artist - Title.txt` next to each Reel.
 2. **The Publishing Process** (starts after your review; not part of this
    repo's steps yet). First piece, scheduling posts. To decide:
    - **Which tool:** Instagram's own API (needs a Business or Creator

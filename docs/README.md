@@ -12,7 +12,7 @@ starts after that.
 | 1 | [Acquire](01-acquire.md) | A Bandcamp purchase is downloaded as FLAC into `MFYN_Library` | Live (2026-10-23) |
 | 2 | [Create the show](02-create-show.md) | **The parent.** Pick tracks, make the episode, archive it in `MFYN_Show_Archive`, then start the sub-automations below | Manual today |
 | 2a | [Make Reels](02a-make-reels.md) | The episode's tracks become 30-second Reels in `MFYN_Reels` | Built, being tested |
-| 2b | *Instagram copy* | A caption for each Reel, from its details and the MFYN Artists sheet | Next up |
+| 2b | [Instagram copy](02b-instagram-copy.md) | A caption for each Reel, from its details and the MFYN Artists sheet | Built, runs at the end of Make Reels |
 | — | **Manual stop** | You review everything made for a post, then trigger Publishing | Not built yet |
 | → | *Publishing Process* | Starts after your review: scheduling the posts on Instagram, among other things | Separate process, not built yet |
 
@@ -32,12 +32,12 @@ misbehaves.
 | Automation | Started by | Runs on | Log | Docs |
 |---|---|---|---|---|
 | Acquire (`intake.acquire`) | Task Scheduler task `MFYN Acquire`, hourly, via `scripts\run_acquire.cmd` | MFYN PC, while signed in | `%APPDATA%\mfyn-intake\acquire.log` | [Step 1](01-acquire.md), [troubleshooting](01-acquire-troubleshooting.md) |
-| Make Reels (`intake.reels`) | You, double-clicking **MFYN – Make Reels** (`scripts\make_reels.cmd`), until step 2 starts it itself | MFYN PC | `%APPDATA%\mfyn-intake\reels.log` | [Step 2a](02a-make-reels.md) |
+| Make Reels (`intake.reels`), then Instagram copy (`intake.captions`) | You, double-clicking **MFYN – Make Reels** (`scripts\make_reels.cmd`), until step 2 starts it itself | MFYN PC | `%APPDATA%\mfyn-intake\reels.log` | [Step 2a](02a-make-reels.md), [step 2b](02b-instagram-copy.md) |
 | Tests | GitHub Actions, on pull requests and pushes to `main` (`.github/workflows/tests.yml`) | GitHub | the Actions tab | `python -m pytest` locally |
 | Labels | GitHub Actions, when `.github/workflows/labels.yml` changes on `main`, or run by hand (`workflow_dispatch`) | GitHub | the Actions tab | [Issues](#issues) |
 
 Not automated: the parent [step 2](02-create-show.md), which you still do by
-hand, and the Album Story sketch. Not built: step 2b, the manual stop's hand-off, and the Publishing Process.
+hand, and the Album Story sketch. Not built: the manual stop's hand-off and the Publishing Process.
 Both logs keep four files of up to 1 MB each, and Make Reels also prints to its window.
 
 ## Systems and accounts
@@ -48,7 +48,7 @@ Both logs keep four files of up to 1 MB each, and Make Reels also prints to its 
 | admin@nothingflatdigital.com | Google Workspace | Workspace and Google Cloud administration |
 | MFYN Artists | Google Sheet in mfyn@'s Drive, kept by the automation | The artist library (Instagram handles, tags, links), releases and labels |
 | `MFYN_Show_Archive` | mfyn@'s My Drive, `H:\My Drive\MFYN_Show_Archive` | Finished episodes, `D_M_YYYY- Episode Name\Tracks` |
-| `MFYN_Reels` | mfyn@'s My Drive, `H:\My Drive\MFYN_Reels` | Each episode's Reels and their details, for your review and then Publishing |
+| `MFYN_Reels` | mfyn@'s My Drive, `H:\My Drive\MFYN_Reels` | Each episode's Reels, their details and captions, for your review and then Publishing |
 | Processing sketches | this repo, `processing\` | `MFYN_Reel` makes the Reels; `MFYN_Album` (not automated yet) |
 | `MFYN_Library` | mfyn@'s My Drive, synced to `H:\My Drive\MFYN_Library` on the MFYN PC | The music library, one folder per album |
 | MFYN PC | Windows, signed in, running Google Drive for desktop and Chrome | Runs the automation (Task Scheduler) |
@@ -81,7 +81,7 @@ list of open work. There are two kinds:
   - `Confirmed` or `No Instagram`: set by you in step 2a.
 - **Episode folders:** `D_M_YYYY- Episode Name`, using the air date.
 - **Reels:** `MFYN_Reels\<episode folder>\Artist - Title.mp4`, plus `.json`
-  details.
+  details and the `.txt` caption.
 - **Secrets:** never in the repo. Google sign-in tokens live on the PC in
   `%APPDATA%\mfyn-intake\`.
 - **Changing the code:** changes go through pull requests on GitHub. On the
@@ -99,4 +99,5 @@ list of open work. There are two kinds:
   - [Troubleshooting](01-acquire-troubleshooting.md)
 - Step 2: [Create the show](02-create-show.md)
   - Step 2a: [Make Reels](02a-make-reels.md)
+  - Step 2b: [Instagram copy](02b-instagram-copy.md)
 - Setup: [Google Cloud](setup/google-cloud.md)

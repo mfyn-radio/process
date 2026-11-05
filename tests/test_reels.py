@@ -95,9 +95,14 @@ def test_make_reels_end_to_end(tmp_path, monkeypatch, capsys):
     assert reels.main([], ask=lambda prompt: "y") == 0
     ep_out = out / "5_11_2026- Official Unofficial"
     assert sorted(p.name for p in ep_out.iterdir()) == [
-        "Other Artist - Song_Two.json", "Other Artist - Song_Two.mp4",
+        "Other Artist - Song_Two.json", "Other Artist - Song_Two.mp4", "Other Artist - Song_Two.txt",
         "applied communications - donna deegan.json", "applied communications - donna deegan.mp4",
+        "applied communications - donna deegan.txt",
     ]
+    assert (ep_out / "applied communications - donna deegan.txt").read_text(encoding="utf-8") == (
+        "Music worth paying for, follow to find and support an artist\n\n"
+        "Artist: applied communications\nSong Title: donna deegan\nAlbum: bites the big one\n\n"
+        "Air Date: 5 November 2026 – Official Unofficial\n")
     info = json.loads((ep_out / "applied communications - donna deegan.json").read_text())
     assert info["title"] == "donna deegan" and info["album"] == "bites the big one"
     assert info["episode"] == {"name": "Official Unofficial", "air_date": "2026-11-05",

@@ -23,7 +23,7 @@ from pathlib import Path
 
 import mutagen
 
-from . import catalog, config, episode, google_auth, handles, library
+from . import captions, catalog, config, episode, google_auth, handles, library
 
 log = logging.getLogger("reels")
 
@@ -228,8 +228,12 @@ def main(argv=None, ask=input):
             json.dumps(details(track, ep, cat, config.REEL_SECONDS), indent=2, ensure_ascii=False), encoding="utf-8")
         log.info("Made %s.mp4", name)
 
+    # Step 2b: a caption for every Reel that doesn't have one yet.
+    written = captions.write_all(out_dir, cat)
+
     failed = len(pending) - len(made)
-    log.info("\nDone: %d Reel(s) made, %d failed. They're in %s", len(made), failed, out_dir)
+    log.info("\nDone: %d Reel(s) made, %d failed, %d caption(s) written. They're in %s",
+             len(made), failed, written, out_dir)
     return 1 if failed else 0
 
 
