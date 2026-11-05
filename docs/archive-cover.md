@@ -21,7 +21,7 @@ See also: [the archive sketch](../processing/MFYN_Archive/README.md)
   folder in `MFYN_Show_Archive` counts up by one, in air-date order: the next
   episode is No. 4, then No. 5. Episodes before 5 November 2026 get no cover
   automatically.
-- **Colour:** a new random, muted paper colour every time, always one the
+- **Colour:** a new random paper colour every time (any hue, soft to strong), always one the
   black ink reads well on. See the [sketch README](../processing/MFYN_Archive/README.md).
 - The start is set in `intake/config.py` (`ARCHIVE_FIRST_DATE`,
   `ARCHIVE_FIRST_NUMBER`).

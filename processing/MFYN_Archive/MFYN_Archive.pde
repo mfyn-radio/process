@@ -19,7 +19,7 @@
 int     SIZE    = 2160;              // pixels; a multiple of 1080. The cover must be at least 1800
 int     SEED    = 7;                 // fixed, so every episode prints on the same paper
 String  LABEL   = "RADIO ARCHIVE";
-boolean RANDOM_COLOUR = true;       // a new random, muted paper colour on every cover; false = the orange
+boolean RANDOM_COLOUR = true;       // a new random paper colour on every cover; false = the orange
 boolean PREVIEW = true;              // show each cover in the window when it's done
 String  INPUT_DIR  = "input";
 String  OUTPUT_DIR = "output";

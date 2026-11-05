@@ -10,9 +10,10 @@ final int B = 1080;                                // design size
 final float[] PAPER = { 240, 124, 14 };            // #F07C0E, the original orange card (RANDOM_COLOUR off)
 
 // random paper colours (RANDOM_COLOUR on), in OKLab: L is lightness (0-1),
-// C is colour strength. The orange is about L 0.70, C 0.18; these are muted.
-final float PAPER_L_MIN = 0.62, PAPER_L_MAX = 0.84;
-final float PAPER_C_MIN = 0.02, PAPER_C_MAX = 0.10;
+// C is colour strength. The orange is about L 0.70, C 0.18. These ranges allow
+// anything from soft to strong, in any hue; the contrast check keeps it readable.
+final float PAPER_L_MIN = 0.58, PAPER_L_MAX = 0.90;
+final float PAPER_C_MIN = 0.05, PAPER_C_MAX = 0.20;
 final float MIN_CONTRAST = 5.0;                    // ink against the paper, WCAG ratio (4.5 is the usual minimum)
 final float DARKEST_CORNER = 0.86;                 // the light falloff and vignette darken the bottom right this much
 final float[] INK   = { 20, 18, 16 };              // #141210, warm near-black, never pure black

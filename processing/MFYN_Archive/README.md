@@ -6,8 +6,8 @@ cover must be at least 1800×1800, and 2160 is twice the 1080 design size, so
 the layout and grain scale exactly. Only the number and the date change per
 episode.
 
-**Every cover gets a new random paper colour**: any hue, muted, picked fresh
-each time the cover is rendered. A colour is only used if the black ink reads
+**Every cover gets a new random paper colour**: any hue, from soft to strong,
+picked fresh each time the cover is rendered. A colour is only used if the black ink reads
 well on it (a contrast ratio of at least 5 at the paper's darkest corner). The
 ranges are in `Spec.pde`. Set `RANDOM_COLOUR` to false for the original orange
 on every cover. The paper texture and the type are the same on every cover.
@@ -57,7 +57,7 @@ travels with it.
 | `SIZE` | 2160 | the cover's width and height in pixels: a multiple of 1080, at least 1800 (so 2160 or 3240) |
 | `SEED` | 7 | the paper's random seed. Leave it, so every episode prints on the same paper |
 | `LABEL` | `RADIO ARCHIVE` | the bottom-right label |
-| `RANDOM_COLOUR` | true | a new random, muted paper colour on every cover; false = orange `#F07C0E` on every cover |
+| `RANDOM_COLOUR` | true | a new random paper colour on every cover; false = orange `#F07C0E` on every cover |
 | `PREVIEW` | true | show each cover in the window |
 
 The design itself (colours, type, positions, paper and ink) is in `Spec.pde`.

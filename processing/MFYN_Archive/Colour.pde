@@ -1,20 +1,22 @@
-// The paper colour. With RANDOM_COLOUR on, every cover gets a new random,
-// muted colour: any hue, with lightness and colour strength picked at random
-// within the ranges in Spec.pde. A colour is only used if the black ink still
-// reads well on it, measured at the paper's darkest corner; otherwise another
-// one is picked. The paper texture and the type are the same on every cover.
+// The paper colour. With RANDOM_COLOUR on, every cover gets a new random
+// colour: any hue (picked evenly round the wheel), with lightness and colour
+// strength picked at random within the ranges in Spec.pde. A colour too strong
+// for a screen is pulled back to the strongest one that fits. A colour is only
+// used if the black ink still reads well on it, measured at the paper's darkest
+// corner; otherwise another lightness is tried. The paper texture and the type are the same on every cover.
 
 float[] paperColour() {
   if (!RANDOM_COLOUR) return PAPER;
   java.util.Random rng = new java.util.Random();     // a new colour every time
-  for (int tries = 0; tries < 10000; tries++) {
+  float h = rng.nextFloat() * TWO_PI;                // any hue, evenly
+  for (int tries = 0; tries < 1000; tries++) {
     float L = PAPER_L_MIN + rng.nextFloat() * (PAPER_L_MAX - PAPER_L_MIN);
     float C = PAPER_C_MIN + rng.nextFloat() * (PAPER_C_MAX - PAPER_C_MIN);
-    float h = rng.nextFloat() * TWO_PI;
-    float[] rgb = oklabToSrgb(L, C * cos(h), C * sin(h));
-    if (rgb == null) continue;                         // outside what a screen can show
+    float[] rgb = null;
+    for (; rgb == null && C >= 0; C -= 0.002) rgb = oklabToSrgb(L, C * cos(h), C * sin(h));  // pull into what a screen can show
+    if (rgb == null) continue;
     float[] corner = { rgb[0] * DARKEST_CORNER, rgb[1] * DARKEST_CORNER, rgb[2] * DARKEST_CORNER };
-    if (contrast(corner, INK) >= MIN_CONTRAST) return rgb;
+    if (contrast(corner, INK) >= MIN_CONTRAST) return rgb;   // too dark: try another lightness
   }
   return PAPER;
 }
