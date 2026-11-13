@@ -155,17 +155,14 @@ def run(browser, args):
         if not state.get("calendar_id"):
             state["calendar_id"] = show_calendar.create(target.calendar, config.SHOW_CALENDAR, config.SHOW_TIMEZONE)
             save_state(config.EVENTS_STATE_FILE, state)
-            log.info("Created the %s calendar", config.SHOW_CALENDAR)
+            log.info("Created the %s calendar. To see it, subscribe to it in Google Calendar as mfyn@ "
+                     "(Other calendars > + > Subscribe to calendar) with this ID: %s",
+                     config.SHOW_CALENDAR, state["calendar_id"])
         if not state.get("flyers_folder_id"):
             state["flyers_folder_id"] = show_calendar.create_folder(target.drive, config.SHOW_FLYERS_FOLDER)
             save_state(config.EVENTS_STATE_FILE, state)
             log.info("Created the %s folder in Drive", config.SHOW_FLYERS_FOLDER)
         target.calendar_id, target.folder_id = state["calendar_id"], state["flyers_folder_id"]
-        try:
-            name = show_calendar.make_visible(target.calendar, target.calendar_id)
-            log.info("Adding to the '%s' calendar in mfyn@'s Google Calendar", name)
-        except Exception:
-            log.exception("couldn't check that %s is in the calendar list", config.SHOW_CALENDAR)
     claude = flyer.find_claude()
 
     if args.post:

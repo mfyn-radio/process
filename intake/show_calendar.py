@@ -121,20 +121,6 @@ def restore(service, calendar_id, event_body):
     return (made or {}).get("htmlLink") or "(no link)"
 
 
-def make_visible(service, calendar_id):
-    """Make sure the calendar is in mfyn@'s list in Google Calendar, shown
-    and ticked. Returns its name as listed."""
-    try:
-        entry = service.calendarList().get(calendarId=calendar_id).execute()
-    except HttpError as e:
-        if e.resp.status != 404:
-            raise
-        entry = service.calendarList().insert(body={"id": calendar_id, "selected": True}).execute()
-    if entry.get("hidden") or not entry.get("selected"):
-        entry = service.calendarList().patch(calendarId=calendar_id, body={"hidden": False, "selected": True}).execute()
-    return entry.get("summary")
-
-
 def add(service, calendar_id, event_body):
     """Add the event. Returns its link in Google Calendar, or None if it's
     already on the calendar."""

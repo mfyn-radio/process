@@ -219,43 +219,6 @@ class FakeCalendar:
         return SimpleNamespace(execute=execute)
 
 
-class FakeCalendarList:
-    def __init__(self, entry):
-        self.entry, self.calls = entry, []
-
-    def calendarList(self):
-        return self
-
-    def get(self, calendarId):
-        def execute():
-            if self.entry is None:
-                raise http_error(404)
-            return self.entry
-        return SimpleNamespace(execute=execute)
-
-    def insert(self, body):
-        self.calls.append(("insert", body))
-        self.entry = {"id": body["id"], "summary": "MFYN Shows", "selected": True}
-        return SimpleNamespace(execute=lambda: self.entry)
-
-    def patch(self, calendarId, body):
-        self.calls.append(("patch", body))
-        self.entry = dict(self.entry, **body)
-        return SimpleNamespace(execute=lambda: self.entry)
-
-
-def test_calendar_is_added_to_the_list_and_ticked():
-    missing = FakeCalendarList(None)
-    assert show_calendar.make_visible(missing, "c1") == "MFYN Shows"
-    assert missing.calls == [("insert", {"id": "c1", "selected": True})]
-    hidden = FakeCalendarList({"id": "c1", "summary": "MFYN Shows", "hidden": True, "selected": False})
-    show_calendar.make_visible(hidden, "c1")
-    assert hidden.calls == [("patch", {"hidden": False, "selected": True})]
-    shown = FakeCalendarList({"id": "c1", "summary": "MFYN Shows", "selected": True})
-    show_calendar.make_visible(shown, "c1")
-    assert shown.calls == []
-
-
 class FakeDrive:
     def __init__(self):
         self.uploads = []
