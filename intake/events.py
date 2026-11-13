@@ -15,9 +15,9 @@ import json
 import logging
 import logging.handlers
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
-from . import catalog, config, flyer, google_auth, instagram, show_calendar, table
+from . import alerts, catalog, config, flyer, gmail, google_auth, instagram, show_calendar, table
 
 log = logging.getLogger("events")
 
@@ -41,6 +41,7 @@ class Target:
     calendar: object = None
     calendar_id: str = None
     catalog: object = None
+    alerts: list = field(default_factory=list)  # alerts.Match for library artists on new shows
 
 
 def sheet_tags(catalog, acts):
@@ -102,7 +103,12 @@ def handle(post, events, target, today, dry_run, redo=False):
                         post.url, event.title)
         tags = event_tags(event, target.catalog)
         body = show_calendar.body(event, post, config.SHOW_TIMEZONE, tags, n)
+        mine = alerts.library_artists(target.catalog, event.acts)
+        if mine:
+            body["colorId"] = config.ALERT_COLOR
         if dry_run:
+            if mine:
+                log.info("%s: would alert: library artist(s) %s", post.url, ", ".join(mine))
             log.info("%s: would add '%s' on %s at %s (location tag: %s)\n%s", post.url, body["summary"], when,
                      body.get("location", "?"), post.location or "none",
                      show_calendar.description(event, post, tags).replace("<br>", "\n"))
@@ -122,6 +128,10 @@ def handle(post, events, target, today, dry_run, redo=False):
             if not link:
                 continue
             log.info("%s: added '%s' on %s: %s", post.url, body["summary"], when, link)
+            if mine:
+                log.info("%s: library artist(s) %s; alert coming", post.url, ", ".join(mine))
+                target.alerts.append(alerts.Match(mine, body["summary"], event.date, event.start_time or "",
+                                                  body.get("location", ""), post.url, link))
         added += 1
         record_row(target, body, today)
         if event.location_conflict:
@@ -201,6 +211,7 @@ def main(argv=None):
 
 def run(browser, args):
     state = load_state(config.EVENTS_STATE_FILE)
+    creds = None
     if args.dry_run:
         target = Target(catalog=open_catalog(google_auth.credentials()))
     else:
@@ -244,10 +255,24 @@ def run(browser, args):
             state["posts"][code] = {"read": today.isoformat(), "events": len(events), "added": added}
             save_state(config.EVENTS_STATE_FILE, state)
 
+    if target.alerts:
+        send_alert(creds, target.alerts)
+
     if failures:
         log.error("%d post(s) failed", failures)
         return 1
     return 0
+
+
+def send_alert(creds, matches):
+    """One email for the run's shows with library artists. A failure is only
+    logged: the shows are on the calendar, with the alert colour, anyway."""
+    subject, text = alerts.email(matches)
+    try:
+        alerts.send(gmail.client(creds), config.ALERT_EMAIL, subject, text)
+        log.info("Emailed %s: %s", config.ALERT_EMAIL, subject)
+    except Exception:
+        log.exception("couldn't send the alert email (%s)", subject)
 
 
 if __name__ == "__main__":

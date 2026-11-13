@@ -5,7 +5,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from intake import events, flyer, google_auth, instagram, show_calendar
+from intake import alerts, events, flyer, google_auth, instagram, show_calendar
 
 POST = instagram.Post(
     shortcode="DAbc123", url="https://www.instagram.com/p/DAbc123/", account="thevenue",
@@ -419,3 +419,49 @@ def test_setup_only_keeps_a_sign_in_for_mfyn(tmp_path, monkeypatch):
     monkeypatch.setattr(google_auth, "signed_in_as", lambda c: "MFYN@nothingflatdigital.com")
     assert google_auth.setup(client) == "MFYN@nothingflatdigital.com"
     assert (tmp_path / "token.json").exists()
+
+
+# "Your artist is playing"
+
+def test_names_match_without_case_accents_punctuation_or_the():
+    assert alerts.key("Daufødt") == alerts.key("DAUFODT") == alerts.key("daufødt.")
+    assert alerts.key("The Ex") == alerts.key("Ex")
+    assert alerts.key("Fellatio") != alerts.key("Fellatio Live Band")
+
+
+def test_library_artists_are_found_among_the_acts_as_the_sheet_spells_them():
+    cat = FakeCatalog([{"Artist": "Daufødt"}, {"Artist": "applied communications"}])
+    assert alerts.library_artists(cat, ["FELLATIO", "DAUFODT", "Applied Communications"]) == [
+        "Daufødt", "applied communications"]
+    assert alerts.library_artists(None, ["x"]) == []
+
+
+def test_a_new_show_with_a_library_artist_is_coloured_and_queued_for_the_email():
+    cal, cat = FakeCalendar(), FakeCatalog([{"Artist": "Daufødt"}])
+    target = events.Target(cal, "cal", cat)
+    events.handle(POST, [event(), event(date="2026-11-22", acts=["Someone Else"])], target, TODAY, dry_run=False)
+    colours = {b["start"]["dateTime"][:10]: b.get("colorId") for b in cal.added.values()}
+    assert colours == {"2026-11-21": events.config.ALERT_COLOR, "2026-11-22": None}
+    (match,) = target.alerts
+    assert match.artists == ["Daufødt"] and match.date == "2026-11-21" and match.post == POST.url
+    events.handle(POST, [event()], target, TODAY, dry_run=False)
+    assert len(target.alerts) == 1  # already on the calendar: no second alert
+
+
+def test_alert_email_lists_each_show():
+    m = alerts.Match(["Daufødt"], "Fellatio", "2026-11-21", "20:00", "WORM, Rotterdam", POST.url, "https://cal/e")
+    subject, text = alerts.email([m])
+    assert subject == "MFYN: Daufødt is playing"
+    assert "Daufødt: Fellatio\nSat 21 Nov 2026, 20:00, WORM, Rotterdam\nPost: " + POST.url in text
+    two = alerts.Match(["Fellatio"], "X", "2026-11-20", "", "", "u", "")
+    assert alerts.email([m, two])[0] == "MFYN: 2 library artists are playing"
+
+
+def test_alert_is_sent_as_one_gmail_message():
+    sent = []
+    gmail = SimpleNamespace(users=lambda: SimpleNamespace(messages=lambda: SimpleNamespace(
+        send=lambda userId, body: SimpleNamespace(execute=lambda: sent.append(body)))))
+    alerts.send(gmail, "mfyn@nothingflatdigital.com", "MFYN: test", "hello")
+    import base64, email
+    msg = email.message_from_bytes(base64.urlsafe_b64decode(sent[0]["raw"]))
+    assert msg["To"] == "mfyn@nothingflatdigital.com" and msg["Subject"] == "MFYN: test"

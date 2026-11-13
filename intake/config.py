@@ -73,6 +73,10 @@ INSTAGRAM_PROFILE_DIR = Path.home() / "mfyn-chrome-instagram"
 # Posts already read, and the calendar's id.
 EVENTS_STATE_FILE = APP_DIR / "events.json"
 SHOW_CALENDAR = "MFYN Shows"
+# "Your artist is playing": shows with a library artist on the bill get this
+# Google Calendar colour (11 is Tomato, red) and an email to this address.
+ALERT_COLOR = "11"
+ALERT_EMAIL = os.environ.get("MFYN_ALERT_EMAIL", "mfyn@nothingflatdigital.com")
 # Only shows in these countries go on the calendar.
 SHOW_COUNTRIES = ("Netherlands", "Belgium")
 # Times on flyers are local times here (an IANA name, e.g. Europe/Amsterdam).

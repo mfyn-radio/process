@@ -29,6 +29,9 @@ session is first.
   each event is added; `--fill-sheet` for events already on the calendar.
   Only shows in the Netherlands or Belgium are added, and a post's location
   tag wins over the flyer (noted in the log).
+- **"Your artist is playing" alerts** (mfyn-radio/process#39): a new show
+  with a library artist on the bill is red on MFYN Shows and emailed to
+  mfyn@ in that run.
 - **Flyers are read by Claude Code on the PC** (`claude -p`, on the Claude
   subscription), not the paid API. Nothing that costs extra gets added
   (now in `CLAUDE.md`).

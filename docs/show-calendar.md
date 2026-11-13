@@ -70,6 +70,25 @@ it stays deleted.
 **What it can only touch:** the calendars it creates itself (the
 `calendar.app.created` permission). It can't see mfyn@'s other calendars.
 
+## "Your artist is playing"
+
+When a newly added show has an artist from the library on the bill (anyone
+on the Artists tab of the MFYN Artists sheet), you're told
+(mfyn-radio/process#39):
+
+- **The event is red** (Google Calendar's Tomato) on MFYN Shows. The title
+  and description stay as usual.
+- **An email from mfyn@** goes to mfyn@ at the end of the run, one per run
+  and only if there's a match, listing each show with the artist, date,
+  venue, post and calendar link. To send it elsewhere, set
+  `MFYN_ALERT_EMAIL` with `setx`.
+
+Names are matched ignoring case, accents, punctuation and a leading "The",
+so *DAUFODT* on a flyer matches *Daufødt* in the sheet. A band only counts
+if Claude listed it among the acts. Events added before 13 November 2026
+have no acts stored, so they don't alert; redo one with `--post` to check
+it. A dry run logs "would alert" instead.
+
 ## The Events tab
 
 Every show the automation adds also gets a row on the **Events** tab of the
