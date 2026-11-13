@@ -62,10 +62,20 @@ def reply(events, **kw):
 
 def test_parse_keeps_events_with_real_dates():
     good = {"title": "Fellatio", "acts": ["Fellatio", "Daufødt"], "date": "2026-11-21", "start_time": "20:00",
-            "end_time": None, "venue": "WORM", "city": "Rotterdam", "tickets": None, "confident": True}
+            "end_time": None, "venue": "WORM", "city": "Rotterdam", "link": "worm.org/agenda/fellatio",
+            "notes": "Cash only. 18+.", "tags": ["Hardcore", " "], "confident": True}
     found = flyer.parse(reply([good, {**good, "date": "21 Nov"}]))
     assert found == [flyer.Event(title="Fellatio", acts=["Fellatio", "Daufødt"], date="2026-11-21",
-                                 start_time="20:00", venue="WORM", city="Rotterdam", confident=True)]
+                                 start_time="20:00", venue="WORM", city="Rotterdam",
+                                 link="https://worm.org/agenda/fellatio", notes="Cash only. 18+.",
+                                 tags=["Hardcore"], confident=True)]
+
+
+def test_only_real_web_addresses_count_as_links():
+    assert flyer.web_address("https://worm.org/x") == "https://worm.org/x"
+    assert flyer.web_address("worm.org") == "https://worm.org"
+    assert flyer.web_address("link in bio") is None
+    assert flyer.web_address(None) is None
 
 
 def test_parse_raises_on_an_error_so_the_post_is_retried():
@@ -107,8 +117,42 @@ def test_timed_event_body():
     assert body["location"] == "The Venue, Hague"
     assert body["start"] == {"dateTime": "2026-11-21T20:00:00", "timeZone": "Europe/Amsterdam"}
     assert body["end"] == {"dateTime": "2026-11-21T23:00:00", "timeZone": "Europe/Amsterdam"}
-    assert "With: Fellatio, Daufødt" in body["description"]
-    assert POST.url in body["description"] and body["source"]["url"] == POST.url
+    assert body["source"]["url"] == POST.url  # no link in the post
+    assert "attachments" not in body
+
+
+def test_description_follows_the_agreed_layout():
+    ev = event(link="https://worm.org/agenda/fellatio", notes="Cash only. 18+. Doors 20:00, first band 21:00.")
+    assert show_calendar.description(ev, POST, ["hardcore", "noise", "punk"]) == (
+        "Link: https://worm.org/agenda/fellatio\n"
+        "Tags: hardcore, noise, punk\n"
+        "Notes: Cash only. 18+. Doors 20:00, first band 21:00.\n"
+        "With: Fellatio, Daufødt\n"
+        "\n"
+        "Save & Share on Instagram\n"
+        "https://www.instagram.com/p/DAbc123/\n"
+        "\n"
+        "—\n"
+        "Fellatio + Daufødt, Sat 21 Nov, doors 8pm")
+
+
+def test_description_leaves_out_empty_lines():
+    text = show_calendar.description(event(acts=[]), instagram.Post("X", "https://i/p/X/"))
+    assert text == "Save & Share on Instagram\nhttps://i/p/X/"
+
+
+def test_post_link_is_the_source_unless_the_post_gives_one():
+    body = show_calendar.body(event(link="https://worm.org/x"), POST, "UTC")
+    assert body["source"]["url"] == "https://worm.org/x"
+
+
+def test_flyer_is_attached():
+    flyer_file = {"fileId": "f1", "fileUrl": "https://drive.google.com/file/d/f1/view", "title": "F.jpg", "mimeType": "image/jpeg"}
+    assert show_calendar.body(event(), POST, "UTC", flyer=flyer_file)["attachments"] == [flyer_file]
+
+
+def test_flyer_name_is_safe_for_drive_and_windows():
+    assert show_calendar.flyer_name(event(title="A/B: live?", venue="WORM"), ".jpg") == "A_B_ live_ - WORM - 2026-11-21.jpg"
 
 
 def test_event_past_midnight_ends_the_next_day():
@@ -140,6 +184,11 @@ def test_event_id_is_stable_and_valid_for_calendar():
 
 # Adding to the calendar
 
+def http_error(status):
+    from googleapiclient.errors import HttpError
+    return HttpError(SimpleNamespace(status=status, reason=""), b"")
+
+
 class FakeCalendar:
     def __init__(self):
         self.added = {}
@@ -147,26 +196,64 @@ class FakeCalendar:
     def events(self):
         return self
 
-    def insert(self, calendarId, body):
+    def get(self, calendarId, eventId):
+        def execute():
+            if eventId not in self.added:
+                raise http_error(404)
+            return self.added[eventId]
+        return SimpleNamespace(execute=execute)
+
+    def insert(self, calendarId, body, supportsAttachments):
+        assert supportsAttachments
         def execute():
             if body["id"] in self.added:
-                from googleapiclient.errors import HttpError
-                raise HttpError(SimpleNamespace(status=409, reason="Conflict"), b"duplicate")
+                raise http_error(409)
             self.added[body["id"]] = body
         return SimpleNamespace(execute=execute)
 
 
-def test_handle_adds_upcoming_events_once_and_skips_past_ones():
-    cal = FakeCalendar()
-    today = datetime.date(2026, 11, 13)
-    found = [event(), event(title="Old show", date="2026-11-01")]
-    assert events.handle(POST, found, cal, "cal", today, dry_run=False) == 1
-    assert [b["summary"] for b in cal.added.values()] == ["Fellatio"]
-    assert events.handle(POST, found, cal, "cal", today, dry_run=False) == 0  # already there
+class FakeDrive:
+    def __init__(self):
+        self.uploads = []
+
+    def files(self):
+        return self
+
+    def create(self, body, media_body, fields):
+        self.uploads.append(body)
+        n = len(self.uploads)
+        return SimpleNamespace(execute=lambda: {"id": f"f{n}", "webViewLink": f"https://drive/f{n}", "mimeType": "image/jpeg"})
+
+
+class FakeCatalog:
+    def __init__(self, rows):
+        from test_catalog import MemoryTable
+        from intake import catalog
+        self.artists = MemoryTable(catalog.ARTISTS, "Artist", ("Tags",), rows=rows)
+
+
+TODAY = datetime.date(2026, 11, 13)
+
+
+def test_handle_adds_upcoming_events_once_with_one_flyer_and_skips_past_ones():
+    cal, drive = FakeCalendar(), FakeDrive()
+    target = events.Target(cal, drive, "cal", "folder")
+    found = [event(), event(date="2026-11-22"), event(title="Old show", date="2026-11-01")]
+    assert events.handle(POST, found, target, TODAY, dry_run=False) == 2
+    assert len(drive.uploads) == 1 and drive.uploads[0]["parents"] == ["folder"]
+    assert all(b["attachments"][0]["fileId"] == "f1" for b in cal.added.values())
+    assert events.handle(POST, found, target, TODAY, dry_run=False) == 0  # already there
+    assert len(drive.uploads) == 1  # and no second copy of the flyer
 
 
 def test_dry_run_adds_nothing():
-    assert events.handle(POST, [event()], None, None, datetime.date(2026, 11, 13), dry_run=True) == 0
+    assert events.handle(POST, [event()], events.Target(), TODAY, dry_run=True) == 0
+
+
+def test_tags_combine_the_post_and_the_artists_sheet_without_places():
+    cat = FakeCatalog([{"Artist": "Fellatio", "Tags": "punk, Noise, rotterdam", "Location": "Rotterdam, Netherlands"}])
+    assert events.event_tags(event(tags=["Hardcore", "punk"]), cat) == ["hardcore", "noise", "punk"]
+    assert events.event_tags(event(tags=["punk"]), None) == ["punk"]
 
 
 def test_state_round_trips(tmp_path):

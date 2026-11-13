@@ -23,7 +23,8 @@ Permissions requested at sign-in:
 - `https://www.googleapis.com/auth/gmail.modify`: read purchase emails and add
   the `MFYN/…` labels. It can't delete mail permanently.
 - `https://www.googleapis.com/auth/drive.file`: only the files the automation
-  creates itself, the MFYN Artists sheet. It can't see the rest of the Drive.
+  creates itself: the MFYN Artists sheet, and the show flyers in
+  `MFYN_Show_Flyers`. It can't see the rest of the Drive.
   The library itself is synced by Drive for desktop.
 - `https://www.googleapis.com/auth/calendar.app.created`: only the calendars
   the automation creates itself, MFYN Shows. It can't see mfyn@'s other

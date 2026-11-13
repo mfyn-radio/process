@@ -13,8 +13,9 @@ import json
 import logging
 import logging.handlers
 import sys
+from dataclasses import dataclass
 
-from . import config, flyer, google_auth, instagram, show_calendar
+from . import catalog, config, flyer, google_auth, instagram, show_calendar, table
 
 log = logging.getLogger("events")
 
@@ -32,9 +33,40 @@ def save_state(path, state):
     tmp.replace(path)
 
 
-def handle(post, events, service, calendar_id, today, dry_run):
+@dataclass
+class Target:
+    """Where events go. In a dry run only `catalog` (for tags) is set."""
+    calendar: object = None
+    drive: object = None
+    calendar_id: str = None
+    folder_id: str = None
+    catalog: object = None
+
+
+def sheet_tags(catalog, acts):
+    """Bandcamp tags from the MFYN Artists sheet for acts already in it,
+    leaving out tags that are just the artist's town or country."""
+    found = []
+    if catalog is None:
+        return found
+    for act in acts:
+        _, row = catalog.artists.find({"Artist": act})
+        if not row:
+            continue
+        places = {p.strip().casefold() for p in (row.get("Location") or "").split(",")}
+        found += [t for t in table.split_list(row.get("Tags")) if t.casefold() not in places]
+    return found
+
+
+def event_tags(event, catalog):
+    """The post's genres plus the sheet's, lowercase, sorted, without repeats."""
+    return sorted({t.strip().lower() for t in event.tags + sheet_tags(catalog, event.acts) if t.strip()})
+
+
+def handle(post, events, target, today, dry_run):
     """Add a post's upcoming events. Returns how many were added."""
     added = 0
+    attachment = None  # one upload per post, shared by its events
     if not events:
         log.info("%s: no event found", post.url)
     for event in events:
@@ -42,16 +74,31 @@ def handle(post, events, service, calendar_id, today, dry_run):
         if event.date < today.isoformat():
             log.info("%s: '%s' on %s is over; skipped", post.url, event.title, when)
             continue
-        body = show_calendar.body(event, post, config.SHOW_TIMEZONE)
+        tags = event_tags(event, target.catalog)
         if dry_run:
-            log.info("%s: would add '%s' on %s at %s", post.url, body["summary"], when, body.get("location", "?"))
+            body = show_calendar.body(event, post, config.SHOW_TIMEZONE, tags)
+            log.info("%s: would add '%s' on %s at %s\n%s", post.url, body["summary"], when,
+                     body.get("location", "?"), show_calendar.description(event, post, tags))
             continue
-        if show_calendar.add(service, calendar_id, body):
+        if show_calendar.exists(target.calendar, target.calendar_id, show_calendar.event_id(post.shortcode, event)):
+            log.info("%s: '%s' on %s is already on the calendar", post.url, event.title, when)
+            continue
+        if attachment is None and post.image and target.drive is not None:
+            name = show_calendar.flyer_name(event, flyer.EXTENSIONS.get(post.image_type, ".jpg"))
+            attachment = show_calendar.upload_flyer(target.drive, target.folder_id, name, post.image, post.image_type)
+        body = show_calendar.body(event, post, config.SHOW_TIMEZONE, tags, attachment)
+        if show_calendar.add(target.calendar, target.calendar_id, body):
             added += 1
             log.info("%s: added '%s' on %s", post.url, body["summary"], when)
-        else:
-            log.info("%s: '%s' on %s is already on the calendar", post.url, event.title, when)
     return added
+
+
+def open_catalog(creds):
+    try:
+        return catalog.Catalog(creds)
+    except Exception:
+        log.exception("couldn't open the %s sheet; tags will come from the posts only", config.ARTISTS_SHEET)
+        return None
 
 
 def setup_logging():
@@ -89,13 +136,20 @@ def main(argv=None):
 
 def run(browser, args):
     state = load_state(config.EVENTS_STATE_FILE)
-    service = None
-    if not args.dry_run:
-        service = show_calendar.client(google_auth.credentials([google_auth.CALENDAR]))
-        if not state["calendar_id"]:
-            state["calendar_id"] = show_calendar.create(service, config.SHOW_CALENDAR, config.SHOW_TIMEZONE)
+    if args.dry_run:
+        target = Target(catalog=open_catalog(google_auth.credentials()))
+    else:
+        creds = google_auth.credentials(google_auth.SCOPES)
+        target = Target(show_calendar.client(creds), show_calendar.drive_client(creds), catalog=open_catalog(creds))
+        if not state.get("calendar_id"):
+            state["calendar_id"] = show_calendar.create(target.calendar, config.SHOW_CALENDAR, config.SHOW_TIMEZONE)
             save_state(config.EVENTS_STATE_FILE, state)
             log.info("Created the %s calendar", config.SHOW_CALENDAR)
+        if not state.get("flyers_folder_id"):
+            state["flyers_folder_id"] = show_calendar.create_folder(target.drive, config.SHOW_FLYERS_FOLDER)
+            save_state(config.EVENTS_STATE_FILE, state)
+            log.info("Created the %s folder in Drive", config.SHOW_FLYERS_FOLDER)
+        target.calendar_id, target.folder_id = state["calendar_id"], state["flyers_folder_id"]
     claude = flyer.find_claude()
 
     if args.post:
@@ -110,13 +164,13 @@ def run(browser, args):
         try:
             post = browser.post(code)
             events = flyer.read(post, config.EVENTS_MODEL, claude=claude)
-            added = handle(post, events, service, state["calendar_id"], today, args.dry_run)
+            added = handle(post, events, target, today, args.dry_run)
         except Exception:
             log.exception("%s: failed; will retry next run", code)
             failures += 1
             continue
         if not args.dry_run:
-            # Remember the post so it isn't read (and paid for) again.
+            # Remember the post so it isn't read again.
             state["posts"][code] = {"read": today.isoformat(), "events": len(events), "added": added}
             save_state(config.EVENTS_STATE_FILE, state)
 

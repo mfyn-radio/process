@@ -10,6 +10,7 @@ import hashlib
 
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+from googleapiclient.http import MediaInMemoryUpload
 
 CHECK = "[Check] "
 
@@ -32,25 +33,46 @@ def event_id(shortcode, event):
     return "mf" + hashlib.sha1(key.encode("utf-8")).hexdigest()
 
 
-def body(event, post, timezone):
-    """The Calendar event for an Event read from `post`."""
-    title = event.title if event.confident else CHECK + event.title
+def description(event, post, tags=()):
+    """The event's notes, in this order:
+
+        Link: …        (only if the post gives one)
+        Tags: …
+        Notes: …
+        With: …
+
+        Save & Share on Instagram
+        <post link>
+
+        —
+        <caption>
+    """
     lines = []
-    if event.acts:
-        lines.append("With: " + ", ".join(event.acts))
-    if event.tickets:
-        lines.append("Tickets: " + event.tickets)
-    lines.append(f"From @{post.account}'s post: {post.url}" if post.account else f"From: {post.url}")
-    if not event.confident:
-        lines.append("Check the details against the post; the flyer wasn't clear.")
+    for label, value in (("Link", event.link), ("Tags", ", ".join(tags)),
+                         ("Notes", event.notes), ("With", ", ".join(event.acts))):
+        if value:
+            lines.append(f"{label}: {value}")
+    if lines:
+        lines.append("")
+    lines += ["Save & Share on Instagram", post.url]
     if post.caption:
-        lines += ["", post.caption]
+        lines += ["", "—", post.caption]
+    return "\n".join(lines)
+
+
+def body(event, post, timezone, tags=(), flyer=None):
+    """The Calendar event for an Event read from `post`. `flyer` is the
+    attachment from upload_flyer, if any."""
+    title = event.title if event.confident else CHECK + event.title
+    link = event.link or post.url
     result = {
         "id": event_id(post.shortcode, event),
         "summary": title,
-        "description": "\n".join(lines),
-        "source": {"title": "Instagram", "url": post.url},
+        "description": description(event, post, tags),
+        "source": {"title": "Instagram" if link == post.url else event.title, "url": link},
     }
+    if flyer:
+        result["attachments"] = [flyer]
     location = ", ".join(p for p in (event.venue, event.city) if p)
     if location:
         result["location"] = location
@@ -80,12 +102,48 @@ def clock(text):
         return None
 
 
+def exists(service, calendar_id, eid):
+    """Whether the event was added on an earlier run, even if since deleted."""
+    try:
+        service.events().get(calendarId=calendar_id, eventId=eid).execute()
+        return True
+    except HttpError as e:
+        if e.resp.status in (404, 410):
+            return False
+        raise
+
+
 def add(service, calendar_id, event_body):
     """Add the event. Returns False if it's already on the calendar."""
     try:
-        service.events().insert(calendarId=calendar_id, body=event_body).execute()
+        service.events().insert(calendarId=calendar_id, body=event_body, supportsAttachments=True).execute()
         return True
     except HttpError as e:
         if e.resp.status == 409:  # that id is taken: added on an earlier run
             return False
         raise
+
+
+# The flyers, in a Drive folder the automation creates (drive.file permission).
+
+def drive_client(creds):
+    return build("drive", "v3", credentials=creds, cache_discovery=False)
+
+
+def create_folder(drive, name):
+    body = {"name": name, "mimeType": "application/vnd.google-apps.folder"}
+    return drive.files().create(body=body, fields="id").execute()["id"]
+
+
+def flyer_name(event, extension):
+    parts = [event.title, event.venue, event.date]
+    name = " - ".join(p for p in parts if p)
+    return "".join("_" if c in '<>:"/\\|?*' else c for c in name) + extension
+
+
+def upload_flyer(drive, folder_id, name, image, mime_type):
+    """Save the flyer to Drive. Returns it as a Calendar attachment."""
+    media = MediaInMemoryUpload(image, mimetype=mime_type)
+    made = drive.files().create(body={"name": name, "parents": [folder_id]}, media_body=media,
+                                fields="id,webViewLink,mimeType").execute()
+    return {"fileId": made["id"], "fileUrl": made["webViewLink"], "title": name, "mimeType": made["mimeType"]}

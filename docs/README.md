@@ -53,7 +53,8 @@ The logs keep four files of up to 1 MB each, and Make Reels and Make Album Story
 | `MFYN_Reels` | mfyn@'s My Drive, `H:\My Drive\MFYN_Reels` | Each episode's Reels, their details and captions, for your review and then Publishing |
 | `MFYN_Stories` | mfyn@'s My Drive, `H:\My Drive\MFYN_Stories` | Featured-album Stories and their details, for your review and then Publishing |
 | Processing sketches | this repo, `processing\` | `MFYN_Reel` makes the Reels; `MFYN_Album` makes the featured-album Stories; `MFYN_Archive` makes the archive episode covers ([automated](archive-cover.md), or by hand: [README](../processing/MFYN_Archive/README.md)) |
-| MFYN Shows | Google Calendar, made by the automation in mfyn@'s account | Upcoming shows, from posts saved to the **Shows** collection on Instagram |
+| MFYN Shows | Google Calendar, made by the automation in mfyn@'s account | Upcoming shows, from posts saved to the **events** collection on Instagram |
+| `MFYN_Show_Flyers` | mfyn@'s My Drive | Each show's flyer, attached to its event on MFYN Shows |
 | `MFYN_Library` | mfyn@'s My Drive, synced to `H:\My Drive\MFYN_Library` on the MFYN PC | The music library, one folder per album |
 | MFYN PC | Windows, signed in, running Google Drive for desktop and Chrome | Runs the automation (Task Scheduler) |
 | `mfyn-library-agent` | Google Cloud project, Internal audience | Lets the automation read and label mail, and keep its sheet and calendar ([setup](setup/google-cloud.md)) |

@@ -31,7 +31,12 @@ List every live event the post announces (a tour poster can list several \
 dates). Read the flyer image as well as the caption; flyers often leave out \
 the year, so work it out from the posting date (the next such date on or \
 after it). Use 24-hour HH:MM times, local to the venue, and YYYY-MM-DD dates. \
-Leave a field null rather than guess. Set confident to false if the date, \
+For link, give a web address written in the post for tickets or the event \
+(tickets first); "link in bio" is not a link. For notes, give short practical \
+details: price, cash only, age limit, free entry, sold out, set times, the \
+address. For tags, give the music genres the post itself names or hashtags \
+(e.g. punk, hardcore), lowercase, as words (#noiserock is noise rock), not \
+places. Leave a field null rather than guess. Set confident to false if the date, \
 venue or acts are unclear. If the post doesn't announce an event (a release, \
 a photo, a past show), return no events."""
 
@@ -51,10 +56,13 @@ SCHEMA = {
             "end_time": {**MAYBE, "description": "HH:MM, if given"},
             "venue": MAYBE,
             "city": MAYBE,
-            "tickets": {**MAYBE, "description": "Ticket link or price, if given"},
+            "link": {**MAYBE, "description": "Tickets or event web address written in the post"},
+            "notes": {**MAYBE, "description": "Practical details: price, cash only, 18+, set times, address"},
+            "tags": {"type": "array", "items": TEXT, "description": "Music genres the post names, lowercase"},
             "confident": {"type": "boolean"},
         },
-        "required": ["title", "acts", "date", "start_time", "end_time", "venue", "city", "tickets", "confident"],
+        "required": ["title", "acts", "date", "start_time", "end_time", "venue", "city", "link", "notes",
+                     "tags", "confident"],
         "additionalProperties": False,
     }}},
     "required": ["events"],
@@ -73,7 +81,9 @@ class Event:
     end_time: Optional[str] = None
     venue: Optional[str] = None
     city: Optional[str] = None
-    tickets: Optional[str] = None
+    link: Optional[str] = None
+    notes: Optional[str] = None
+    tags: List[str] = field(default_factory=list)
     confident: bool = False
 
 
@@ -119,7 +129,9 @@ def parse(stdout):
     for item in output.get("events") or []:
         known = {k: item.get(k) for k in Event.__dataclass_fields__ if k in item}
         if isinstance(known.get("title"), str) and valid_date(known.get("date")):
-            known["acts"] = [a for a in known.get("acts") or [] if isinstance(a, str)]
+            for name in ("acts", "tags"):
+                known[name] = [a for a in known.get(name) or [] if isinstance(a, str) and a.strip()]
+            known["link"] = web_address(known.get("link"))
             known["confident"] = bool(known.get("confident"))
             events.append(Event(**known))
     return events
@@ -138,6 +150,16 @@ def read(post, model=None, run=subprocess.run, claude=None):
     if result.returncode and not result.stdout:
         raise RuntimeError(f"Claude Code exited with {result.returncode}: {result.stderr[:300]}")
     return parse(result.stdout)
+
+
+def web_address(text):
+    """A clickable address, or None. Captions often leave off https://."""
+    if not isinstance(text, str) or not text.strip() or " " in text.strip():
+        return None
+    text = text.strip()
+    if text.startswith(("http://", "https://")):
+        return text
+    return "https://" + text if "." in text else None
 
 
 def valid_date(text):

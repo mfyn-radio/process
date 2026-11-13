@@ -1,7 +1,7 @@
 # Show calendar
 
 Live shows from the posts MFYN saves on Instagram go on a Google calendar of
-their own, **MFYN Shows**. Save a show's post to the **Shows** collection;
+their own, **MFYN Shows**. Save a show's post to the **events** collection;
 once a day the automation reads it and adds the event. This is
 mfyn-radio/process#36, the Instagram half of mfyn-radio/process#15. Other sources come later.
 
@@ -28,15 +28,37 @@ See also: [process overview](README.md) · [Google Cloud setup](setup/google-clo
    each event: title, acts, date, times, venue, city and tickets. A tour
    poster can give several. Flyers often leave out the year, so it's worked
    out from the posting date. A post that isn't an event gives none.
-4. **Adds them to MFYN Shows:**
-   - The title is the headline act or the event's name. **`[Check]`** in
-     front means the flyer wasn't clear, so check it against the post.
-   - The location is the venue and city.
-   - The description lists the acts and tickets, links the post and copies
-     the caption.
-   - Without a start time it's an all-day event. Without an end time it's
-     3 hours long.
-   - Shows that are already over are skipped.
+4. **Adds them to MFYN Shows**, laid out like this:
+   ```
+   Fellatio                                  <- [Check] in front if the flyer wasn't clear
+   WORM, Rotterdam
+   Sat 21 Nov 2026, 20:00–23:00
+   (the flyer, attached)
+
+   Link: https://worm.org/agenda/fellatio
+   Tags: hardcore, noise, punk
+   Notes: Cash only. 18+. Doors 20:00, first band 21:00.
+   With: Fellatio, Daufødt
+
+   Save & Share on Instagram
+   https://www.instagram.com/p/DAbc123/
+
+   —
+   (the post's caption)
+   ```
+   - **Link** is a tickets or event address written in the post. "Link in
+     bio" doesn't count. Without one, the event links to the Instagram post.
+   - **Tags** are the genres the post names or hashtags, plus the tags in the
+     MFYN Artists sheet for acts already in the library (leaving out their
+     town and country).
+   - **Notes** are practical details from the flyer: price, cash only, age
+     limit, set times, the address.
+   - **The flyer** is saved to `MFYN_Show_Flyers` in mfyn@'s My Drive and
+     attached to the event. Click it in the event to see it. Calendar shows
+     its file name, not the picture.
+   - Empty lines are left out. Without a start time it's an all-day event;
+     without an end time it's 3 hours long. Shows that are already over are
+     skipped.
 5. **Remembers the post** in `%APPDATA%\mfyn-intake\events.json`, so it's
    never read again. A post that fails is retried next run.
 
@@ -75,7 +97,7 @@ to your Claude subscription. Nothing new to buy.
    Check it with `claude --version`. Each post read counts toward the
    subscription's usage limits, like a short chat.
 5. **Make the collection.** On Instagram, signed in as MFYN, make a saved
-   collection called **Shows** and save a show's post to it. Open it in
+   collection (MFYN's is called **events**) and save a show's post to it. Open it in
    Chrome and copy the address, e.g.
    `https://www.instagram.com/<account>/saved/shows/17900000000000000/`.
 6. **Set the collection**, in Command Prompt (it takes effect in new windows):
@@ -108,8 +130,9 @@ to your Claude subscription. Nothing new to buy.
 python -m intake.events [--dry-run] [--post SHORTCODE]
 ```
 
-- `--dry-run` reads the new posts and logs what it would add. It adds nothing
-  and doesn't remember the posts, so they're read again next time.
+- `--dry-run` reads the new posts and logs each event it would add, with its
+  description, so you can check the layout. It adds nothing, uploads no
+  flyers and doesn't remember the posts, so they're read again next time.
 - `--post` reads one post, even one read before: the code after `/p/` in
   its link. Events already on the calendar aren't added twice.
 
