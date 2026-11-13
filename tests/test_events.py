@@ -446,6 +446,8 @@ def test_a_new_show_with_a_library_artist_is_coloured_and_queued_for_the_email()
     assert match.artists == ["Daufødt"] and match.date == "2026-11-21" and match.post == POST.url
     events.handle(POST, [event()], target, TODAY, dry_run=False)
     assert len(target.alerts) == 1  # already on the calendar: no second alert
+    events.handle(POST, [event()], target, TODAY, dry_run=False, redo=True)
+    assert len(target.alerts) == 2  # --post: alerts again, so it can be tried
 
 
 def test_alert_email_lists_each_show():

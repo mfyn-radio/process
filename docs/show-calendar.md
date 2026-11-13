@@ -86,8 +86,9 @@ on the Artists tab of the MFYN Artists sheet), you're told
 Names are matched ignoring case, accents, punctuation and a leading "The",
 so *DAUFODT* on a flyer matches *Daufødt* in the sheet. A band only counts
 if Claude listed it among the acts. Events added before 13 November 2026
-have no acts stored, so they don't alert; redo one with `--post` to check
-it. A dry run logs "would alert" instead.
+have no acts stored, so they don't alert. Redoing a post with `--post`
+alerts again, which is also how to try it. A dry run logs "would alert"
+instead.
 
 ## The Events tab
 

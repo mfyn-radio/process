@@ -128,10 +128,11 @@ def handle(post, events, target, today, dry_run, redo=False):
             if not link:
                 continue
             log.info("%s: added '%s' on %s: %s", post.url, body["summary"], when, link)
-            if mine:
-                log.info("%s: library artist(s) %s; alert coming", post.url, ", ".join(mine))
-                target.alerts.append(alerts.Match(mine, body["summary"], event.date, event.start_time or "",
-                                                  body.get("location", ""), post.url, link))
+        # Alert for new shows, and for a post redone with --post (so it can be tried).
+        if mine:
+            log.info("%s: library artist(s) %s; alert coming", post.url, ", ".join(mine))
+            target.alerts.append(alerts.Match(mine, body["summary"], event.date, event.start_time or "",
+                                              body.get("location", ""), post.url, link))
         added += 1
         record_row(target, body, today)
         if event.location_conflict:
