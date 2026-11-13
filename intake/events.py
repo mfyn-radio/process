@@ -86,7 +86,7 @@ def handle(post, events, target, today, dry_run, redo=False):
         deleted = old is not None and old.get("status") == "cancelled"
         if old is not None and not (deleted and redo):
             log.info("%s: '%s' on %s is already on the calendar%s", post.url, event.title, when,
-                     " (deleted; --post puts it back)" if deleted else "")
+                     " (deleted; --post puts it back)" if deleted else ": " + old.get("htmlLink", ""))
             continue
         if attachment is None and post.image and target.drive is not None:
             name = show_calendar.flyer_name(event, flyer.EXTENSIONS.get(post.image_type, ".jpg"))
