@@ -1,8 +1,7 @@
 # MFYN Intake and Production Process
 
 Code and documentation for the **Music for Your Neighbors (MFYN)** intake and
-production process: how a song or artist goes from being *discovered* to having
-all the content for a post ready, and a show ready to play on the radio.
+production process: how a song or artist goes from being *discovered* to having post content ready, and a show ready to play on the radio.
 
 It ends at a manual stop, where you review everything. The separate
 **Publishing Process** starts after that. It isn't part of this repo yet.
