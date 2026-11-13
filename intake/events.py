@@ -93,12 +93,14 @@ def handle(post, events, target, today, dry_run, redo=False):
             attachment = show_calendar.upload_flyer(target.drive, target.folder_id, name, post.image, post.image_type)
         body = show_calendar.body(event, post, config.SHOW_TIMEZONE, tags, attachment)
         if old is not None:
-            show_calendar.restore(target.calendar, target.calendar_id, body)
+            link = show_calendar.restore(target.calendar, target.calendar_id, body)
             added += 1
-            log.info("%s: put back '%s' on %s", post.url, body["summary"], when)
-        elif show_calendar.add(target.calendar, target.calendar_id, body):
-            added += 1
-            log.info("%s: added '%s' on %s", post.url, body["summary"], when)
+            log.info("%s: put back '%s' on %s: %s", post.url, body["summary"], when, link)
+        else:
+            link = show_calendar.add(target.calendar, target.calendar_id, body)
+            if link:
+                added += 1
+                log.info("%s: added '%s' on %s: %s", post.url, body["summary"], when, link)
     return added
 
 
@@ -159,6 +161,11 @@ def run(browser, args):
             save_state(config.EVENTS_STATE_FILE, state)
             log.info("Created the %s folder in Drive", config.SHOW_FLYERS_FOLDER)
         target.calendar_id, target.folder_id = state["calendar_id"], state["flyers_folder_id"]
+        try:
+            name = show_calendar.make_visible(target.calendar, target.calendar_id)
+            log.info("Adding to the '%s' calendar in mfyn@'s Google Calendar", name)
+        except Exception:
+            log.exception("couldn't check that %s is in the calendar list", config.SHOW_CALENDAR)
     claude = flyer.find_claude()
 
     if args.post:
