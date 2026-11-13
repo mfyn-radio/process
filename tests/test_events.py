@@ -75,6 +75,17 @@ def test_parse_raises_on_an_error_so_the_post_is_retried():
         flyer.parse("Not logged in")
 
 
+def test_claude_is_found_where_the_installer_puts_it_even_off_the_path(tmp_path, monkeypatch):
+    monkeypatch.setattr(flyer.shutil, "which", lambda name: None)
+    monkeypatch.setattr(flyer.Path, "home", lambda: tmp_path)
+    with pytest.raises(SystemExit):
+        flyer.find_claude()
+    exe = tmp_path / ".local" / "bin" / "claude.exe"
+    exe.parent.mkdir(parents=True)
+    exe.write_bytes(b"")
+    assert flyer.find_claude() == str(exe)
+
+
 def test_read_saves_the_flyer_and_runs_claude_code_there(tmp_path):
     seen = {}
 

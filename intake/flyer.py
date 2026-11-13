@@ -96,7 +96,11 @@ def command(claude, image, model=None):
 
 
 def find_claude():
+    """Claude Code: on the PATH, or where its Windows installer puts it."""
     found = shutil.which("claude")
+    if not found:
+        installed = Path.home() / ".local" / "bin" / "claude.exe"
+        found = str(installed) if installed.exists() else None
     if not found:
         raise SystemExit("Claude Code isn't installed on this PC. See docs/show-calendar.md.")
     return found
