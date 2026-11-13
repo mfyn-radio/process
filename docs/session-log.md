@@ -11,6 +11,8 @@ session is first.
   on a new **MFYN Shows** Google calendar. Unclear ones are marked
   `[Check]`. Chrome reads Instagram, as Bandcamp is read in Acquire, because
   Instagram has no API for saved posts. Not yet run on the PC.
+- **Acquire now runs daily** (18:37), not hourly, in case Bandcamp was
+  getting suspicious of Chrome.
 - The Google sign-in now asks for the calendar too. Older sign-ins keep
   working for Acquire, Make Reels and Make Album Story.
 

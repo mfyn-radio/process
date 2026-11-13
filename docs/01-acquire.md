@@ -8,10 +8,10 @@ See also: [decisions and how we got here](01-acquire-decisions.md) ·
 
 | | |
 |---|---|
-| **Trigger** | The hourly run finds a new Bandcamp purchase email in the mfyn@nothingflatdigital.com inbox |
+| **Trigger** | The daily run finds a new Bandcamp purchase email in the mfyn@nothingflatdigital.com inbox |
 | **Input** | An album bought on Bandcamp. MFYN only uses music it owns. |
 | **Output** | One folder per album in `MFYN_Library`, with FLAC tracks and cover art |
-| **Runs on** | The MFYN Windows PC, hourly, from Task Scheduler |
+| **Runs on** | The MFYN Windows PC, daily, from Task Scheduler |
 | **Status** | Live on the MFYN PC since 2026-10-23 (Task Scheduler task `MFYN Acquire`) |
 | **Code** | [`intake/acquire.py`](../intake/acquire.py), started by [`scripts/run_acquire.cmd`](../scripts/run_acquire.cmd) |
 
@@ -202,9 +202,9 @@ installed.
    python -m intake.acquire --dry-run --backlog
    python -m intake.acquire --message-id <id>
    ```
-4. **Schedule it hourly:**
+4. **Schedule it daily:**
    ```
-   schtasks /Create /TN "MFYN Acquire" /SC HOURLY /TR "\"%USERPROFILE%\mfyn-process\scripts\run_acquire.cmd\""
+   schtasks /Create /TN "MFYN Acquire" /SC DAILY /ST 18:37 /TR "\"%USERPROFILE%\mfyn-process\scripts\run_acquire.cmd\""
    ```
    It runs while you're signed in to Windows. To run it straight away:
    `schtasks /Run /TN "MFYN Acquire"`.

@@ -31,7 +31,7 @@ misbehaves.
 
 | Automation | Started by | Runs on | Log | Docs |
 |---|---|---|---|---|
-| Acquire (`intake.acquire`) | Task Scheduler task `MFYN Acquire`, hourly, via `scripts\run_acquire.cmd` | MFYN PC, while signed in | `%APPDATA%\mfyn-intake\acquire.log` | [Step 1](01-acquire.md), [troubleshooting](01-acquire-troubleshooting.md) |
+| Acquire (`intake.acquire`) | Task Scheduler task `MFYN Acquire`, daily, via `scripts\run_acquire.cmd` | MFYN PC, while signed in | `%APPDATA%\mfyn-intake\acquire.log` | [Step 1](01-acquire.md), [troubleshooting](01-acquire-troubleshooting.md) |
 | Make Reels (`intake.reels`), with the archive cover (`intake.archive_cover`) and Instagram copy (`intake.captions`) | You, double-clicking **MFYN – Make Reels** (`scripts\make_reels.cmd`), until step 2 starts it itself | MFYN PC | `%APPDATA%\mfyn-intake\reels.log` | [Step 2a](02a-make-reels.md), [step 2b](02b-instagram-copy.md), [archive cover](archive-cover.md) |
 | Show calendar (`intake.events`) | Task Scheduler task `MFYN Show Calendar`, daily, via `scripts\run_events.cmd` | MFYN PC, while signed in | `%APPDATA%\mfyn-intake\events.log` | [Show calendar](show-calendar.md) |
 | Make Album Story (`intake.stories`) | You, double-clicking **MFYN – Make Album Story** (`scripts\make_story.cmd`), to feature an album | MFYN PC | `%APPDATA%\mfyn-intake\stories.log` | [Make Album Story](featured-album-story.md) |

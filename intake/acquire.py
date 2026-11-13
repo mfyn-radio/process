@@ -1,6 +1,6 @@
 """Step 1, Acquire: download new Bandcamp purchases into MFYN_Library.
 
-Runs on the MFYN PC (hourly, from Task Scheduler). See docs/01-acquire.md.
+Runs on the MFYN PC (daily, from Task Scheduler). See docs/01-acquire.md.
 
     python -m intake.acquire --setup CLIENT_JSON   # one-time Gmail sign-in
     python -m intake.acquire                       # new purchases

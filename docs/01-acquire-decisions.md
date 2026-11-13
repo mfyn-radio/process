@@ -14,7 +14,8 @@ Built on 2026-10-23. This is the record of what was decided for
 - Mostly albums. A single track is bought occasionally.
 - **New purchases only.** Older purchases can be handled by a manual batch
   run later.
-- Check **hourly**.
+- Check **hourly**. Changed to **daily** on 2026-11-13, so Chrome opens
+  Bandcamp less often, in case Bandcamp was treating it as suspicious.
 
 ## Decisions
 
