@@ -36,6 +36,7 @@ TOKEN_FILE = APP_DIR / "token.json"
 LOG_FILE = APP_DIR / "acquire.log"
 REELS_LOG_FILE = APP_DIR / "reels.log"
 STORIES_LOG_FILE = APP_DIR / "stories.log"
+EVENTS_LOG_FILE = APP_DIR / "events.log"
 
 # Google Sheet of artists and their Instagram handles, in mfyn@'s Drive.
 # Created by the automation on first use.
@@ -59,3 +60,21 @@ START_DATE = datetime.date(2026, 10, 23)
 PURCHASE_QUERY = 'from:noreply@bandcamp.com subject:"Thank you!" "Thanks for purchasing"'
 
 AUDIO_FORMAT = "flac"
+
+# Show calendar: events from the posts saved to one Instagram collection go on
+# a Google calendar of their own. See docs/show-calendar.md.
+# The collection's address, as Chrome shows it when you open it, e.g.
+# https://www.instagram.com/<account>/saved/shows/17900000000000000/
+INSTAGRAM_COLLECTION_URL = os.environ.get("MFYN_INSTAGRAM_COLLECTION", "")
+# Chrome keeps the Instagram sign-in in this profile, separate from Acquire's.
+INSTAGRAM_PROFILE_DIR = APP_DIR / "chrome-instagram"
+# Posts already read, and the calendar's id.
+EVENTS_STATE_FILE = APP_DIR / "events.json"
+SHOW_CALENDAR = "MFYN Shows"
+# Times on flyers are local times here (an IANA name, e.g. America/Chicago).
+SHOW_TIMEZONE = os.environ.get("MFYN_TIMEZONE", "America/Chicago")
+# Each run opens at most this many new posts, slowly, so Instagram doesn't
+# take Chrome for a bot.
+EVENTS_POSTS_PER_RUN = 15
+# Reads the flyers. Needs an Anthropic API key in ANTHROPIC_API_KEY on the PC.
+EVENTS_MODEL = "claude-opus-5-5"

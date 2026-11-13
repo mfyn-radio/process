@@ -3,6 +3,17 @@
 Where the MFYN intake project stands, and where to pick up. The newest
 session is first.
 
+## 2026-11-13
+
+- **Show calendar built** ([doc](show-calendar.md)), the Instagram half of
+  mfyn-radio/process#15. Every day it opens posts saved to a **Shows**
+  collection on MFYN's Instagram, Claude reads each flyer, and the shows go
+  on a new **MFYN Shows** Google calendar. Unclear ones are marked
+  `[Check]`. Chrome reads Instagram, as Bandcamp is read in Acquire, because
+  Instagram has no API for saved posts. Not yet run on the PC.
+- The Google sign-in now asks for the calendar too. Older sign-ins keep
+  working for Acquire, Make Reels and Make Album Story.
+
 ## 2026-11-05
 
 - **Reel sketch finalized** (white design) and brought in from Drive:

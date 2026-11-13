@@ -13,6 +13,7 @@ the PC, as part of [setting up step 1](../01-acquire.md#setting-it-up-on-the-pc)
   - **Gmail API**
   - **Google Drive API**
   - **Google Sheets API** (needed for the MFYN Artists sheet)
+  - **Google Calendar API** (needed for the [show calendar](../show-calendar.md))
 - consent screen **Audience: Internal**. Only nothingflatdigital.com accounts
   can use it, Google doesn't review it, and its login doesn't expire after
   7 days.
@@ -24,9 +25,13 @@ Permissions requested at sign-in:
 - `https://www.googleapis.com/auth/drive.file`: only the files the automation
   creates itself, the MFYN Artists sheet. It can't see the rest of the Drive.
   The library itself is synced by Drive for desktop.
+- `https://www.googleapis.com/auth/calendar.app.created`: only the calendars
+  the automation creates itself, MFYN Shows. It can't see mfyn@'s other
+  calendars. Added for the [show calendar](../show-calendar.md); a sign-in
+  from before it still works for everything else.
 
 If you ever need to rebuild this from scratch: create the project under the
-nothingflatdigital.com organization, enable the Gmail, Drive and Sheets APIs, then configure
+nothingflatdigital.com organization, enable the Gmail, Drive, Sheets and Calendar APIs, then configure
 **Google Auth Platform** (or **APIs & Services → OAuth consent screen**) with
 Audience **Internal**.
 
