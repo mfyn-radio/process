@@ -89,12 +89,28 @@ def test_collection_picks_up_a_new_post_at_the_top(monkeypatch):
     assert collection(codes, codes[1:]) == ["NEW"]
 
 
+def test_location_tag_is_the_first_named_place_link():
+    links = [("https://www.instagram.com/thevenue/", "thevenue"),
+             ("https://www.instagram.com/explore/locations/123/", " "),
+             ("https://www.instagram.com/explore/locations/456/worm/", "WORM\n Rotterdam")]
+    assert instagram.location_tag(links) == "WORM Rotterdam"
+    assert instagram.location_tag([("https://www.instagram.com/p/X/", "post")]) == ""
+
+
 # Reading the flyer
 
 def test_prompt_names_the_flyer_file_and_gives_the_posting_date():
     text = flyer.prompt(POST, "flyer.jpg")
     assert "flyer.jpg" in text and "@thevenue" in text and "2026-11-01" in text and "Daufødt" in text
     assert "Flyer image:" not in flyer.prompt(instagram.Post("X", "u", caption="hi"))
+
+
+def test_prompt_gives_the_location_tag_and_says_it_wins_only_when_there_is_one():
+    tagged = instagram.Post("X", "u", caption="hi", location="WORM Rotterdam")
+    text = flyer.prompt(tagged, "flyer.jpg")
+    assert "Location tag: WORM Rotterdam" in text and "even if the flyer" in text
+    untagged = flyer.prompt(instagram.Post("X", "u", caption="hi"), "flyer.jpg")
+    assert "Location tag" not in untagged and "location_conflict to true" not in untagged
 
 
 def test_command_only_allows_reading_files_when_there_is_an_image():

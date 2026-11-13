@@ -23,8 +23,9 @@ See also: [process overview](README.md) · [Google Cloud setup](setup/google-clo
    Older posts below one already read aren't reached; to add them, use
    `--backlog` (or `--post` for one). Pages open a few seconds apart, so Instagram doesn't take it
    for a bot.
-2. **Reads each post:** its caption, who posted it and when, and its image.
-   For a carousel that's the first image only. For a Reel it's the cover.
+2. **Reads each post:** its caption, who posted it and when, its location
+   tag if it has one, and its image. For a carousel that's the first image
+   only. For a Reel it's the cover.
 3. **Finds the events.** Claude Code on the PC (`claude -p`, on the Claude
    subscription, so no extra bill) reads the flyer and the caption and returns
    each event: title, acts, date, times, venue, city and tickets. A tour
@@ -48,9 +49,14 @@ See also: [process overview](README.md) · [Google Cloud setup](setup/google-clo
    - **The event's link** (Calendar's "source") is a tickets or event address
      written in the post, else the Instagram post. "Link in bio" doesn't
      count.
-   - **Only shows in the Netherlands or Belgium** are added. Claude works
-     out the country from the venue and city; a tour poster's dates
-     elsewhere are skipped. If the country can't be told, the show is added
+   - **The location tag wins.** If the post is tagged with a place, that's
+     the venue, city and country, even if the flyer says otherwise; the log
+     notes when they disagreed. On a tour poster the tag is only used for
+     the show at that place.
+   - **Only shows in the Netherlands or Belgium** are added. Without a tag,
+     Claude works out the country from the venue and city (its own
+     knowledge; nothing is looked up). A tour poster's dates elsewhere are
+     skipped. If the country can't be told, the show is added
      and the log says to check it.
    - Without a start time it's an all-day event; without an end time it's
      3 hours long. Shows that are already over are skipped.
@@ -155,6 +161,8 @@ python -m intake.events [--dry-run] [--backlog] [--post SHORTCODE]
   limit was reached, the posts are retried on the next run.
 - **"couldn't tell which country '…' is in"** in the log: the show was
   added anyway. Delete it if it isn't in the Netherlands or Belgium.
+- **"the location tag '…' differs from the flyer"** in the log: the event
+  uses the tag's place. Check it if the tag looks wrong.
 - **"The flyer for '…' wasn't clear"** in the log: Claude wasn't sure of
   the date, venue or acts. Check that event against the post.
 - **Wrong year or time:** fix the event by hand. It won't be changed back.

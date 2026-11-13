@@ -23,7 +23,7 @@ about independent music, saved because it may announce a live music event.
 
 Posted by: @{account}
 Posted on: {posted}
-{image}
+{location}{image}
 Caption:
 {caption}
 
@@ -40,6 +40,16 @@ out from the venue and city if the post doesn't say. For tags, give the music ge
 places. Leave a field null rather than guess. Set confident to false if the date, \
 venue or acts are unclear. If the post doesn't announce an event (a release, \
 a photo, a past show), return no events."""
+
+LOCATION_LINE = "Location tag: {tag}\n"
+LOCATION_RULE = """
+
+The post is tagged with a location on Instagram, which is reliable. Use it for \
+the venue, city and country of the event at that place, even if the flyer or \
+caption says otherwise, and set location_conflict to true for an event where \
+they disagreed. If the post lists several places (a tour), the tag is only \
+one of them: don't apply it to the others. Ignore a tag that isn't a real \
+place."""
 
 IMAGE_LINE = "Flyer image: the file {name} in the current folder. Read it first.\n"
 
@@ -62,9 +72,11 @@ SCHEMA = {
             "notes": {**MAYBE, "description": "Practical details: price, cash only, 18+, set times, address"},
             "tags": {"type": "array", "items": TEXT, "description": "Music genres the post names, lowercase"},
             "confident": {"type": "boolean"},
+            "location_conflict": {"type": "boolean",
+                                  "description": "True if the location tag and the flyer or caption disagreed"},
         },
         "required": ["title", "acts", "date", "start_time", "end_time", "venue", "city", "country", "link", "notes",
-                     "tags", "confident"],
+                     "tags", "confident", "location_conflict"],
         "additionalProperties": False,
     }}},
     "required": ["events"],
@@ -88,13 +100,17 @@ class Event:
     notes: Optional[str] = None
     tags: List[str] = field(default_factory=list)
     confident: bool = False
+    location_conflict: bool = False
 
 
 def prompt(post, image_name=None):
-    return PROMPT.format(
+    location = getattr(post, "location", "")
+    text = PROMPT.format(
         account=post.account or "unknown", posted=post.posted or "unknown",
+        location=LOCATION_LINE.format(tag=location) if location else "",
         image=IMAGE_LINE.format(name=image_name) if image_name else "",
         caption=post.caption or "(none)")
+    return text + LOCATION_RULE if location else text
 
 
 def command(claude, image, model=None):
@@ -136,6 +152,7 @@ def parse(stdout):
                 known[name] = [a for a in known.get(name) or [] if isinstance(a, str) and a.strip()]
             known["link"] = web_address(known.get("link"))
             known["confident"] = bool(known.get("confident"))
+            known["location_conflict"] = bool(known.get("location_conflict"))
             events.append(Event(**known))
     return events
 

@@ -34,6 +34,16 @@ class Post:
     image_url: str = ""
     image: bytes = b""
     image_type: str = "image/jpeg"
+    location: str = ""    # the post's location tag, e.g. "WORM Rotterdam"
+
+
+def location_tag(links):
+    """The location tag from a post page's (href, text) links: the first link
+    to an Instagram place page that has a name."""
+    for href, text in links:
+        if "/explore/locations/" in (href or "") and (text or "").strip():
+            return " ".join(text.split())
+    return ""
 
 
 def shortcodes(hrefs):
@@ -139,7 +149,7 @@ class Browser:
         return new
 
     def post(self, shortcode):
-        """Read one post: its caption and its (first) image."""
+        """Read one post: its caption, location tag and (first) image."""
         url = f"https://www.instagram.com/p/{shortcode}/"
         driver = self._open(url)
 
@@ -152,6 +162,8 @@ class Browser:
         post = Post(shortcode, url, account, posted, caption, meta("og:image"))
         if times:
             post.posted = times[0].get_attribute("datetime")[:10] or post.posted
+        places = driver.find_elements(By.CSS_SELECTOR, 'a[href*="/explore/locations/"]')
+        post.location = location_tag((a.get_attribute("href"), a.get_attribute("textContent")) for a in places)
         if post.image_url:
             request = urllib.request.Request(post.image_url, headers={"User-Agent": "Mozilla/5.0"})
             with urllib.request.urlopen(request, timeout=60) as resp:
