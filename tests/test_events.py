@@ -37,6 +37,47 @@ def test_og_description_that_doesnt_match_is_kept_as_the_caption():
     assert instagram.parse_description("Just some text") == ("", "", "Just some text")
 
 
+class FakeGrid:
+    """A saved-posts page that shows `window` posts at a time and moves down
+    by `step` posts on each scroll, like Instagram's grid."""
+
+    def __init__(self, codes, window=12, step=6):
+        self.codes, self.window, self.step, self.top = codes, window, step, 0
+        self.current_url = "https://www.instagram.com/mfyn_thing/saved/events/1/"
+
+    def find_elements(self, by, css):
+        shown = self.codes[self.top:self.top + self.window]
+        return [SimpleNamespace(get_attribute=lambda name, c=c: f"https://www.instagram.com/p/{c}/") for c in shown]
+
+    def execute_script(self, script):
+        self.top = min(self.top + self.step, max(len(self.codes) - self.window, 0))
+
+
+def collection(codes, known, limit=15):
+    browser = instagram.Browser("profile")
+    grid = FakeGrid(codes)
+    browser._open = lambda url: grid
+    return browser.collection("u", set(known), limit)
+
+
+def test_collection_reaches_older_posts_below_ones_already_read(monkeypatch):
+    monkeypatch.setattr(instagram, "pause", lambda *a: None)
+    codes = [f"P{i:02}" for i in range(37)]  # newest first
+    first = collection(codes, [])
+    assert first == codes[:15]
+    second = collection(codes, first)
+    assert second == codes[15:30]
+    third = collection(codes, first + second)
+    assert third == codes[30:]
+    assert collection(codes, codes) == []
+
+
+def test_collection_picks_up_a_new_post_at_the_top(monkeypatch):
+    monkeypatch.setattr(instagram, "pause", lambda *a: None)
+    codes = ["NEW"] + [f"P{i:02}" for i in range(37)]
+    assert collection(codes, codes[1:]) == ["NEW"]
+
+
 # Reading the flyer
 
 def test_prompt_names_the_flyer_file_and_gives_the_posting_date():

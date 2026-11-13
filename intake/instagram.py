@@ -107,25 +107,29 @@ class Browser:
     def signed_in(self, driver):
         return "/accounts/login" not in driver.current_url
 
-    def collection(self, url, known, limit):
+    def collection(self, url, known, limit, max_scrolls=40):
         """Shortcodes in the collection that aren't in `known`, newest first,
-        at most `limit`. Scrolls until it reaches posts it already knows."""
+        at most `limit`. Scrolls down until it has `limit` of them or reaches
+        the end, so older posts below ones already read are found too.
+        Instagram drops posts scrolled far past from the page, so the codes
+        are collected as it goes."""
         driver = self._open(url)
         if not self.signed_in(driver):
             raise SystemExit("Instagram isn't signed in. Run: python -m intake.events --setup-instagram")
-        found = []
-        for _ in range(10):
+        seen = []
+        stalled = 0
+        for _ in range(max_scrolls):
             hrefs = [a.get_attribute("href") for a in driver.find_elements(By.CSS_SELECTOR, "a[href]")]
-            codes = shortcodes(hrefs)
-            found = [c for c in codes if c not in known]
-            if len(found) >= limit or len(found) < len(codes):
-                break  # enough, or we've reached posts read before
-            before = len(codes)
+            fresh = [c for c in shortcodes(hrefs) if c not in seen]
+            seen += fresh
+            if len([c for c in seen if c not in known]) >= limit:
+                break
+            stalled = 0 if fresh else stalled + 1
+            if stalled >= 2:
+                break  # nothing more loads: the end of the collection
             driver.execute_script("window.scrollTo(0, document.body.scrollHeight)")
             pause()
-            if len(shortcodes(a.get_attribute("href") for a in driver.find_elements(By.CSS_SELECTOR, "a[href]"))) == before:
-                break  # the end of the collection
-        return found[:limit]
+        return [c for c in seen if c not in known][:limit]
 
     def post(self, shortcode):
         """Read one post: its caption and its (first) image."""
