@@ -12,9 +12,6 @@ import html
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
-CHECK = "[Check] "
-
-
 def client(creds):
     return build("calendar", "v3", credentials=creds, cache_discovery=False)
 
@@ -53,11 +50,10 @@ def description(event, post, tags=()):
 
 def body(event, post, timezone, tags=()):
     """The Calendar event for an Event read from `post`."""
-    title = event.title if event.confident else CHECK + event.title
     link = event.link or post.url
     result = {
         "id": event_id(post.shortcode, event),
-        "summary": title,
+        "summary": event.title,
         "description": description(event, post, tags),
         "source": {"title": "Instagram" if link == post.url else event.title, "url": link},
     }

@@ -9,8 +9,8 @@ session is first.
   the Instagram half of mfyn-radio/process#15. Every day it opens posts saved to a **Shows**
   collection on MFYN's Instagram, Claude Code on the PC reads
   each flyer (on the subscription, no API key), and the shows go
-  on a new **MFYN Shows** Google calendar. Unclear ones are marked
-  `[Check]`. Chrome reads Instagram, as Bandcamp is read in Acquire, because
+  on a new **MFYN Shows** Google calendar. Unclear flyers are noted in
+  the log, not in the title. Chrome reads Instagram, as Bandcamp is read in Acquire, because
   Instagram has no API for saved posts. Not yet run on the PC.
 - **Acquire now runs daily** (18:37), not hourly, in case Bandcamp was
   getting suspicious of Chrome.

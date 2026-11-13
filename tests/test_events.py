@@ -154,9 +154,9 @@ def test_unreadable_time_becomes_all_day():
     assert body["start"] == {"date": "2026-11-21"}
 
 
-def test_unclear_event_is_marked_check():
+def test_unclear_event_keeps_its_plain_title():
     body = show_calendar.body(event(confident=False), POST, "UTC")
-    assert body["summary"] == "[Check] Fellatio"
+    assert body["summary"] == "Fellatio"  # no "[Check]": an unclear flyer is only noted in the log
 
 
 def test_event_id_is_stable_and_valid_for_calendar():

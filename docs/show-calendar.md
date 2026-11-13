@@ -30,7 +30,7 @@ See also: [process overview](README.md) · [Google Cloud setup](setup/google-clo
    out from the posting date. A post that isn't an event gives none.
 4. **Adds them to MFYN Shows**, laid out like this:
    ```
-   Calls From The Hull IV                    <- [Check] in front if the flyer wasn't clear
+   Calls From The Hull IV
    V11, Rotterdam
    Sat 28 Nov 2026
 
@@ -52,7 +52,7 @@ See also: [process overview](README.md) · [Google Cloud setup](setup/google-clo
    never read again. A post that fails is retried next run.
 
 **Your edits are safe.** Once an event is on the calendar the automation never
-changes it. Fix a `[Check]` event by hand and it stays fixed. Delete one and
+changes it. Fix an event by hand and it stays fixed. Delete one and
 it stays deleted.
 
 **What it can only touch:** the calendars it creates itself (the
@@ -145,6 +145,8 @@ python -m intake.events [--dry-run] [--post SHORTCODE]
 - **"Claude Code isn't installed"** or **"Claude Code failed"**: run `claude`
   in Command Prompt to check it's signed in. If the subscription's usage
   limit was reached, the posts are retried on the next run.
+- **"The flyer for '…' wasn't clear"** in the log: Claude wasn't sure of
+  the date, venue or acts. Check that event against the post.
 - **Wrong year or time:** fix the event by hand. It won't be changed back.
 - **Page layout changes:** if Instagram changes its pages, finding posts
   (`instagram.py`) is the part likely to break. The log says which post

@@ -95,6 +95,9 @@ def handle(post, events, target, today, dry_run, redo=False):
             if link:
                 added += 1
                 log.info("%s: added '%s' on %s: %s", post.url, body["summary"], when, link)
+                if not event.confident:
+                    log.warning("%s: the flyer for '%s' wasn't clear; check the event against the post",
+                                post.url, event.title)
     return added
 
 
