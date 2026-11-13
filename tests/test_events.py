@@ -53,11 +53,11 @@ class FakeGrid:
         self.top = min(self.top + self.step, max(len(self.codes) - self.window, 0))
 
 
-def collection(codes, known, limit=15):
+def collection(codes, known, limit=15, backlog=False):
     browser = instagram.Browser("profile")
     grid = FakeGrid(codes)
     browser._open = lambda url: grid
-    return browser.collection("u", set(known), limit)
+    return browser.collection("u", set(known), limit, backlog=backlog)
 
 
 def test_collection_takes_the_newest_15_and_stops_at_a_post_already_read(monkeypatch):
@@ -67,6 +67,20 @@ def test_collection_takes_the_newest_15_and_stops_at_a_post_already_read(monkeyp
     assert first == codes[:15]
     assert collection(codes, first) == []  # stops at P00: older posts aren't reached
     assert collection(["N1", "N2"] + codes, first) == ["N1", "N2"]
+
+
+def test_backlog_reads_older_posts_below_ones_already_read(monkeypatch):
+    monkeypatch.setattr(instagram, "pause", lambda *a: None)
+    codes = [f"P{i:02}" for i in range(37)]
+    read = codes[:1]  # the post tested with --post
+    runs = []
+    while True:
+        new = collection(codes, read, backlog=True)
+        if not new:
+            break
+        runs.append(new)
+        read += new
+    assert [len(r) for r in runs] == [15, 15, 6] and sorted(read) == codes
 
 
 def test_collection_picks_up_a_new_post_at_the_top(monkeypatch):

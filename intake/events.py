@@ -6,6 +6,7 @@ Runs on the MFYN PC (daily, from Task Scheduler). See docs/show-calendar.md.
     python -m intake.events                     # read new saved posts, add their events
     python -m intake.events --dry-run           # show what would be added, change nothing
     python -m intake.events --post SHORTCODE    # just this one post, even if read before
+    python -m intake.events --backlog           # also older unread posts, 15 a run
 """
 import argparse
 import datetime
@@ -125,6 +126,8 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--setup-instagram", action="store_true", help="sign in to Instagram as MFYN in Chrome, once")
     parser.add_argument("--dry-run", action="store_true", help="read posts but don't add events or remember the posts")
+    parser.add_argument("--backlog", action="store_true",
+                        help="also read older posts below ones already read (15 a run; repeat until none are left)")
     parser.add_argument("--post", metavar="SHORTCODE", help="read only this post (the code after /p/ in its link)")
     args = parser.parse_args(argv)
     setup_logging()
@@ -162,7 +165,8 @@ def run(browser, args):
     if args.post:
         codes = [args.post]
     else:
-        codes = browser.collection(config.INSTAGRAM_COLLECTION_URL, set(state["posts"]), config.EVENTS_POSTS_PER_RUN)
+        codes = browser.collection(config.INSTAGRAM_COLLECTION_URL, set(state["posts"]), config.EVENTS_POSTS_PER_RUN,
+                                   backlog=args.backlog)
     log.info("%d new post(s) to read", len(codes))
 
     today = datetime.date.today()

@@ -107,10 +107,11 @@ class Browser:
     def signed_in(self, driver):
         return "/accounts/login" not in driver.current_url
 
-    def collection(self, url, known, limit, max_scrolls=40):
+    def collection(self, url, known, limit, backlog=False, max_scrolls=40):
         """The newest posts in the collection, down to the first one already
         read (in `known`), at most `limit`. Older posts below a read one are
-        never reached. Instagram drops posts scrolled far past from the page,
+        never reached, unless `backlog`: then read ones are skipped and it
+        carries on down. Instagram drops posts scrolled far past from the page,
         so the codes are collected as it goes."""
         driver = self._open(url)
         if not self.signed_in(driver):
@@ -123,8 +124,12 @@ class Browser:
             fresh = [c for c in shortcodes(hrefs) if c not in seen]
             seen.update(fresh)
             for code in fresh:
-                if code in known or len(new) >= limit:
-                    return new  # reached posts read before, or enough for this run
+                if code in known:
+                    if backlog:
+                        continue
+                    return new  # reached posts read before
+                if len(new) >= limit:
+                    return new  # enough for this run
                 new.append(code)
             stalled = 0 if fresh else stalled + 1
             if stalled >= 2:

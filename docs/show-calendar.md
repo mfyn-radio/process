@@ -20,8 +20,8 @@ See also: [process overview](README.md) · [Google Cloud setup](setup/google-clo
 
 1. **Finds new posts.** Chrome opens the collection and takes the newest
    posts, down to the first one it has already read, at most 15 a run.
-   Older posts below one already read aren't reached; to add one, use
-   `--post`. Pages open a few seconds apart, so Instagram doesn't take it
+   Older posts below one already read aren't reached; to add them, use
+   `--backlog` (or `--post` for one). Pages open a few seconds apart, so Instagram doesn't take it
    for a bot.
 2. **Reads each post:** its caption, who posted it and when, and its image.
    For a carousel that's the first image only. For a Reel it's the cover.
@@ -122,9 +122,12 @@ to your Claude subscription. Nothing new to buy.
 ## Running it by hand
 
 ```
-python -m intake.events [--dry-run] [--post SHORTCODE]
+python -m intake.events [--dry-run] [--backlog] [--post SHORTCODE]
 ```
 
+- `--backlog` also reads older unread posts below ones already read, 15 a
+  run. Repeat it until it says "0 new post(s) to read". Use it once, to add
+  a collection's existing posts.
 - `--dry-run` reads the new posts and logs each event it would add, with its
   description, so you can check the layout. It adds nothing and doesn't
   remember the posts, so they're read again next time.
