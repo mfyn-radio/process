@@ -245,6 +245,10 @@ def run(browser, args):
     for code in codes:
         try:
             post = browser.post(code)
+            if args.dry_run:
+                log.info("%s: read @%s, posted %s, location tag: %s, image: %s, caption: %r", post.url,
+                         post.account or "?", post.posted or "?", post.location or "none",
+                         f"{len(post.image) // 1024} KB" if post.image else "none", post.caption[:300])
             events = flyer.read(post, config.EVENTS_MODEL, claude=claude)
             added = handle(post, events, target, today, args.dry_run, redo=bool(args.post))
         except Exception:
