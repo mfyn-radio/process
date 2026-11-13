@@ -19,6 +19,12 @@ session is first.
   Share on Instagram" link to the post. No flyer attachment and no
   `[Check]` in titles, by choice. The full collection and the daily task
   aren't tried yet.
+- **Where it stands at the end of the day:** the backlog is read (21 events
+  on MFYN Shows), `--fill-sheet` filled the Events tab, and the daily
+  `MFYN Show Calendar` task (10:17) is created. Waiting on: the first
+  scheduled run, Acquire actually switched to daily on the PC, and a check
+  that a refreshed sign-in keeps `calendar.app.created`. Then merge
+  mfyn-radio/process#38.
 - **Events tab** in the MFYN Artists sheet: one row per show, written as
   each event is added; `--fill-sheet` for events already on the calendar.
   Only shows in the Netherlands or Belgium are added, and a post's location
