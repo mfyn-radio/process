@@ -19,6 +19,10 @@ session is first.
   Share on Instagram" link to the post. No flyer attachment and no
   `[Check]` in titles, by choice. The full collection and the daily task
   aren't tried yet.
+- **Events tab** in the MFYN Artists sheet: one row per show, written as
+  each event is added; `--fill-sheet` for events already on the calendar.
+  Only shows in the Netherlands or Belgium are added, and a post's location
+  tag wins over the flyer (noted in the log).
 - **Flyers are read by Claude Code on the PC** (`claude -p`, on the Claude
   subscription), not the paid API. Nothing that costs extra gets added
   (now in `CLAUDE.md`).

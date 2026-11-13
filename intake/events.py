@@ -7,6 +7,7 @@ Runs on the MFYN PC (daily, from Task Scheduler). See docs/show-calendar.md.
     python -m intake.events --dry-run           # show what would be added, change nothing
     python -m intake.events --post SHORTCODE    # just this one post, even if read before
     python -m intake.events --backlog           # also older unread posts, 15 a run
+    python -m intake.events --fill-sheet        # Events tab rows for events already on the calendar
 """
 import argparse
 import datetime
@@ -110,6 +111,8 @@ def handle(post, events, target, today, dry_run, redo=False):
         if old is not None and not redo:
             log.info("%s: '%s' on %s is already on the calendar: %s", post.url, event.title, when,
                      old.get("htmlLink", ""))
+            if old.get("status") != "cancelled":
+                record_row(target, old, today)
             continue
         if old is not None:
             link = show_calendar.restore(target.calendar, target.calendar_id, body)
@@ -120,6 +123,7 @@ def handle(post, events, target, today, dry_run, redo=False):
                 continue
             log.info("%s: added '%s' on %s: %s", post.url, body["summary"], when, link)
         added += 1
+        record_row(target, body, today)
         if event.location_conflict:
             log.warning("%s: the location tag '%s' differs from the flyer for '%s'; used the tag (%s)",
                         post.url, post.location, event.title, body.get("location", "?"))
@@ -127,6 +131,27 @@ def handle(post, events, target, today, dry_run, redo=False):
             log.warning("%s: the flyer for '%s' wasn't clear; check the event against the post",
                         post.url, event.title)
     return added
+
+
+def record_row(target, event_body, today):
+    """Add or fill in the event's row on the Events tab. The calendar is what
+    matters, so a problem with the sheet is only logged; --fill-sheet catches
+    up later."""
+    if target.catalog is None:
+        return
+    try:
+        target.catalog.events.upsert(show_calendar.row(event_body, today.isoformat()))
+    except Exception:
+        log.exception("couldn't record '%s' on the Events tab", event_body.get("summary"))
+
+
+def fill_sheet(target, today):
+    """Give every event on the calendar a row on the Events tab."""
+    count = 0
+    for event_body in show_calendar.all_events(target.calendar, target.calendar_id):
+        record_row(target, event_body, today)
+        count += 1
+    log.info("%d event(s) on %s are on the Events tab", count, config.SHOW_CALENDAR)
 
 
 def open_catalog(creds):
@@ -154,6 +179,8 @@ def main(argv=None):
     parser.add_argument("--dry-run", action="store_true", help="read posts but don't add events or remember the posts")
     parser.add_argument("--backlog", action="store_true",
                         help="also read older posts below ones already read (15 a run; repeat until none are left)")
+    parser.add_argument("--fill-sheet", action="store_true",
+                        help="give every event already on the calendar a row on the Events tab, then stop")
     parser.add_argument("--post", metavar="SHORTCODE", help="read only this post (the code after /p/ in its link)")
     args = parser.parse_args(argv)
     setup_logging()
@@ -164,7 +191,7 @@ def main(argv=None):
             browser.sign_in()
             log.info("Instagram sign-in saved in %s", config.INSTAGRAM_PROFILE_DIR)
             return 0
-        if not args.post and not config.INSTAGRAM_COLLECTION_URL:
+        if not (args.post or args.fill_sheet) and not config.INSTAGRAM_COLLECTION_URL:
             log.error("Set MFYN_INSTAGRAM_COLLECTION to the collection's address. See docs/show-calendar.md.")
             return 1
         return run(browser, args)
@@ -186,6 +213,12 @@ def run(browser, args):
                      "subscribe to it (Other calendars > + > Subscribe to calendar) with this ID: %s",
                      config.SHOW_CALENDAR, state["calendar_id"])
         target.calendar_id = state["calendar_id"]
+    if args.fill_sheet:
+        if args.dry_run or target.catalog is None:
+            log.error("--fill-sheet needs the %s sheet and can't be a dry run", config.ARTISTS_SHEET)
+            return 1
+        fill_sheet(target, datetime.date.today())
+        return 0
     claude = flyer.find_claude()
 
     if args.post:

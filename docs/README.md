@@ -48,7 +48,7 @@ The logs keep four files of up to 1 MB each, and Make Reels and Make Album Story
 |---|---|---|
 | mfyn@nothingflatdigital.com | Google Workspace | Bandcamp purchases, receipts, owns the library |
 | admin@nothingflatdigital.com | Google Workspace | Workspace and Google Cloud administration |
-| MFYN Artists | Google Sheet in mfyn@'s Drive, kept by the automation | The artist library (Instagram handles, tags, links), releases and labels |
+| MFYN Artists | Google Sheet in mfyn@'s Drive, kept by the automation | The artist library (Instagram handles, tags, links), releases, labels, and every show on MFYN Shows (Events tab) |
 | `MFYN_Show_Archive` | mfyn@'s My Drive, `H:\My Drive\MFYN_Show_Archive` | Finished episodes, `D_M_YYYY- Episode Name\Tracks` |
 | `MFYN_Reels` | mfyn@'s My Drive, `H:\My Drive\MFYN_Reels` | Each episode's Reels, their details and captions, for your review and then Publishing |
 | `MFYN_Stories` | mfyn@'s My Drive, `H:\My Drive\MFYN_Stories` | Featured-album Stories and their details, for your review and then Publishing |

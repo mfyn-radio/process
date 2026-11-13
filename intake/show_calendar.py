@@ -8,6 +8,7 @@ there is left alone, even if you've edited it.
 import datetime
 import hashlib
 import html
+import re
 
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
@@ -58,6 +59,12 @@ def body(event, post, timezone, tags=(), n=0):
         "summary": event.title,
         "description": description(event, post, tags),
         "source": {"title": "Instagram" if link == post.url else event.title, "url": link},
+        # The details, kept with the event so the Events tab can be rebuilt from the calendar.
+        "extendedProperties": {"private": {k: v[:1000] for k, v in {
+            "venue": event.venue or "", "city": event.city or "", "country": event.country or "",
+            "acts": ", ".join(event.acts), "tags": ", ".join(tags), "link": event.link or "",
+            "post": post.url, "location_tag": getattr(post, "location", "") or "",
+        }.items() if v}},
     }
     location = ", ".join(p for p in (event.venue, event.city) if p)
     if location:
@@ -116,3 +123,49 @@ def add(service, calendar_id, event_body):
         if e.resp.status == 409:  # that id is taken: added on an earlier run
             return None
         raise
+
+
+# Rows for the Events tab of the MFYN Artists sheet.
+
+def _date_and_time(when):
+    """("2026-11-28", "20:00") from a Calendar start or end; no time for all-day."""
+    if "dateTime" in when:
+        return when["dateTime"][:10], when["dateTime"][11:16]
+    return when.get("date", ""), ""
+
+
+def row(event_body, added):
+    """The Events tab row for a Calendar event, from the details kept with it.
+    Older events without them get what the title, place and dates give."""
+    extra = event_body.get("extendedProperties", {}).get("private", {})
+    date, start = _date_and_time(event_body.get("start", {}))
+    end_date, end = _date_and_time(event_body.get("end", {}))
+    venue, city = extra.get("venue", ""), extra.get("city", "")
+    if not (venue or city) and event_body.get("location"):
+        venue, _, city = event_body["location"].rpartition(", ")
+    post = extra.get("post", "")
+    if not post:
+        found = re.search(r'href="([^"]+)"', event_body.get("description", ""))
+        post = html.unescape(found.group(1)) if found else ""
+    source = event_body.get("source", {}).get("url", "")
+    return {
+        "Date": date, "Start": start, "End": end, "Title": event_body.get("summary", ""),
+        "Venue": venue, "City": city, "Country": extra.get("country", ""),
+        "Acts": extra.get("acts", ""),
+        "Tags": [t.strip() for t in extra.get("tags", "").split(",") if t.strip()],
+        "Link": extra.get("link", "") or (source if source and source != post else ""),
+        "Post": post, "Location tag": extra.get("location_tag", ""),
+        "Event id": event_body.get("id", ""), "Added": added,
+    }
+
+
+def all_events(service, calendar_id):
+    """Every event on the calendar, not counting deleted ones."""
+    page = None
+    while True:
+        resp = service.events().list(calendarId=calendar_id, pageToken=page, showDeleted=False,
+                                     singleEvents=True, maxResults=250).execute()
+        yield from resp.get("items", [])
+        page = resp.get("nextPageToken")
+        if not page:
+            return

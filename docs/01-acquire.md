@@ -106,6 +106,9 @@ or filter this tab to see, say, every *ambient* artist, or add a pivot table
 to count the library by tag. Bandcamp tags mix genres with places like
 *Brooklyn*; they're kept as Bandcamp has them.
 
+**Events** has one row per show on the MFYN Shows calendar, written by the
+[show calendar](show-calendar.md#the-events-tab), not by Acquire.
+
 #### Status
 
 | Status | Meaning |

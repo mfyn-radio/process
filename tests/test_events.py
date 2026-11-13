@@ -272,10 +272,11 @@ class FakeCalendar:
 
 
 class FakeCatalog:
-    def __init__(self, rows):
+    def __init__(self, rows=()):
         from test_catalog import MemoryTable
         from intake import catalog
         self.artists = MemoryTable(catalog.ARTISTS, "Artist", ("Tags",), rows=rows)
+        self.events = MemoryTable(catalog.EVENTS, "Event id", ("Tags",))
 
 
 TODAY = datetime.date(2026, 11, 13)
@@ -314,6 +315,42 @@ def test_only_shows_in_the_netherlands_or_belgium_are_added():
              event(date="2026-11-24", city=None, country=None)]
     assert events.handle(POST, found, events.Target(cal, "cal"), TODAY, dry_run=False) == 3
     assert sorted(b["start"]["dateTime"][:10] for b in cal.added.values()) == ["2026-11-21", "2026-11-22", "2026-11-24"]
+
+
+def test_each_added_event_gets_a_row_on_the_events_tab():
+    cal, cat = FakeCalendar(), FakeCatalog([{"Artist": "Fellatio", "Tags": "punk"}])
+    post = instagram.Post("DAbc123", POST.url, caption="x", location="WORM Rotterdam")
+    ev = event(link="https://worm.org/x", tags=["Noise"])
+    events.handle(post, [ev], events.Target(cal, "cal", cat), TODAY, dry_run=False)
+    (row,) = cat.events.rows
+    assert row["Date"] == "2026-11-21" and row["Start"] == "20:00" and row["End"] == "23:00"
+    assert (row["Title"], row["Venue"], row["City"], row["Country"]) == ("Fellatio", "The Venue", "Hague", "Netherlands")
+    assert row["Acts"] == "Fellatio, Daufødt" and row["Tags"] == "noise, punk"
+    assert row["Link"] == "https://worm.org/x" and row["Post"] == POST.url
+    assert row["Location tag"] == "WORM Rotterdam" and row["Event id"] == show_calendar.event_id("DAbc123", ev)
+    assert row["Added"] == "2026-11-13"
+    events.handle(post, [ev], events.Target(cal, "cal", cat), TODAY, dry_run=False)
+    assert len(cat.events.rows) == 1  # no second row on a rerun
+
+
+def test_row_for_an_older_event_without_kept_details():
+    old = {"id": "mfabc", "summary": "Calls From The Hull IV", "location": "V11, Rotterdam",
+           "start": {"date": "2026-11-28"}, "end": {"date": "2026-11-29"},
+           "description": 'kraut<br><br>caption<br><br><a href="https://www.instagram.com/p/DfhmQJuAaLV/">Save &amp; Share</a>',
+           "source": {"url": "https://www.instagram.com/p/DfhmQJuAaLV/"}}
+    row = show_calendar.row(old, "2026-11-13")
+    assert (row["Date"], row["Start"], row["Title"]) == ("2026-11-28", "", "Calls From The Hull IV")
+    assert (row["Venue"], row["City"]) == ("V11", "Rotterdam")
+    assert row["Post"] == "https://www.instagram.com/p/DfhmQJuAaLV/" and row["Link"] == ""
+
+
+def test_fill_sheet_gives_every_calendar_event_a_row():
+    cal, cat = FakeCalendar(), FakeCatalog()
+    events.handle(POST, [event(), event(date="2026-11-22")], events.Target(cal, "cal"), TODAY, dry_run=False)
+    cal.list = lambda calendarId, pageToken, showDeleted, singleEvents, maxResults: SimpleNamespace(
+        execute=lambda: {"items": list(cal.added.values())})
+    events.fill_sheet(events.Target(cal, "cal", cat), TODAY)
+    assert sorted(r["Date"] for r in cat.events.rows) == ["2026-11-21", "2026-11-22"]
 
 
 def test_dry_run_adds_nothing():

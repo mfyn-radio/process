@@ -70,6 +70,27 @@ it stays deleted.
 **What it can only touch:** the calendars it creates itself (the
 `calendar.app.created` permission). It can't see mfyn@'s other calendars.
 
+## The Events tab
+
+Every show the automation adds also gets a row on the **Events** tab of the
+MFYN Artists sheet, so all the shows are in one list you can sort and
+filter: Date, Start, End, Title, Venue, City, Country, Acts, Tags, Link,
+Post, Location tag, Event id, Added. Dates are written `2026-11-28` so they
+sort.
+
+Like the rest of the sheet, the automation only fills empty cells, so what
+you type there stays. Each calendar event also keeps its details, so for
+events already on the calendar (before the tab existed, or if writing a
+row failed), run:
+
+```
+python -m intake.events --fill-sheet
+```
+
+It reads MFYN Shows, not Instagram. Events added before 13 November 2026
+get what the calendar has: date, times, title, venue and city, post and
+link. Acts, country, tags and location tag stay empty for those.
+
 ## Setting it up on the PC
 
 Needs: everything from [step 1's setup](01-acquire.md#setting-it-up-on-the-pc)
@@ -132,9 +153,11 @@ to your Claude subscription. Nothing new to buy.
 ## Running it by hand
 
 ```
-python -m intake.events [--dry-run] [--backlog] [--post SHORTCODE]
+python -m intake.events [--dry-run] [--backlog] [--post SHORTCODE] [--fill-sheet]
 ```
 
+- `--fill-sheet` gives every event already on MFYN Shows a row on the
+  [Events tab](#the-events-tab), then stops.
 - `--backlog` also reads older unread posts below ones already read, 15 a
   run. Repeat it until it says "0 new post(s) to read". Use it once, to add
   a collection's existing posts.
