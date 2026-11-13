@@ -48,6 +48,10 @@ See also: [process overview](README.md) · [Google Cloud setup](setup/google-clo
    - **The event's link** (Calendar's "source") is a tickets or event address
      written in the post, else the Instagram post. "Link in bio" doesn't
      count.
+   - **Only shows in the Netherlands or Belgium** are added. Claude works
+     out the country from the venue and city; a tour poster's dates
+     elsewhere are skipped. If the country can't be told, the show is added
+     and the log says to check it.
    - Without a start time it's an all-day event; without an end time it's
      3 hours long. Shows that are already over are skipped.
 5. **Remembers the post** in `%APPDATA%\mfyn-intake\events.json`, so it's
@@ -149,6 +153,8 @@ python -m intake.events [--dry-run] [--backlog] [--post SHORTCODE]
 - **"Claude Code isn't installed"** or **"Claude Code failed"**: run `claude`
   in Command Prompt to check it's signed in. If the subscription's usage
   limit was reached, the posts are retried on the next run.
+- **"couldn't tell which country '…' is in"** in the log: the show was
+  added anyway. Delete it if it isn't in the Netherlands or Belgium.
 - **"The flyer for '…' wasn't clear"** in the log: Claude wasn't sure of
   the date, venue or acts. Check that event against the post.
 - **Wrong year or time:** fix the event by hand. It won't be changed back.

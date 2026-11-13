@@ -73,6 +73,8 @@ INSTAGRAM_PROFILE_DIR = Path.home() / "mfyn-chrome-instagram"
 # Posts already read, and the calendar's id.
 EVENTS_STATE_FILE = APP_DIR / "events.json"
 SHOW_CALENDAR = "MFYN Shows"
+# Only shows in these countries go on the calendar.
+SHOW_COUNTRIES = ("Netherlands", "Belgium")
 # Times on flyers are local times here (an IANA name, e.g. Europe/Amsterdam).
 SHOW_TIMEZONE = os.environ.get("MFYN_TIMEZONE", "Europe/Amsterdam")
 # Each run opens at most this many new posts, slowly, so Instagram doesn't

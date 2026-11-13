@@ -14,7 +14,7 @@ POST = instagram.Post(
 
 def event(**kw):
     fields = dict(title="Fellatio", acts=["Fellatio", "Daufødt"], date="2026-11-21",
-                  start_time="20:00", venue="The Venue", city="Hague", confident=True)
+                  start_time="20:00", venue="The Venue", city="Hague", country="Netherlands", confident=True)
     fields.update(kw)
     return flyer.Event(**fields)
 
@@ -289,6 +289,15 @@ def test_existing_event_is_left_alone_unless_the_post_is_named():
 def test_two_events_on_one_date_in_a_post_both_get_added():
     cal = FakeCalendar()
     assert events.handle(POST, [event(), event(title="Afterparty")], events.Target(cal, "cal"), TODAY, dry_run=False) == 2
+
+
+def test_only_shows_in_the_netherlands_or_belgium_are_added():
+    cal = FakeCalendar()
+    found = [event(), event(date="2026-11-22", city="Ghent", country="België"),
+             event(date="2026-11-23", city="Berlin", country="Germany"),
+             event(date="2026-11-24", city=None, country=None)]
+    assert events.handle(POST, found, events.Target(cal, "cal"), TODAY, dry_run=False) == 3
+    assert sorted(b["start"]["dateTime"][:10] for b in cal.added.values()) == ["2026-11-21", "2026-11-22", "2026-11-24"]
 
 
 def test_dry_run_adds_nothing():

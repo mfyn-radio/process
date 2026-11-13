@@ -34,7 +34,8 @@ after it). Use 24-hour HH:MM times, local to the venue, and YYYY-MM-DD dates. \
 For link, give a web address written in the post for tickets or the event \
 (tickets first); "link in bio" is not a link. For notes, give short practical \
 details: price, cash only, age limit, free entry, sold out, set times, the \
-address. For tags, give the music genres the post itself names or hashtags \
+address. For country, give the country the venue is in, in English, worked \
+out from the venue and city if the post doesn't say. For tags, give the music genres the post itself names or hashtags \
 (e.g. punk, hardcore), lowercase, as words (#noiserock is noise rock), not \
 places. Leave a field null rather than guess. Set confident to false if the date, \
 venue or acts are unclear. If the post doesn't announce an event (a release, \
@@ -56,12 +57,13 @@ SCHEMA = {
             "end_time": {**MAYBE, "description": "HH:MM, if given"},
             "venue": MAYBE,
             "city": MAYBE,
+            "country": {**MAYBE, "description": "The venue's country, in English, e.g. Netherlands"},
             "link": {**MAYBE, "description": "Tickets or event web address written in the post"},
             "notes": {**MAYBE, "description": "Practical details: price, cash only, 18+, set times, address"},
             "tags": {"type": "array", "items": TEXT, "description": "Music genres the post names, lowercase"},
             "confident": {"type": "boolean"},
         },
-        "required": ["title", "acts", "date", "start_time", "end_time", "venue", "city", "link", "notes",
+        "required": ["title", "acts", "date", "start_time", "end_time", "venue", "city", "country", "link", "notes",
                      "tags", "confident"],
         "additionalProperties": False,
     }}},
@@ -81,6 +83,7 @@ class Event:
     end_time: Optional[str] = None
     venue: Optional[str] = None
     city: Optional[str] = None
+    country: Optional[str] = None
     link: Optional[str] = None
     notes: Optional[str] = None
     tags: List[str] = field(default_factory=list)

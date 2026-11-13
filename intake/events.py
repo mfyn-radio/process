@@ -62,6 +62,20 @@ def event_tags(event, catalog):
     return sorted({t.strip().lower() for t in event.tags + sheet_tags(catalog, event.acts) if t.strip()})
 
 
+COUNTRY_NAMES = {
+    "netherlands": "Netherlands", "the netherlands": "Netherlands", "nederland": "Netherlands",
+    "holland": "Netherlands", "nl": "Netherlands",
+    "belgium": "Belgium", "belgië": "Belgium", "belgie": "Belgium", "belgique": "Belgium",
+    "belgien": "Belgium", "be": "Belgium",
+}
+
+
+def country(event):
+    """The event's country, tidied (e.g. "Nederland" is "Netherlands"), or None."""
+    name = (event.country or "").strip()
+    return COUNTRY_NAMES.get(name.casefold(), name) or None
+
+
 def handle(post, events, target, today, dry_run, redo=False):
     """Add a post's upcoming events. Returns how many were added or
     rewritten. An event already on the calendar is left alone, even if
@@ -77,6 +91,14 @@ def handle(post, events, target, today, dry_run, redo=False):
         if event.date < today.isoformat():
             log.info("%s: '%s' on %s is over; skipped", post.url, event.title, when)
             continue
+        place = country(event)
+        if place and place not in config.SHOW_COUNTRIES:
+            log.info("%s: '%s' on %s is in %s, not the Netherlands or Belgium; skipped",
+                     post.url, event.title, when, place)
+            continue
+        if not place:
+            log.warning("%s: couldn't tell which country '%s' is in; added anyway, check it",
+                        post.url, event.title)
         tags = event_tags(event, target.catalog)
         body = show_calendar.body(event, post, config.SHOW_TIMEZONE, tags, n)
         if dry_run:
