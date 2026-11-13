@@ -31,8 +31,9 @@ misbehaves.
 
 | Automation | Started by | Runs on | Log | Docs |
 |---|---|---|---|---|
-| Acquire (`intake.acquire`) | Task Scheduler task `MFYN Acquire`, hourly, via `scripts\run_acquire.cmd` | MFYN PC, while signed in | `%APPDATA%\mfyn-intake\acquire.log` | [Step 1](01-acquire.md), [troubleshooting](01-acquire-troubleshooting.md) |
+| Acquire (`intake.acquire`) | Task Scheduler task `MFYN Acquire`, daily, via `scripts\run_acquire.cmd` | MFYN PC, while signed in | `%APPDATA%\mfyn-intake\acquire.log` | [Step 1](01-acquire.md), [troubleshooting](01-acquire-troubleshooting.md) |
 | Make Reels (`intake.reels`), with the archive cover (`intake.archive_cover`) and Instagram copy (`intake.captions`) | You, double-clicking **MFYN – Make Reels** (`scripts\make_reels.cmd`), until step 2 starts it itself | MFYN PC | `%APPDATA%\mfyn-intake\reels.log` | [Step 2a](02a-make-reels.md), [step 2b](02b-instagram-copy.md), [archive cover](archive-cover.md) |
+| Show calendar (`intake.events`) | Task Scheduler task `MFYN Show Calendar`, daily, via `scripts\run_events.cmd` | MFYN PC, while signed in | `%APPDATA%\mfyn-intake\events.log` | [Show calendar](show-calendar.md) |
 | Make Album Story (`intake.stories`) | You, double-clicking **MFYN – Make Album Story** (`scripts\make_story.cmd`), to feature an album | MFYN PC | `%APPDATA%\mfyn-intake\stories.log` | [Make Album Story](featured-album-story.md) |
 | Tests | GitHub Actions, on pull requests and pushes to `main` (`.github/workflows/tests.yml`) | GitHub | the Actions tab | `python -m pytest` locally |
 | Labels | GitHub Actions, when `.github/workflows/labels.yml` changes on `main`, or run by hand (`workflow_dispatch`) | GitHub | the Actions tab | [Issues](#issues) |
@@ -47,14 +48,16 @@ The logs keep four files of up to 1 MB each, and Make Reels and Make Album Story
 |---|---|---|
 | mfyn@nothingflatdigital.com | Google Workspace | Bandcamp purchases, receipts, owns the library |
 | admin@nothingflatdigital.com | Google Workspace | Workspace and Google Cloud administration |
-| MFYN Artists | Google Sheet in mfyn@'s Drive, kept by the automation | The artist library (Instagram handles, tags, links), releases and labels |
+| MFYN Artists | Google Sheet in mfyn@'s Drive, kept by the automation | The artist library (Instagram handles, tags, links), releases, labels, and every show on MFYN Shows (Events tab) |
 | `MFYN_Show_Archive` | mfyn@'s My Drive, `H:\My Drive\MFYN_Show_Archive` | Finished episodes, `D_M_YYYY- Episode Name\Tracks` |
 | `MFYN_Reels` | mfyn@'s My Drive, `H:\My Drive\MFYN_Reels` | Each episode's Reels, their details and captions, for your review and then Publishing |
 | `MFYN_Stories` | mfyn@'s My Drive, `H:\My Drive\MFYN_Stories` | Featured-album Stories and their details, for your review and then Publishing |
 | Processing sketches | this repo, `processing\` | `MFYN_Reel` makes the Reels; `MFYN_Album` makes the featured-album Stories; `MFYN_Archive` makes the archive episode covers ([automated](archive-cover.md), or by hand: [README](../processing/MFYN_Archive/README.md)) |
+| MFYN Shows | Google Calendar, made by the automation in mfyn@'s account | Upcoming shows, from posts saved to the **events** collection on Instagram |
 | `MFYN_Library` | mfyn@'s My Drive, synced to `H:\My Drive\MFYN_Library` on the MFYN PC | The music library, one folder per album |
 | MFYN PC | Windows, signed in, running Google Drive for desktop and Chrome | Runs the automation (Task Scheduler) |
-| `mfyn-library-agent` | Google Cloud project, Internal audience | Lets the automation read and label mail ([setup](setup/google-cloud.md)) |
+| `mfyn-library-agent` | Google Cloud project, Internal audience | Lets the automation read and label mail, and keep its sheet and calendar ([setup](setup/google-cloud.md)) |
+| Claude Code | installed on the MFYN PC, signed in to the Claude subscription | Reads show flyers for the [show calendar](show-calendar.md) (`claude -p`) |
 | `mfyn-radio/process` | GitHub, this repo | Code and docs; GitHub only runs the tests |
 
 ## Issues
@@ -105,4 +108,5 @@ list of open work. There are two kinds:
   - Step 2b: [Instagram copy](02b-instagram-copy.md)
   - [Archive cover](archive-cover.md)
 - Featured albums: [Make Album Story](featured-album-story.md)
+- [Show calendar](show-calendar.md): shows from saved Instagram posts
 - Setup: [Google Cloud](setup/google-cloud.md)

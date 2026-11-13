@@ -3,6 +3,48 @@
 Where the MFYN intake project stands, and where to pick up. The newest
 session is first.
 
+## 2026-11-13
+
+- **Show calendar built** ([doc](show-calendar.md)), mfyn-radio/process#36,
+  the Instagram half of mfyn-radio/process#15. Every day it opens posts saved to a **Shows**
+  collection on MFYN's Instagram, Claude Code on the PC reads
+  each flyer (on the subscription, no API key), and the shows go
+  on a new **MFYN Shows** Google calendar. Unclear flyers are noted in
+  the log, not in the title. Chrome reads Instagram, as Bandcamp is read in Acquire, because
+  Instagram has no API for saved posts. Not yet run on the PC.
+- **Acquire now runs daily** (18:37), not hourly, in case Bandcamp was
+  getting suspicious of Chrome.
+- **Tested on the PC** with one post (Calls From The Hull IV): the event is
+  on MFYN Shows with the agreed layout: the tags, the caption, then a "Save &
+  Share on Instagram" link to the post. No flyer attachment and no
+  `[Check]` in titles, by choice. The full collection and the daily task
+  aren't tried yet.
+- **Where it stands at the end of the day:** the backlog is read (21 events
+  on MFYN Shows), `--fill-sheet` filled the Events tab, and the daily
+  `MFYN Show Calendar` task (10:17) is created. Waiting on: the first
+  scheduled run, Acquire actually switched to daily on the PC, and a check
+  that a refreshed sign-in keeps `calendar.app.created`. Then merge
+  mfyn-radio/process#38.
+- **Events tab** in the MFYN Artists sheet: one row per show, written as
+  each event is added; `--fill-sheet` for events already on the calendar.
+  Only shows in the Netherlands or Belgium are added, and a post's location
+  tag wins over the flyer (noted in the log).
+- **"Your artist is playing" alerts** (mfyn-radio/process#39): a new show
+  with a library artist on the bill is red on MFYN Shows and emailed to
+  mfyn@ in that run. Tested end to end in the cloud session with a made-up
+  flyer and library; the first real match on the PC is still to come.
+- **Location tags are read** from real posts (checked on the PC: "OCCII").
+  A post for a show that's already over now logs "is over; skipped", not
+  "no event found".
+- **Flyers are read by Claude Code on the PC** (`claude -p`, on the Claude
+  subscription), not the paid API. Nothing that costs extra gets added
+  (now in `CLAUDE.md`).
+- **The Google sign-in had gone to admin@** at the morning's re-sign-in, so
+  Acquire read admin@'s inbox from 06:45 to 07:38. `--setup` now refuses any
+  account but mfyn@.
+- The Google sign-in now asks for the calendar too. Older sign-ins keep
+  working for Acquire, Make Reels and Make Album Story.
+
 ## 2026-11-05
 
 - **Reel sketch finalized** (white design) and brought in from Drive:

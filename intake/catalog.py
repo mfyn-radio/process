@@ -5,6 +5,8 @@ Tabs:
 - Releases: one row per album in the library.
 - Labels: one row per label, with its Instagram handle.
 - Tags: one row per Bandcamp tag per release, for sorting and filtering.
+- Events: one row per show on the MFYN Shows calendar, written by the show
+  calendar (docs/show-calendar.md).
 
 Step 1 fills it in automatically, with Instagram handles marked "Suggested"
 or "Not found". Step 2a is where handles are confirmed. The automation only
@@ -27,6 +29,8 @@ RELEASES = ["Album", "Artist", "Label", "Release date", "Tags", "Album link", "C
             "Purchased", "Library folder", "Added"]
 LABELS = ["Label", "Instagram", "Status", "Location", "Website", "Other links", "Bandcamp page", "Added"]
 TAGS = ["Tag", "Artist", "Album"]
+EVENTS = ["Date", "Start", "End", "Title", "Venue", "City", "Country", "Acts", "Tags", "Link", "Post",
+          "Location tag", "Event id", "Added"]
 
 
 class Catalog:
@@ -38,6 +42,7 @@ class Catalog:
         self.releases = Table(sheets, sheet_id, "Releases", RELEASES, key=("Album", "Artist"), list_fields=("Tags",))
         self.labels = Table(sheets, sheet_id, "Labels", LABELS, key="Label")
         self.tags = Table(sheets, sheet_id, "Tags", TAGS, key=("Tag", "Artist", "Album"))
+        self.events = Table(sheets, sheet_id, "Events", EVENTS, key="Event id", list_fields=("Tags",))
 
     @staticmethod
     def _find_or_create(drive, sheets):

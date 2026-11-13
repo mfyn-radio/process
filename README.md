@@ -14,7 +14,7 @@ It ends at a manual stop, where you review everything. The separate
 - `intake/` — the automation code.
 - `processing/` — the Processing sketches that make the Reels (and the Album
   Story, not automated yet).
-- `scripts/` — launchers: the hourly Acquire task, and the Make Reels
+- `scripts/` — launchers: the daily Acquire task, and the Make Reels
   double-click.
 - `tests/` — run with `python -m pytest`; GitHub runs them on pull requests
   and on pushes to `main`.
@@ -22,7 +22,7 @@ It ends at a manual stop, where you review everything. The separate
 ## Steps
 
 1. [Acquire](docs/01-acquire.md) — download new Bandcamp purchases into
-   `MFYN_Library` on Google Drive. Runs hourly on the MFYN PC. *(live since
+   `MFYN_Library` on Google Drive. Runs daily on the MFYN PC. *(live since
    2026-10-23)*
 2. [Create the show](docs/02-create-show.md) — pick tracks, make the episode,
    archive it. *(manual)*
