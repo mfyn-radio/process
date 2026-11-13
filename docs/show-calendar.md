@@ -85,7 +85,8 @@ to your Claude subscription. Nothing new to buy.
    Times on flyers are read as Rotterdam time (`Europe/Amsterdam`). To change
    that, set `MFYN_TIMEZONE` the same way. `MFYN_CLAUDE_MODEL` (e.g. `opus`)
    picks the model; by default it's Claude Code's own.
-7. **Sign in to Instagram**, once, in the automation's own Chrome profile:
+7. **Sign in to Instagram**, once, in the automation's own Chrome profile
+   (kept in `%USERPROFILE%\mfyn-chrome-instagram`):
    ```
    python -m intake.events --setup-instagram
    ```

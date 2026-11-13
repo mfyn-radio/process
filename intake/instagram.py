@@ -11,6 +11,7 @@ import re
 import time
 import urllib.request
 from dataclasses import dataclass
+from pathlib import Path
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -65,8 +66,11 @@ class Browser:
 
     def _chrome(self):
         if self._driver is None:
+            Path(self.profile_dir).mkdir(parents=True, exist_ok=True)
             options = webdriver.ChromeOptions()
             options.add_argument(f"--user-data-dir={self.profile_dir}")
+            options.add_argument("--no-first-run")
+            options.add_argument("--no-default-browser-check")
             options.add_argument("--log-level=3")
             options.add_experimental_option("excludeSwitches", ["enable-logging", "enable-automation"])
             self._driver = webdriver.Chrome(options=options)

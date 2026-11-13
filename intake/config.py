@@ -67,7 +67,9 @@ AUDIO_FORMAT = "flac"
 # https://www.instagram.com/<account>/saved/shows/17900000000000000/
 INSTAGRAM_COLLECTION_URL = os.environ.get("MFYN_INSTAGRAM_COLLECTION", "")
 # Chrome keeps the Instagram sign-in in this profile, separate from Acquire's.
-INSTAGRAM_PROFILE_DIR = APP_DIR / "chrome-instagram"
+# It's outside AppData because the Microsoft Store Python redirects what it
+# writes there, so Chrome wouldn't find the same folder.
+INSTAGRAM_PROFILE_DIR = Path.home() / "mfyn-chrome-instagram"
 # Posts already read, and the calendar's id.
 EVENTS_STATE_FILE = APP_DIR / "events.json"
 SHOW_CALENDAR = "MFYN Shows"
