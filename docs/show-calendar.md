@@ -2,8 +2,8 @@
 
 Live shows from the posts MFYN saves on Instagram go on a Google calendar of
 their own, **MFYN Shows**. Save a show's post to the **Shows** collection;
-once a day the automation reads it and adds the event. This is the
-Instagram half of mfyn-radio/process#15. Other sources come later.
+once a day the automation reads it and adds the event. This is
+mfyn-radio/process#36, the Instagram half of mfyn-radio/process#15. Other sources come later.
 
 See also: [process overview](README.md) · [Google Cloud setup](setup/google-cloud.md)
 

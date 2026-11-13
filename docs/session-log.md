@@ -5,8 +5,8 @@ session is first.
 
 ## 2026-11-13
 
-- **Show calendar built** ([doc](show-calendar.md)), the Instagram half of
-  mfyn-radio/process#15. Every day it opens posts saved to a **Shows**
+- **Show calendar built** ([doc](show-calendar.md)), mfyn-radio/process#36,
+  the Instagram half of mfyn-radio/process#15. Every day it opens posts saved to a **Shows**
   collection on MFYN's Instagram, Claude reads each flyer, and the shows go
   on a new **MFYN Shows** Google calendar. Unclear ones are marked
   `[Check]`. Chrome reads Instagram, as Bandcamp is read in Acquire, because
