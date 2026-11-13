@@ -124,8 +124,8 @@ def main(argv=None):
     setup_logging()
 
     if args.setup:
-        google_auth.setup(args.setup)
-        log.info("Signed in. Token saved to %s", config.TOKEN_FILE)
+        account = google_auth.setup(args.setup)
+        log.info("Signed in as %s. Token saved to %s", account, config.TOKEN_FILE)
         return 0
     if not config.LIBRARY_DIR.is_dir():
         log.error("Library folder %s not found. Is Google Drive for desktop running?", config.LIBRARY_DIR)

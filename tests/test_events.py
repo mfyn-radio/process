@@ -294,3 +294,23 @@ def test_older_sign_in_without_calendar_still_works_for_the_rest(tmp_path, monke
     with pytest.raises(SystemExit):
         google_auth.credentials([google_auth.CALENDAR])
     assert google_auth.CALENDAR in google_auth.SCOPES  # --setup asks for it
+
+
+def test_setup_only_keeps_a_sign_in_for_mfyn(tmp_path, monkeypatch):
+    client = tmp_path / "client.json"
+    client.write_text("{}")
+    monkeypatch.setattr(google_auth.config, "APP_DIR", tmp_path)
+    monkeypatch.setattr(google_auth.config, "CLIENT_FILE", client)
+    monkeypatch.setattr(google_auth.config, "TOKEN_FILE", tmp_path / "token.json")
+    creds = SimpleNamespace(to_json=lambda: "{}")
+    flow = SimpleNamespace(run_local_server=lambda **kw: creds)
+    monkeypatch.setattr(google_auth.InstalledAppFlow, "from_client_secrets_file", lambda *a: flow)
+
+    monkeypatch.setattr(google_auth, "signed_in_as", lambda c: "admin@nothingflatdigital.com")
+    with pytest.raises(SystemExit, match="admin@"):
+        google_auth.setup(client)
+    assert not (tmp_path / "token.json").exists()
+
+    monkeypatch.setattr(google_auth, "signed_in_as", lambda c: "MFYN@nothingflatdigital.com")
+    assert google_auth.setup(client) == "MFYN@nothingflatdigital.com"
+    assert (tmp_path / "token.json").exists()
