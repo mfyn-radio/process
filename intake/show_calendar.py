@@ -102,15 +102,21 @@ def clock(text):
         return None
 
 
-def exists(service, calendar_id, eid):
-    """Whether the event was added on an earlier run, even if since deleted."""
+def existing(service, calendar_id, eid):
+    """The event if an earlier run added it (a deleted one has status
+    "cancelled"), else None."""
     try:
-        service.events().get(calendarId=calendar_id, eventId=eid).execute()
-        return True
+        return service.events().get(calendarId=calendar_id, eventId=eid).execute()
     except HttpError as e:
         if e.resp.status in (404, 410):
-            return False
+            return None
         raise
+
+
+def restore(service, calendar_id, event_body):
+    """Put back an event that was deleted, as new."""
+    body = dict(event_body, status="confirmed")
+    service.events().update(calendarId=calendar_id, eventId=body["id"], body=body, supportsAttachments=True).execute()
 
 
 def add(service, calendar_id, event_body):

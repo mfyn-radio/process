@@ -63,8 +63,10 @@ def event_tags(event, catalog):
     return sorted({t.strip().lower() for t in event.tags + sheet_tags(catalog, event.acts) if t.strip()})
 
 
-def handle(post, events, target, today, dry_run):
-    """Add a post's upcoming events. Returns how many were added."""
+def handle(post, events, target, today, dry_run, redo=False):
+    """Add a post's upcoming events. Returns how many were added. With
+    `redo` (a post named with --post), events deleted from the calendar
+    are put back; otherwise a deleted event stays deleted."""
     added = 0
     attachment = None  # one upload per post, shared by its events
     if not events:
@@ -80,14 +82,21 @@ def handle(post, events, target, today, dry_run):
             log.info("%s: would add '%s' on %s at %s\n%s", post.url, body["summary"], when,
                      body.get("location", "?"), show_calendar.description(event, post, tags))
             continue
-        if show_calendar.exists(target.calendar, target.calendar_id, show_calendar.event_id(post.shortcode, event)):
-            log.info("%s: '%s' on %s is already on the calendar", post.url, event.title, when)
+        old = show_calendar.existing(target.calendar, target.calendar_id, show_calendar.event_id(post.shortcode, event))
+        deleted = old is not None and old.get("status") == "cancelled"
+        if old is not None and not (deleted and redo):
+            log.info("%s: '%s' on %s is already on the calendar%s", post.url, event.title, when,
+                     " (deleted; --post puts it back)" if deleted else "")
             continue
         if attachment is None and post.image and target.drive is not None:
             name = show_calendar.flyer_name(event, flyer.EXTENSIONS.get(post.image_type, ".jpg"))
             attachment = show_calendar.upload_flyer(target.drive, target.folder_id, name, post.image, post.image_type)
         body = show_calendar.body(event, post, config.SHOW_TIMEZONE, tags, attachment)
-        if show_calendar.add(target.calendar, target.calendar_id, body):
+        if old is not None:
+            show_calendar.restore(target.calendar, target.calendar_id, body)
+            added += 1
+            log.info("%s: put back '%s' on %s", post.url, body["summary"], when)
+        elif show_calendar.add(target.calendar, target.calendar_id, body):
             added += 1
             log.info("%s: added '%s' on %s", post.url, body["summary"], when)
     return added
@@ -164,7 +173,7 @@ def run(browser, args):
         try:
             post = browser.post(code)
             events = flyer.read(post, config.EVENTS_MODEL, claude=claude)
-            added = handle(post, events, target, today, args.dry_run)
+            added = handle(post, events, target, today, args.dry_run, redo=bool(args.post))
         except Exception:
             log.exception("%s: failed; will retry next run", code)
             failures += 1

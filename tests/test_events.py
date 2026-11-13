@@ -203,6 +203,11 @@ class FakeCalendar:
             return self.added[eventId]
         return SimpleNamespace(execute=execute)
 
+    def update(self, calendarId, eventId, body, supportsAttachments):
+        def execute():
+            self.added[eventId] = body
+        return SimpleNamespace(execute=execute)
+
     def insert(self, calendarId, body, supportsAttachments):
         assert supportsAttachments
         def execute():
@@ -244,6 +249,17 @@ def test_handle_adds_upcoming_events_once_with_one_flyer_and_skips_past_ones():
     assert all(b["attachments"][0]["fileId"] == "f1" for b in cal.added.values())
     assert events.handle(POST, found, target, TODAY, dry_run=False) == 0  # already there
     assert len(drive.uploads) == 1  # and no second copy of the flyer
+
+
+def test_deleted_event_stays_deleted_unless_the_post_is_named():
+    cal = FakeCalendar()
+    target = events.Target(cal, FakeDrive(), "cal", "folder")
+    events.handle(POST, [event()], target, TODAY, dry_run=False)
+    (eid, body), = cal.added.items()
+    cal.added[eid] = dict(body, status="cancelled")
+    assert events.handle(POST, [event()], target, TODAY, dry_run=False) == 0
+    assert events.handle(POST, [event()], target, TODAY, dry_run=False, redo=True) == 1
+    assert cal.added[eid]["status"] == "confirmed"
 
 
 def test_dry_run_adds_nothing():
