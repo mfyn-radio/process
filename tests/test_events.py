@@ -455,6 +455,8 @@ def test_alert_email_lists_each_show():
     subject, text = alerts.email([m])
     assert subject == "MFYN: Daufødt is playing"
     assert "Daufødt: Fellatio\nSat 21 Nov 2026, 20:00, WORM, Rotterdam\nPost: " + POST.url in text
+    own = alerts.Match(["Allarme"], "ALLARME", "2026-12-04", "", "", "u", "")
+    assert alerts.email([own])[1].splitlines()[2] == "Allarme"  # not "Allarme: ALLARME"
     two = alerts.Match(["Fellatio"], "X", "2026-11-20", "", "", "u", "")
     assert alerts.email([m, two])[0] == "MFYN: 2 library artists are playing"
 

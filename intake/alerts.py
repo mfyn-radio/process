@@ -65,7 +65,9 @@ def email(matches):
     subject = "MFYN: " + (f"{names[0]} is playing" if len(names) == 1 else f"{len(names)} library artists are playing")
     lines = ["Library artists on the bill of new shows on MFYN Shows:", ""]
     for m in sorted(matches, key=lambda m: (m.date, m.start)):
-        lines += [f"{', '.join(m.artists)}: {m.title}",
+        names = ", ".join(m.artists)
+        same = [key(a) for a in m.artists] == [key(m.title)]  # the show is named after the artist
+        lines += [names if same else f"{names}: {m.title}",
                   f"{when(m)}" + (f", {m.place}" if m.place else ""),
                   f"Post: {m.post}"]
         if m.calendar_link:

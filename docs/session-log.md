@@ -31,7 +31,11 @@ session is first.
   tag wins over the flyer (noted in the log).
 - **"Your artist is playing" alerts** (mfyn-radio/process#39): a new show
   with a library artist on the bill is red on MFYN Shows and emailed to
-  mfyn@ in that run.
+  mfyn@ in that run. Tested end to end in the cloud session with a made-up
+  flyer and library; the first real match on the PC is still to come.
+- **Location tags are read** from real posts (checked on the PC: "OCCII").
+  A post for a show that's already over now logs "is over; skipped", not
+  "no event found".
 - **Flyers are read by Claude Code on the PC** (`claude -p`, on the Claude
   subscription), not the paid API. Nothing that costs extra gets added
   (now in `CLAUDE.md`).
