@@ -57,7 +57,7 @@ The logs keep four files of up to 1 MB each, and Make Reels and Make Album Story
 | `MFYN_Library` | mfyn@'s My Drive, synced to `H:\My Drive\MFYN_Library` on the MFYN PC | The music library, one folder per album |
 | MFYN PC | Windows, signed in, running Google Drive for desktop and Chrome | Runs the automation (Task Scheduler) |
 | `mfyn-library-agent` | Google Cloud project, Internal audience | Lets the automation read and label mail, and keep its sheet and calendar ([setup](setup/google-cloud.md)) |
-| Anthropic API | key in `ANTHROPIC_API_KEY` on the MFYN PC | Reads show flyers for the [show calendar](show-calendar.md) |
+| Claude Code | installed on the MFYN PC, signed in to the Claude subscription | Reads show flyers for the [show calendar](show-calendar.md) (`claude -p`) |
 | `mfyn-radio/process` | GitHub, this repo | Code and docs; GitHub only runs the tests |
 
 ## Issues

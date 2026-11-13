@@ -88,8 +88,6 @@ def main(argv=None):
 
 
 def run(browser, args):
-    import anthropic  # only this automation needs it
-
     state = load_state(config.EVENTS_STATE_FILE)
     service = None
     if not args.dry_run:
@@ -98,7 +96,7 @@ def run(browser, args):
             state["calendar_id"] = show_calendar.create(service, config.SHOW_CALENDAR, config.SHOW_TIMEZONE)
             save_state(config.EVENTS_STATE_FILE, state)
             log.info("Created the %s calendar", config.SHOW_CALENDAR)
-    claude = anthropic.Anthropic()
+    claude = flyer.find_claude()
 
     if args.post:
         codes = [args.post]
@@ -111,7 +109,7 @@ def run(browser, args):
     for code in codes:
         try:
             post = browser.post(code)
-            events = flyer.read(claude, config.EVENTS_MODEL, post)
+            events = flyer.read(post, config.EVENTS_MODEL, claude=claude)
             added = handle(post, events, service, state["calendar_id"], today, args.dry_run)
         except Exception:
             log.exception("%s: failed; will retry next run", code)

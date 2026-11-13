@@ -3,4 +3,3 @@ google-auth==2.36.0
 google-auth-oauthlib==1.2.1
 selenium==4.27.1
 mutagen==1.47.0
-anthropic==2.8.0

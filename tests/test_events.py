@@ -1,5 +1,6 @@
 import datetime
 import json
+from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
@@ -38,42 +39,53 @@ def test_og_description_that_doesnt_match_is_kept_as_the_caption():
 
 # Reading the flyer
 
-def test_request_sends_image_then_text_with_the_posting_date():
-    content = flyer.request(POST)[0]["content"]
-    assert content[0]["type"] == "image" and content[0]["source"]["media_type"] == "image/jpeg"
-    text = content[1]["text"]
-    assert "@thevenue" in text and "2026-11-01" in text and "Daufødt" in text
+def test_prompt_names_the_flyer_file_and_gives_the_posting_date():
+    text = flyer.prompt(POST, "flyer.jpg")
+    assert "flyer.jpg" in text and "@thevenue" in text and "2026-11-01" in text and "Daufødt" in text
+    assert "Flyer image:" not in flyer.prompt(instagram.Post("X", "u", caption="hi"))
 
 
-def test_request_without_an_image_is_text_only():
-    post = instagram.Post("X", "u", caption="hi")
-    assert [c["type"] for c in flyer.request(post)[0]["content"]] == ["text"]
+def test_command_only_allows_reading_files_when_there_is_an_image():
+    with_image = flyer.command("claude", True, "opus")
+    assert with_image[with_image.index("--tools") + 1] == "Read"
+    assert "--allowedTools" in with_image and with_image[-2:] == ["--model", "opus"]
+    schema = json.loads(with_image[with_image.index("--json-schema") + 1])
+    assert schema["properties"]["events"]["items"]["required"][0] == "title"
+    without = flyer.command("claude", False)
+    assert without[without.index("--tools") + 1] == "" and "--allowedTools" not in without and "--model" not in without
 
 
-class FakeClaude:
-    def __init__(self, response):
-        self.response = response
-        self.calls = []
-        self.beta = SimpleNamespace(messages=SimpleNamespace(parse=self.parse))
-
-    def parse(self, **kw):
-        self.calls.append(kw)
-        return self.response
+def reply(events, **kw):
+    return json.dumps({"type": "result", "subtype": "success", "is_error": False,
+                       "structured_output": {"events": events}, **kw})
 
 
-def test_read_returns_events_with_real_dates_and_asks_for_the_schema():
-    good, bad = event(), event(date="21 Nov")
-    claude = FakeClaude(SimpleNamespace(stop_reason="end_turn", parsed_output=flyer.Events(events=[good, bad])))
-    assert flyer.read(claude, "claude-opus-5-5", POST) == [good]
-    call = claude.calls[0]
-    assert call["output_format"] is flyer.Events and call["model"] == "claude-opus-5-5"
-    assert call["fallbacks"] == "default"
+def test_parse_keeps_events_with_real_dates():
+    good = {"title": "Fellatio", "acts": ["Fellatio", "Daufødt"], "date": "2026-11-21", "start_time": "20:00",
+            "end_time": None, "venue": "WORM", "city": "Rotterdam", "tickets": None, "confident": True}
+    found = flyer.parse(reply([good, {**good, "date": "21 Nov"}]))
+    assert found == [flyer.Event(title="Fellatio", acts=["Fellatio", "Daufødt"], date="2026-11-21",
+                                 start_time="20:00", venue="WORM", city="Rotterdam", confident=True)]
 
 
-def test_read_raises_on_refusal_so_the_post_is_retried():
-    claude = FakeClaude(SimpleNamespace(stop_reason="refusal", parsed_output=None))
+def test_parse_raises_on_an_error_so_the_post_is_retried():
     with pytest.raises(RuntimeError):
-        flyer.read(claude, "m", POST)
+        flyer.parse(json.dumps({"is_error": True, "subtype": "error_max_turns", "result": "x"}))
+    with pytest.raises(RuntimeError):
+        flyer.parse("Not logged in")
+
+
+def test_read_saves_the_flyer_and_runs_claude_code_there(tmp_path):
+    seen = {}
+
+    def run(cmd, input, cwd, **kw):
+        seen["cmd"], seen["files"] = cmd, {p.name: p.read_bytes() for p in Path(cwd).iterdir()}
+        seen["prompt"] = input
+        return SimpleNamespace(returncode=0, stdout=reply([]), stderr="")
+
+    assert flyer.read(POST, run=run, claude="claude.exe") == []
+    assert seen["files"] == {"flyer.jpg": POST.image}
+    assert seen["cmd"][:2] == ["claude.exe", "-p"] and "flyer.jpg" in seen["prompt"]
 
 
 # The calendar event

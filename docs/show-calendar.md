@@ -23,7 +23,8 @@ See also: [process overview](README.md) · [Google Cloud setup](setup/google-clo
    apart, so Instagram doesn't take it for a bot.
 2. **Reads each post:** its caption, who posted it and when, and its image.
    For a carousel that's the first image only. For a Reel it's the cover.
-3. **Finds the events.** Claude reads the flyer and the caption and returns
+3. **Finds the events.** Claude Code on the PC (`claude -p`, on the Claude
+   subscription, so no extra bill) reads the flyer and the caption and returns
    each event: title, acts, date, times, venue, city and tickets. A tour
    poster can give several. Flyers often leave out the year, so it's worked
    out from the posting date. A post that isn't an event gives none.
@@ -37,7 +38,7 @@ See also: [process overview](README.md) · [Google Cloud setup](setup/google-clo
      3 hours long.
    - Shows that are already over are skipped.
 5. **Remembers the post** in `%APPDATA%\mfyn-intake\events.json`, so it's
-   never read (or paid for) again. A post that fails is retried next run.
+   never read again. A post that fails is retried next run.
 
 **Your edits are safe.** Once an event is on the calendar the automation never
 changes it. Fix a `[Check]` event by hand and it stays fixed. Delete one and
@@ -49,7 +50,8 @@ it stays deleted.
 ## Setting it up on the PC
 
 Needs: everything from [step 1's setup](01-acquire.md#setting-it-up-on-the-pc)
-(Python, Chrome, the repo, the Google sign-in), plus an Anthropic API key.
+(Python, Chrome, the repo, the Google sign-in), plus Claude Code signed in
+to your Claude subscription. Nothing new to buy.
 
 1. **Update the code** and its packages, from `%USERPROFILE%\mfyn-process`:
    ```
@@ -64,30 +66,37 @@ Needs: everything from [step 1's setup](01-acquire.md#setting-it-up-on-the-pc)
    ```
    Until you do, Acquire and the rest carry on as before. Only this
    automation needs the new permission.
-4. **Make the collection.** On Instagram, signed in as MFYN, make a saved
+4. **Install Claude Code** and sign in. In PowerShell:
+   ```
+   irm https://claude.ai/install.ps1 | iex
+   ```
+   Then open a new Command Prompt, run `claude`, choose to sign in with your
+   Claude account (the subscription), and type `/exit` once it's ready.
+   Check it with `claude --version`. Each post read counts toward the
+   subscription's usage limits, like a short chat.
+5. **Make the collection.** On Instagram, signed in as MFYN, make a saved
    collection called **Shows** and save a show's post to it. Open it in
    Chrome and copy the address, e.g.
    `https://www.instagram.com/<account>/saved/shows/17900000000000000/`.
-5. **Settings**, in Command Prompt (they take effect in new windows):
+6. **Set the collection**, in Command Prompt (it takes effect in new windows):
    ```
    setx MFYN_INSTAGRAM_COLLECTION "https://www.instagram.com/<account>/saved/shows/<id>/"
-   setx MFYN_TIMEZONE "Europe/Amsterdam"
-   setx ANTHROPIC_API_KEY "<key from console.anthropic.com>"
    ```
-   `MFYN_TIMEZONE` is where the shows are, as an IANA name. Times on flyers
-   are read as local times there.
-6. **Sign in to Instagram**, once, in the automation's own Chrome profile:
+   Times on flyers are read as Rotterdam time (`Europe/Amsterdam`). To change
+   that, set `MFYN_TIMEZONE` the same way. `MFYN_CLAUDE_MODEL` (e.g. `opus`)
+   picks the model; by default it's Claude Code's own.
+7. **Sign in to Instagram**, once, in the automation's own Chrome profile:
    ```
    python -m intake.events --setup-instagram
    ```
    Sign in as MFYN in the window that opens, then press Enter.
-7. **Try it** without adding anything:
+8. **Try it** without adding anything:
    ```
    python -m intake.events --dry-run
    ```
    Then run it for real. The first real run creates the **MFYN Shows**
    calendar in mfyn@'s Google Calendar. Share it from there if you like.
-8. **Schedule it daily:**
+9. **Schedule it daily:**
    ```
    schtasks /Create /TN "MFYN Show Calendar" /SC DAILY /ST 10:17 /TR "\"%USERPROFILE%\mfyn-process\scripts\run_events.cmd\""
    ```
@@ -113,6 +122,9 @@ python -m intake.events [--dry-run] [--post SHORTCODE]
   why it opens few pages, slowly.
 - **Nothing found in a post that has a show:** the details may be on a later
   carousel slide, which isn't read. Add the event by hand.
+- **"Claude Code isn't installed"** or **"Claude Code failed"**: run `claude`
+  in Command Prompt to check it's signed in. If the subscription's usage
+  limit was reached, the posts are retried on the next run.
 - **Wrong year or time:** fix the event by hand. It won't be changed back.
 - **Page layout changes:** if Instagram changes its pages, finding posts
   (`instagram.py`) is the part likely to break. The log says which post

@@ -7,6 +7,8 @@ Code and docs for Music for Your Neighbors (MFYN). Start at
 - Tests: `python -m pytest`.
 - Changes go through pull requests. Don't merge one unless asked.
 - The code runs on the MFYN Windows PC. Docs use Windows paths.
+- Don't add anything that costs extra (paid APIs, credits, subscriptions).
+  Use what's already there, such as Claude Code on the Claude subscription.
 
 ## Issues are the single list of open work
 

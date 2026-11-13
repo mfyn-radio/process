@@ -76,5 +76,7 @@ SHOW_TIMEZONE = os.environ.get("MFYN_TIMEZONE", "Europe/Amsterdam")
 # Each run opens at most this many new posts, slowly, so Instagram doesn't
 # take Chrome for a bot.
 EVENTS_POSTS_PER_RUN = 15
-# Reads the flyers. Needs an Anthropic API key in ANTHROPIC_API_KEY on the PC.
-EVENTS_MODEL = "claude-opus-5-5"
+# Flyers are read by Claude Code on the PC (`claude -p`), on MFYN's Claude
+# subscription. Empty means Claude Code's own default model; set
+# MFYN_CLAUDE_MODEL (e.g. "opus") to choose one.
+EVENTS_MODEL = os.environ.get("MFYN_CLAUDE_MODEL", "")
