@@ -71,7 +71,7 @@ Needs: everything from [step 1's setup](01-acquire.md#setting-it-up-on-the-pc)
 5. **Settings**, in Command Prompt (they take effect in new windows):
    ```
    setx MFYN_INSTAGRAM_COLLECTION "https://www.instagram.com/<account>/saved/shows/<id>/"
-   setx MFYN_TIMEZONE "America/Chicago"
+   setx MFYN_TIMEZONE "Europe/Amsterdam"
    setx ANTHROPIC_API_KEY "<key from console.anthropic.com>"
    ```
    `MFYN_TIMEZONE` is where the shows are, as an IANA name. Times on flyers

@@ -71,8 +71,8 @@ INSTAGRAM_PROFILE_DIR = APP_DIR / "chrome-instagram"
 # Posts already read, and the calendar's id.
 EVENTS_STATE_FILE = APP_DIR / "events.json"
 SHOW_CALENDAR = "MFYN Shows"
-# Times on flyers are local times here (an IANA name, e.g. America/Chicago).
-SHOW_TIMEZONE = os.environ.get("MFYN_TIMEZONE", "America/Chicago")
+# Times on flyers are local times here (an IANA name, e.g. Europe/Amsterdam).
+SHOW_TIMEZONE = os.environ.get("MFYN_TIMEZONE", "Europe/Amsterdam")
 # Each run opens at most this many new posts, slowly, so Instagram doesn't
 # take Chrome for a bot.
 EVENTS_POSTS_PER_RUN = 15
