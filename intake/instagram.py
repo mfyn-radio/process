@@ -108,28 +108,30 @@ class Browser:
         return "/accounts/login" not in driver.current_url
 
     def collection(self, url, known, limit, max_scrolls=40):
-        """Shortcodes in the collection that aren't in `known`, newest first,
-        at most `limit`. Scrolls down until it has `limit` of them or reaches
-        the end, so older posts below ones already read are found too.
-        Instagram drops posts scrolled far past from the page, so the codes
-        are collected as it goes."""
+        """The newest posts in the collection, down to the first one already
+        read (in `known`), at most `limit`. Older posts below a read one are
+        never reached. Instagram drops posts scrolled far past from the page,
+        so the codes are collected as it goes."""
         driver = self._open(url)
         if not self.signed_in(driver):
             raise SystemExit("Instagram isn't signed in. Run: python -m intake.events --setup-instagram")
-        seen = []
+        new = []
+        seen = set()
         stalled = 0
         for _ in range(max_scrolls):
             hrefs = [a.get_attribute("href") for a in driver.find_elements(By.CSS_SELECTOR, "a[href]")]
             fresh = [c for c in shortcodes(hrefs) if c not in seen]
-            seen += fresh
-            if len([c for c in seen if c not in known]) >= limit:
-                break
+            seen.update(fresh)
+            for code in fresh:
+                if code in known or len(new) >= limit:
+                    return new  # reached posts read before, or enough for this run
+                new.append(code)
             stalled = 0 if fresh else stalled + 1
             if stalled >= 2:
                 break  # nothing more loads: the end of the collection
             driver.execute_script("window.scrollTo(0, document.body.scrollHeight)")
             pause()
-        return [c for c in seen if c not in known][:limit]
+        return new
 
     def post(self, shortcode):
         """Read one post: its caption and its (first) image."""

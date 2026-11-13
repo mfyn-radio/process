@@ -60,16 +60,13 @@ def collection(codes, known, limit=15):
     return browser.collection("u", set(known), limit)
 
 
-def test_collection_reaches_older_posts_below_ones_already_read(monkeypatch):
+def test_collection_takes_the_newest_15_and_stops_at_a_post_already_read(monkeypatch):
     monkeypatch.setattr(instagram, "pause", lambda *a: None)
     codes = [f"P{i:02}" for i in range(37)]  # newest first
     first = collection(codes, [])
     assert first == codes[:15]
-    second = collection(codes, first)
-    assert second == codes[15:30]
-    third = collection(codes, first + second)
-    assert third == codes[30:]
-    assert collection(codes, codes) == []
+    assert collection(codes, first) == []  # stops at P00: older posts aren't reached
+    assert collection(["N1", "N2"] + codes, first) == ["N1", "N2"]
 
 
 def test_collection_picks_up_a_new_post_at_the_top(monkeypatch):

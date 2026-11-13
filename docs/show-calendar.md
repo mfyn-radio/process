@@ -18,9 +18,11 @@ See also: [process overview](README.md) · [Google Cloud setup](setup/google-clo
 
 ## What it does
 
-1. **Finds new posts.** Chrome opens the collection and lists posts it hasn't
-   read before, newest first, at most 15 a run. Pages open a few seconds
-   apart, so Instagram doesn't take it for a bot.
+1. **Finds new posts.** Chrome opens the collection and takes the newest
+   posts, down to the first one it has already read, at most 15 a run.
+   Older posts below one already read aren't reached; to add one, use
+   `--post`. Pages open a few seconds apart, so Instagram doesn't take it
+   for a bot.
 2. **Reads each post:** its caption, who posted it and when, and its image.
    For a carousel that's the first image only. For a Reel it's the cover.
 3. **Finds the events.** Claude Code on the PC (`claude -p`, on the Claude
