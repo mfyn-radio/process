@@ -109,12 +109,10 @@ to your Claude subscription. Nothing new to buy.
    Then run it for real. The first real run creates the **MFYN Shows**
    calendar and logs its ID (`c_…@group.calendar.google.com`; it's also
    `calendar_id` in `%APPDATA%\mfyn-intake\events.json`).
-9. **Add the calendar to Google Calendar**, once. The automation can create
-   the calendar but not add it to mfyn@'s list, so it doesn't show up by
-   itself. Signed in as mfyn@, in Google Calendar: **Other calendars → + →
-   Subscribe to calendar**, paste the ID, and press Enter. Share it from
-   there if you like.
-10. **Schedule it daily:**
+   It appears in mfyn@'s Google Calendar under **My calendars**. If it
+   doesn't, subscribe to it with the ID from the log: **Other calendars → +
+   → Subscribe to calendar**. Share it from there if you like.
+9. **Schedule it daily:**
    ```
    schtasks /Create /TN "MFYN Show Calendar" /SC DAILY /ST 10:17 /TR "\"%USERPROFILE%\mfyn-process\scripts\run_events.cmd\""
    ```

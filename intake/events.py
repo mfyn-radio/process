@@ -153,8 +153,8 @@ def run(browser, args):
         if not state.get("calendar_id"):
             state["calendar_id"] = show_calendar.create(target.calendar, config.SHOW_CALENDAR, config.SHOW_TIMEZONE)
             save_state(config.EVENTS_STATE_FILE, state)
-            log.info("Created the %s calendar. To see it, subscribe to it in Google Calendar as mfyn@ "
-                     "(Other calendars > + > Subscribe to calendar) with this ID: %s",
+            log.info("Created the %s calendar in mfyn@'s Google Calendar. If it isn't listed there, "
+                     "subscribe to it (Other calendars > + > Subscribe to calendar) with this ID: %s",
                      config.SHOW_CALENDAR, state["calendar_id"])
         target.calendar_id = state["calendar_id"]
     claude = flyer.find_claude()

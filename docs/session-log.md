@@ -14,6 +14,17 @@ session is first.
   Instagram has no API for saved posts. Not yet run on the PC.
 - **Acquire now runs daily** (18:37), not hourly, in case Bandcamp was
   getting suspicious of Chrome.
+- **Tested on the PC** with one post (Calls From The Hull IV): the event is
+  on MFYN Shows with the agreed layout: the tags, the caption, then a "Save &
+  Share on Instagram" link to the post. No flyer attachment and no
+  `[Check]` in titles, by choice. The full collection and the daily task
+  aren't tried yet.
+- **Flyers are read by Claude Code on the PC** (`claude -p`, on the Claude
+  subscription), not the paid API. Nothing that costs extra gets added
+  (now in `CLAUDE.md`).
+- **The Google sign-in had gone to admin@** at the morning's re-sign-in, so
+  Acquire read admin@'s inbox from 06:45 to 07:38. `--setup` now refuses any
+  account but mfyn@.
 - The Google sign-in now asks for the calendar too. Older sign-ins keep
   working for Acquire, Make Reels and Make Album Story.
 
