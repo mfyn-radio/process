@@ -38,8 +38,9 @@ address. For country, give the country the venue is in, in English, worked \
 out from the venue and city if the post doesn't say. For tags, give the music genres the post itself names or hashtags \
 (e.g. punk, hardcore), lowercase, as words (#noiserock is noise rock), not \
 places. Leave a field null rather than guess. Set confident to false if the date, \
-venue or acts are unclear. If the post doesn't announce an event (a release, \
-a photo, a past show), return no events."""
+venue or acts are unclear. Include shows whose date has passed; they're skipped later. If the post \
+doesn't announce a show at all (a release, a photo, a look back at a show), \
+return no events."""
 
 LOCATION_LINE = "Location tag: {tag}\n"
 LOCATION_RULE = """
