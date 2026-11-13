@@ -385,6 +385,22 @@ def test_older_sign_in_without_calendar_still_works_for_the_rest(tmp_path, monke
     assert google_auth.CALENDAR in google_auth.SCOPES  # --setup asks for it
 
 
+def test_refreshing_for_acquire_keeps_the_calendar_permission(tmp_path, monkeypatch):
+    token = tmp_path / "token.json"
+    token.write_text(json.dumps({"scopes": google_auth.SCOPES, "token": "old", "refresh_token": "r",
+                                 "client_id": "c", "client_secret": "s", "expiry": "2000-01-01T00:00:00Z"}))
+    monkeypatch.setattr(google_auth.config, "TOKEN_FILE", token)
+
+    def refresh(self, request):
+        self.token, self.expiry = "new", datetime.datetime(2999, 1, 1)
+    monkeypatch.setattr(google_auth.Credentials, "refresh", refresh)
+
+    google_auth.credentials()  # Acquire: gmail and drive only
+    saved = json.loads(token.read_text())
+    assert saved["token"] == "new" and set(saved["scopes"]) == set(google_auth.SCOPES)
+    google_auth.credentials(google_auth.SCOPES)  # the show calendar still works
+
+
 def test_setup_only_keeps_a_sign_in_for_mfyn(tmp_path, monkeypatch):
     client = tmp_path / "client.json"
     client.write_text("{}")

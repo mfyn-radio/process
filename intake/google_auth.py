@@ -60,7 +60,10 @@ def credentials(scopes=BASE_SCOPES):
     granted = set(json.loads(config.TOKEN_FILE.read_text()).get("scopes") or [])
     if not set(scopes) <= granted:
         raise SystemExit(f"The saved Google sign-in is missing newer permissions. {setup_hint}")
-    creds = Credentials.from_authorized_user_file(config.TOKEN_FILE, list(scopes))
+    # Load it with everything it was granted, not just `scopes`: a refreshed
+    # sign-in is saved again below, and must keep the calendar even when
+    # Acquire (which doesn't need it) is the one refreshing it.
+    creds = Credentials.from_authorized_user_file(config.TOKEN_FILE, sorted(granted))
     if not creds.valid:
         creds.refresh(Request())
         config.TOKEN_FILE.write_text(creds.to_json())
