@@ -62,42 +62,43 @@ def event_tags(event, catalog):
 
 
 def handle(post, events, target, today, dry_run, redo=False):
-    """Add a post's upcoming events. Returns how many were added. With
-    `redo` (a post named with --post), events deleted from the calendar
-    are put back; otherwise a deleted event stays deleted."""
+    """Add a post's upcoming events. Returns how many were added or
+    rewritten. An event already on the calendar is left alone, even if
+    you've edited or deleted it, unless `redo` (the post was named with
+    --post): then it's rewritten with the current layout."""
     added = 0
+    seen = {}  # events per date in this post, for their ids
     if not events:
         log.info("%s: no event found", post.url)
     for event in events:
+        n = seen[event.date] = seen.get(event.date, -1) + 1
         when = f"{event.date} {event.start_time or ''}".strip()
         if event.date < today.isoformat():
             log.info("%s: '%s' on %s is over; skipped", post.url, event.title, when)
             continue
         tags = event_tags(event, target.catalog)
+        body = show_calendar.body(event, post, config.SHOW_TIMEZONE, tags, n)
         if dry_run:
-            body = show_calendar.body(event, post, config.SHOW_TIMEZONE, tags)
             log.info("%s: would add '%s' on %s at %s\n%s", post.url, body["summary"], when,
                      body.get("location", "?"), show_calendar.description(event, post, tags).replace("<br>", "\n"))
             continue
-        old = show_calendar.existing(target.calendar, target.calendar_id, show_calendar.event_id(post.shortcode, event))
-        deleted = old is not None and old.get("status") == "cancelled"
-        if old is not None and not (deleted and redo):
-            log.info("%s: '%s' on %s is already on the calendar%s", post.url, event.title, when,
-                     " (deleted; --post puts it back)" if deleted else ": " + old.get("htmlLink", ""))
+        old = show_calendar.existing(target.calendar, target.calendar_id, body["id"])
+        if old is not None and not redo:
+            log.info("%s: '%s' on %s is already on the calendar: %s", post.url, event.title, when,
+                     old.get("htmlLink", ""))
             continue
-        body = show_calendar.body(event, post, config.SHOW_TIMEZONE, tags)
         if old is not None:
             link = show_calendar.restore(target.calendar, target.calendar_id, body)
-            added += 1
-            log.info("%s: put back '%s' on %s: %s", post.url, body["summary"], when, link)
+            log.info("%s: rewrote '%s' on %s: %s", post.url, body["summary"], when, link)
         else:
             link = show_calendar.add(target.calendar, target.calendar_id, body)
-            if link:
-                added += 1
-                log.info("%s: added '%s' on %s: %s", post.url, body["summary"], when, link)
-                if not event.confident:
-                    log.warning("%s: the flyer for '%s' wasn't clear; check the event against the post",
-                                post.url, event.title)
+            if not link:
+                continue
+            log.info("%s: added '%s' on %s: %s", post.url, body["summary"], when, link)
+        added += 1
+        if not event.confident:
+            log.warning("%s: the flyer for '%s' wasn't clear; check the event against the post",
+                        post.url, event.title)
     return added
 
 

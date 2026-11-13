@@ -129,8 +129,9 @@ python -m intake.events [--dry-run] [--post SHORTCODE]
   description, so you can check the layout. It adds nothing and doesn't
   remember the posts, so they're read again next time.
 - `--post` reads one post, even one read before: the code after `/p/` in
-  its link. Events already on the calendar aren't added twice, but one you
-  deleted is put back. Use it to test, or to redo an event.
+  its link. It rewrites that post's events with the current layout,
+  putting back any you deleted and replacing any edits you made to them.
+  Use it to test, or to redo an event.
 
 ## If it misbehaves
 

@@ -161,8 +161,9 @@ def test_unclear_event_keeps_its_plain_title():
 
 def test_event_id_is_stable_and_valid_for_calendar():
     a = show_calendar.event_id("DAbc123", event())
-    assert a == show_calendar.event_id("DAbc123", event(start_time="21:00"))
+    assert a == show_calendar.event_id("DAbc123", event(title="FELLATIO live", start_time="21:00"))
     assert a != show_calendar.event_id("DAbc123", event(date="2026-11-22"))
+    assert a != show_calendar.event_id("DAbc123", event(), 1)
     assert set(a) <= set("abcdefghijklmnopqrstuv0123456789") and 5 <= len(a) <= 1024
 
 
@@ -221,15 +222,21 @@ def test_handle_adds_upcoming_events_once_and_skips_past_ones():
     assert events.handle(POST, found, target, TODAY, dry_run=False) == 0  # already there
 
 
-def test_deleted_event_stays_deleted_unless_the_post_is_named():
+def test_existing_event_is_left_alone_unless_the_post_is_named():
     cal = FakeCalendar()
     target = events.Target(cal, "cal")
     events.handle(POST, [event()], target, TODAY, dry_run=False)
     (eid, body), = cal.added.items()
-    cal.added[eid] = dict(body, status="cancelled")
+    cal.added[eid] = dict(body, summary="edited by hand", status="cancelled")
     assert events.handle(POST, [event()], target, TODAY, dry_run=False) == 0
+    assert cal.added[eid]["summary"] == "edited by hand"
     assert events.handle(POST, [event()], target, TODAY, dry_run=False, redo=True) == 1
-    assert cal.added[eid]["status"] == "confirmed"
+    assert cal.added[eid]["summary"] == "Fellatio" and cal.added[eid]["status"] == "confirmed"
+
+
+def test_two_events_on_one_date_in_a_post_both_get_added():
+    cal = FakeCalendar()
+    assert events.handle(POST, [event(), event(title="Afterparty")], events.Target(cal, "cal"), TODAY, dry_run=False) == 2
 
 
 def test_dry_run_adds_nothing():

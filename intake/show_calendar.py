@@ -23,10 +23,12 @@ def create(service, name, timezone):
     return service.calendars().insert(body=body).execute()["id"]
 
 
-def event_id(shortcode, event):
-    """A stable Calendar event id for one event in one post. Calendar ids use
-    the letters a-v and digits, so a hex digest fits."""
-    key = f"{shortcode}|{event.date}|{event.title.casefold()}"
+def event_id(shortcode, event, n=0):
+    """A stable Calendar event id for one event in one post: the post, the
+    date, and `n` for a second event on the same date. Not the title, which
+    Claude may word differently on a rerun. Calendar ids use the letters a-v
+    and digits, so a hex digest fits."""
+    key = f"{shortcode}|{event.date}|{n}"
     return "mf" + hashlib.sha1(key.encode("utf-8")).hexdigest()
 
 
@@ -48,11 +50,11 @@ def description(event, post, tags=()):
     return "<br><br>".join(parts)
 
 
-def body(event, post, timezone, tags=()):
+def body(event, post, timezone, tags=(), n=0):
     """The Calendar event for an Event read from `post`."""
     link = event.link or post.url
     result = {
-        "id": event_id(post.shortcode, event),
+        "id": event_id(post.shortcode, event, n),
         "summary": event.title,
         "description": description(event, post, tags),
         "source": {"title": "Instagram" if link == post.url else event.title, "url": link},
@@ -98,7 +100,7 @@ def existing(service, calendar_id, eid):
 
 
 def restore(service, calendar_id, event_body):
-    """Put back an event that was deleted, as new."""
+    """Rewrite an event (putting it back if it was deleted)."""
     body = dict(event_body, status="confirmed")
     made = service.events().update(calendarId=calendar_id, eventId=body["id"], body=body).execute()
     return (made or {}).get("htmlLink") or "(no link)"
