@@ -14,6 +14,8 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from selenium import webdriver
+from selenium.common.exceptions import SessionNotCreatedException
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 
@@ -73,7 +75,16 @@ class Browser:
             options.add_argument("--no-default-browser-check")
             options.add_argument("--log-level=3")
             options.add_experimental_option("excludeSwitches", ["enable-logging", "enable-automation"])
-            self._driver = webdriver.Chrome(options=options)
+            # ChromeDriver's own log, next to the profile, for when Chrome won't start.
+            log = Path(f"{self.profile_dir}.log")
+            service = Service(log_output=str(log), service_args=["--verbose"])
+            try:
+                self._driver = webdriver.Chrome(options=options, service=service)
+            except SessionNotCreatedException:
+                raise SystemExit(
+                    "Chrome wouldn't start on the Instagram profile. Usually another Chrome is still using it: "
+                    "close any Chrome window the automation opened (or end it in Task Manager) and try again. "
+                    f"Details are in {log}")
         return self._driver
 
     def close(self):
