@@ -102,8 +102,9 @@ def handle(post, events, target, today, dry_run, redo=False):
         tags = event_tags(event, target.catalog)
         body = show_calendar.body(event, post, config.SHOW_TIMEZONE, tags, n)
         if dry_run:
-            log.info("%s: would add '%s' on %s at %s\n%s", post.url, body["summary"], when,
-                     body.get("location", "?"), show_calendar.description(event, post, tags).replace("<br>", "\n"))
+            log.info("%s: would add '%s' on %s at %s (location tag: %s)\n%s", post.url, body["summary"], when,
+                     body.get("location", "?"), post.location or "none",
+                     show_calendar.description(event, post, tags).replace("<br>", "\n"))
             continue
         old = show_calendar.existing(target.calendar, target.calendar_id, body["id"])
         if old is not None and not redo:
