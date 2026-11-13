@@ -118,41 +118,25 @@ def test_timed_event_body():
     assert body["start"] == {"dateTime": "2026-11-21T20:00:00", "timeZone": "Europe/Amsterdam"}
     assert body["end"] == {"dateTime": "2026-11-21T23:00:00", "timeZone": "Europe/Amsterdam"}
     assert body["source"]["url"] == POST.url  # no link in the post
-    assert "attachments" not in body
 
 
 def test_description_follows_the_agreed_layout():
-    ev = event(link="https://worm.org/agenda/fellatio", notes="Cash only. 18+. Doors 20:00, first band 21:00.")
-    assert show_calendar.description(ev, POST, ["hardcore", "noise", "punk"]) == (
-        "Link: https://worm.org/agenda/fellatio\n"
-        "Tags: hardcore, noise, punk\n"
-        "Notes: Cash only. 18+. Doors 20:00, first band 21:00.\n"
-        "With: Fellatio, Daufødt\n"
-        "\n"
-        "Save & Share on Instagram\n"
-        "https://www.instagram.com/p/DAbc123/\n"
-        "\n"
-        "—\n"
-        "Fellatio + Daufødt, Sat 21 Nov, doors 8pm")
+    post = instagram.Post("DAbc123", "https://www.instagram.com/p/DAbc123/",
+                          caption="28th of November.. Check out these names..\n\nOnly €18,50 & vinyl <3")
+    assert show_calendar.description(event(), post, ["alternative", "kraut"]) == (
+        "alternative, kraut<br><br>"
+        "28th of November.. Check out these names..<br><br>Only €18,50 &amp; vinyl &lt;3<br><br>"
+        '<a href="https://www.instagram.com/p/DAbc123/">Save &amp; Share on Instagram</a>')
 
 
-def test_description_leaves_out_empty_lines():
-    text = show_calendar.description(event(acts=[]), instagram.Post("X", "https://i/p/X/"))
-    assert text == "Save & Share on Instagram\nhttps://i/p/X/"
+def test_description_leaves_out_empty_parts():
+    text = show_calendar.description(event(), instagram.Post("X", "https://i/p/X/"))
+    assert text == '<a href="https://i/p/X/">Save &amp; Share on Instagram</a>'
 
 
 def test_post_link_is_the_source_unless_the_post_gives_one():
     body = show_calendar.body(event(link="https://worm.org/x"), POST, "UTC")
     assert body["source"]["url"] == "https://worm.org/x"
-
-
-def test_flyer_is_attached():
-    flyer_file = {"fileId": "f1", "fileUrl": "https://drive.google.com/file/d/f1/view", "title": "F.jpg", "mimeType": "image/jpeg"}
-    assert show_calendar.body(event(), POST, "UTC", flyer=flyer_file)["attachments"] == [flyer_file]
-
-
-def test_flyer_name_is_safe_for_drive_and_windows():
-    assert show_calendar.flyer_name(event(title="A/B: live?", venue="WORM"), ".jpg") == "A_B_ live_ - WORM - 2026-11-21.jpg"
 
 
 def test_event_past_midnight_ends_the_next_day():
@@ -203,33 +187,19 @@ class FakeCalendar:
             return self.added[eventId]
         return SimpleNamespace(execute=execute)
 
-    def update(self, calendarId, eventId, body, supportsAttachments):
+    def update(self, calendarId, eventId, body):
         def execute():
             self.added[eventId] = body
             return {"htmlLink": "https://calendar/" + eventId}
         return SimpleNamespace(execute=execute)
 
-    def insert(self, calendarId, body, supportsAttachments):
-        assert supportsAttachments
+    def insert(self, calendarId, body):
         def execute():
             if body["id"] in self.added:
                 raise http_error(409)
             self.added[body["id"]] = body
             return {"htmlLink": "https://calendar/" + body["id"]}
         return SimpleNamespace(execute=execute)
-
-
-class FakeDrive:
-    def __init__(self):
-        self.uploads = []
-
-    def files(self):
-        return self
-
-    def create(self, body, media_body, fields):
-        self.uploads.append(body)
-        n = len(self.uploads)
-        return SimpleNamespace(execute=lambda: {"id": f"f{n}", "webViewLink": f"https://drive/f{n}", "mimeType": "image/jpeg"})
 
 
 class FakeCatalog:
@@ -242,20 +212,18 @@ class FakeCatalog:
 TODAY = datetime.date(2026, 11, 13)
 
 
-def test_handle_adds_upcoming_events_once_with_one_flyer_and_skips_past_ones():
-    cal, drive = FakeCalendar(), FakeDrive()
-    target = events.Target(cal, drive, "cal", "folder")
+def test_handle_adds_upcoming_events_once_and_skips_past_ones():
+    cal = FakeCalendar()
+    target = events.Target(cal, "cal")
     found = [event(), event(date="2026-11-22"), event(title="Old show", date="2026-11-01")]
     assert events.handle(POST, found, target, TODAY, dry_run=False) == 2
-    assert len(drive.uploads) == 1 and drive.uploads[0]["parents"] == ["folder"]
-    assert all(b["attachments"][0]["fileId"] == "f1" for b in cal.added.values())
+    assert all("attachments" not in b for b in cal.added.values())
     assert events.handle(POST, found, target, TODAY, dry_run=False) == 0  # already there
-    assert len(drive.uploads) == 1  # and no second copy of the flyer
 
 
 def test_deleted_event_stays_deleted_unless_the_post_is_named():
     cal = FakeCalendar()
-    target = events.Target(cal, FakeDrive(), "cal", "folder")
+    target = events.Target(cal, "cal")
     events.handle(POST, [event()], target, TODAY, dry_run=False)
     (eid, body), = cal.added.items()
     cal.added[eid] = dict(body, status="cancelled")

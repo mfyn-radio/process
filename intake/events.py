@@ -37,9 +37,7 @@ def save_state(path, state):
 class Target:
     """Where events go. In a dry run only `catalog` (for tags) is set."""
     calendar: object = None
-    drive: object = None
     calendar_id: str = None
-    folder_id: str = None
     catalog: object = None
 
 
@@ -68,7 +66,6 @@ def handle(post, events, target, today, dry_run, redo=False):
     `redo` (a post named with --post), events deleted from the calendar
     are put back; otherwise a deleted event stays deleted."""
     added = 0
-    attachment = None  # one upload per post, shared by its events
     if not events:
         log.info("%s: no event found", post.url)
     for event in events:
@@ -80,7 +77,7 @@ def handle(post, events, target, today, dry_run, redo=False):
         if dry_run:
             body = show_calendar.body(event, post, config.SHOW_TIMEZONE, tags)
             log.info("%s: would add '%s' on %s at %s\n%s", post.url, body["summary"], when,
-                     body.get("location", "?"), show_calendar.description(event, post, tags))
+                     body.get("location", "?"), show_calendar.description(event, post, tags).replace("<br>", "\n"))
             continue
         old = show_calendar.existing(target.calendar, target.calendar_id, show_calendar.event_id(post.shortcode, event))
         deleted = old is not None and old.get("status") == "cancelled"
@@ -88,10 +85,7 @@ def handle(post, events, target, today, dry_run, redo=False):
             log.info("%s: '%s' on %s is already on the calendar%s", post.url, event.title, when,
                      " (deleted; --post puts it back)" if deleted else ": " + old.get("htmlLink", ""))
             continue
-        if attachment is None and post.image and target.drive is not None:
-            name = show_calendar.flyer_name(event, flyer.EXTENSIONS.get(post.image_type, ".jpg"))
-            attachment = show_calendar.upload_flyer(target.drive, target.folder_id, name, post.image, post.image_type)
-        body = show_calendar.body(event, post, config.SHOW_TIMEZONE, tags, attachment)
+        body = show_calendar.body(event, post, config.SHOW_TIMEZONE, tags)
         if old is not None:
             link = show_calendar.restore(target.calendar, target.calendar_id, body)
             added += 1
@@ -151,18 +145,14 @@ def run(browser, args):
         target = Target(catalog=open_catalog(google_auth.credentials()))
     else:
         creds = google_auth.credentials(google_auth.SCOPES)
-        target = Target(show_calendar.client(creds), show_calendar.drive_client(creds), catalog=open_catalog(creds))
+        target = Target(show_calendar.client(creds), catalog=open_catalog(creds))
         if not state.get("calendar_id"):
             state["calendar_id"] = show_calendar.create(target.calendar, config.SHOW_CALENDAR, config.SHOW_TIMEZONE)
             save_state(config.EVENTS_STATE_FILE, state)
             log.info("Created the %s calendar. To see it, subscribe to it in Google Calendar as mfyn@ "
                      "(Other calendars > + > Subscribe to calendar) with this ID: %s",
                      config.SHOW_CALENDAR, state["calendar_id"])
-        if not state.get("flyers_folder_id"):
-            state["flyers_folder_id"] = show_calendar.create_folder(target.drive, config.SHOW_FLYERS_FOLDER)
-            save_state(config.EVENTS_STATE_FILE, state)
-            log.info("Created the %s folder in Drive", config.SHOW_FLYERS_FOLDER)
-        target.calendar_id, target.folder_id = state["calendar_id"], state["flyers_folder_id"]
+        target.calendar_id = state["calendar_id"]
     claude = flyer.find_claude()
 
     if args.post:
