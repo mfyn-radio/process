@@ -1,9 +1,24 @@
-# MFYN Reel generator (Processing)
+# MFYN Video Post generator: ON AIR (Processing)
 
-Turns tagged audio files into 1080×1920 Instagram Reels in the MFYN white
+Turns tagged audio files into 1080×1920 video posts in the MFYN white
 dot-matrix player style: white dots on black, five grey levels, with the song
-title the only element at full white. The reels include the track's audio, a
+title the only element at full white. The videos include the track's audio, a
 live scope line, a progress bar and the ON AIR pulse.
+
+Instagram publishes every uploaded video as a Reel, so the file is 9:16, with
+the player in the exact centre. That one frame works in all three places:
+
+| Where | Visible area | Fits? |
+|---|---|---|
+| Full-screen Reel | the whole 1080×1920 frame | yes |
+| Profile grid | the middle 1080×1440 (3:4) | yes |
+| Feed, if cropped | the middle 1080×1350 (4:5) | yes |
+
+The layout tabs draw the player off-centre; `MFYN_VideoPost_OnAir.pde` shifts every
+finished frame (`SHIFT_X`, `SHIFT_Y`) so the middle of the panels lands on
+(540, 960). Pixels pushed past one edge wrap round to the opposite edge. Those
+edges are plain dot-grid background and 1080 and 1920 are multiples of the 6 px
+grid, so no seam shows.
 
 ## One-time setup (Windows)
 
@@ -13,16 +28,16 @@ covers how the automation uses it.
 1. Install **Processing 4** from processing.org.
 2. Install **ffmpeg**: in a terminal run `winget install Gyan.FFmpeg`, then restart
    the PC (or log out and in) so Processing can find it. If it still can't, set
-   `FFMPEG` / `FFPROBE` at the top of `MFYN_Reel.pde` to the full paths, e.g.
+   `FFMPEG` / `FFPROBE` at the top of `MFYN_VideoPost_OnAir.pde` to the full paths, e.g.
    `"C:\\ffmpeg\\bin\\ffmpeg.exe"` (note the double backslashes).
-3. Keep this folder named `MFYN_Reel` (Processing needs the folder and the
+3. Keep this folder named `MFYN_VideoPost_OnAir` (Processing needs the folder and the
    main `.pde` to share a name).
 
-## Making reels
+## Making video posts
 
-1. Put audio files in `MFYN_Reel/input/` (FLAC, MP3, WAV, M4A, AIFF, OGG).
-2. Open `MFYN_Reel.pde` and press **Run**.
-3. Finished videos appear in `MFYN_Reel/output/` as `<file name>_reel.mp4`.
+1. Put audio files in `MFYN_VideoPost_OnAir/input/` (FLAC, MP3, WAV, M4A, AIFF, OGG).
+2. Open `MFYN_VideoPost_OnAir.pde` and press **Run**.
+3. Finished videos appear in `MFYN_VideoPost_OnAir/output/` as `<file name>_post.mp4`.
    The window shows a preview while it renders, and closes itself when done.
 
 Tracks that already have a video in `output/` are skipped, so you can keep
@@ -41,11 +56,11 @@ The pixel fonts only have the basic Latin letters. The sketch adds Ø, writes Æ
 Œ and ß as AE, OE and SS, and drops accents (É → E, Ù → U). Anything else,
 such as non-Latin text, still comes out as `?`.
 
-## Settings (top of `MFYN_Reel.pde`)
+## Settings (top of `MFYN_VideoPost_OnAir.pde`)
 
 | Setting | Default | |
 |---|---|---|
-| `CLIP_SECONDS` | 30 | reel length, max 60 |
+| `CLIP_SECONDS` | 30 | video length, max 60 |
 | `START_OVERRIDE` | -1 | -1 = auto, or a number of seconds into the track |
 | `PREVIEW` | true | draw frames in the window while rendering |
 
@@ -53,8 +68,9 @@ Look settings live in their own tabs:
 
 - `Cover`: `COVER_DIM` (cover brightness), `COVER_BLOOM` (glow on the cover's highlights)
 - `Scope`: `SCOPE_GAIN` (wave height), `SCOPE_LOWPASS_HZ` (smoothness)
-- `Player`: the five grey levels, layout positions (the player is centred in
-  Instagram's safe area, between y 120 and 1575), `TITLE_P` (title size, 6 =
+- `Player`: the five grey levels, layout positions (the player is drawn off-centre and
+  shifted to the exact centre of the frame; its bottom edge `B2` keeps it clear of
+  the Reels username / Follow row), `TITLE_P` (title size, 6 =
   design size), `ARTIST_P` (artist size, 4.8 = 20% smaller)
 - `Glow`: `GLOW_TIGHT`, `GLOW_WIDE`, `GLOW_GAIN` (the halo around every lit dot)
 
@@ -66,7 +82,7 @@ Processing use `Processing.exe cli` instead). This renders everything in
 `input/`:
 
 ```
-"C:\Program Files\Processing\processing-java.exe" --sketch="C:\path\to\MFYN_Reel" --run
+"C:\Program Files\Processing\processing-java.exe" --sketch="C:\path\to\MFYN_VideoPost_OnAir" --run
 ```
 
 A window opens briefly while it renders, so the PC needs to be signed in.
@@ -77,7 +93,7 @@ The Make Reels automation (`intake/reels.py`, step 2a of the intake and producti
 runs the sketch with options that override the settings:
 
 ```
-"C:\Program Files\Processing\processing-java.exe" --sketch="C:\path\to\MFYN_Reel" --run input="<folder>" output="<folder>" seconds=30
+"C:\Program Files\Processing\processing-java.exe" --sketch="C:\path\to\MFYN_VideoPost_OnAir" --run input="<folder>" output="<folder>" seconds=30
 ```
 
 `input` and `output` can be absolute paths; relative ones are inside the
@@ -85,7 +101,7 @@ sketch folder, as before.
 
 ## Files
 
-- `MFYN_Reel.pde`: settings, the job queue, the preview window
+- `MFYN_VideoPost_OnAir.pde`: settings, the job queue, the preview window
 - `Job.pde`: reads tags, cover and audio for one track; builds the static frame; renders frames
 - `Player.pde`: layout, grey levels, header, title, progress bar, ON AIR pulse
 - `Cover.pde`: the album cover, "Screen" treatment (full colour through the dot grid)

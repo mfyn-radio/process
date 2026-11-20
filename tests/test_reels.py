@@ -73,7 +73,7 @@ if any("MFYN_Archive" in a for a in sys.argv):
     sys.exit(0)
 assert args["seconds"] == "30"
 for f in Path(args["input"]).iterdir():
-    (Path(args["output"]) / (f.stem + "_reel.mp4")).write_bytes(b"mp4")
+    (Path(args["output"]) / (f.stem + "_post.mp4")).write_bytes(b"mp4")
 '''
 
 
@@ -89,7 +89,7 @@ def test_make_reels_end_to_end(tmp_path, monkeypatch, capsys):
     fake.chmod(fake.stat().st_mode | stat.S_IEXEC)
 
     monkeypatch.setattr(config, "SHOW_ARCHIVE_DIR", archive)
-    monkeypatch.setattr(config, "REELS_DIR", out)
+    monkeypatch.setattr(config, "POSTS_DIR", out)
     monkeypatch.setattr(config, "PROCESSING", str(fake))
     monkeypatch.setattr(config, "APP_DIR", tmp_path / "app")
     monkeypatch.setattr(config, "REELS_LOG_FILE", tmp_path / "app" / "reels.log")
@@ -116,4 +116,4 @@ def test_make_reels_end_to_end(tmp_path, monkeypatch, capsys):
 
     # A second run has nothing left to do.
     assert reels.main([], ask=lambda prompt: "y") == 0
-    assert "2 track(s) already have a Reel" in (tmp_path / "app" / "reels.log").read_text()
+    assert "2 track(s) already have a video post" in (tmp_path / "app" / "reels.log").read_text()

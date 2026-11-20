@@ -112,7 +112,7 @@ def render(folder, tracks, featured_index, seconds):
             shutil.copy2(img, staging / img.name)
     (staging / "featured.txt").write_text(featured_txt(tracks, featured_index), encoding="utf-8")
     cmd = reels.processing_command() + [
-        f"--sketch={config.ALBUM_SKETCH}", "--run",
+        f"--sketch={config.STORY_SKETCH}", "--run",
         f"input={staging.parent}", f"output={out}", f"seconds={seconds}",
     ]
     log.info("Rendering the Story with Processing. A preview window opens while it works.")

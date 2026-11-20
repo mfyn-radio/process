@@ -12,13 +12,14 @@ float[] HIGHLIGHT = { 255, 255, 255 };   // song title
 float DOT_R = 0.36;                      // text dot radius, as a fraction of the dot pitch
 
 // ---------- layout (1080x1920, 6 px master dot grid) ----------
-// The player sits centred in Instagram's safe area for Reels: below the top
-// bar (y 120) and above the name and caption (y 1575), measured from a phone
-// screenshot. Everything else is placed relative to these edges; move them by
-// multiples of 6 so the player's dots stay on the background grid.
+// The player is drawn here, then MFYN_VideoPost_OnAir.pde shifts every frame so
+// the middle of the panels (X0..X1, T1..B2) lands on the exact centre of the
+// 1080x1920 frame. The bottom edge B2 keeps the player clear of the Reels
+// username / Follow row. Everything else is placed relative to these edges;
+// move them by multiples of 6 so the player's dots stay on the background grid.
 final int X0 = 118, X1 = 872;            // panel left / right
 final int T1 = 196, B1 = 386;            // header panel (MFYN + ON AIR)
-final int T2 = 406, B2 = 1502;           // main panel
+final int T2 = 406, B2 = 1506;           // main panel
 final int TEXT_X = 138, TEXT_R = 852;
 final int TEXT_MAXW = TEXT_R - TEXT_X;
 final int COVER_S = 480;
@@ -29,8 +30,8 @@ final int TITLE_Y = COVER_Y0 + COVER_S + 70;
 float TITLE_P  = 6;                      // title dot pitch
 String ARTIST_FONT = "F13";              // artist: same font as the title
 float  ARTIST_P    = 4.8;                // 20% smaller than the title (6)
-final int PROGRESS_Y = B2 - 85;          // top of the time labels
-final int TEXT_BOTTOM = PROGRESS_Y - 16; // the artist stops above the progress row
+final int PROGRESS_Y = B2 - 83;          // top of the time labels
+final int TEXT_BOTTOM = PROGRESS_Y - 28; // the artist stops above the progress row
 final int[] ONAIR_DOT = { 532, T1 + 93 };
 
 float[][] NOTE = { {0,0,1,1,1}, {0,0,1,0,1}, {0,0,1,0,0}, {0,0,1,0,0}, {1,1,1,0,0}, {1,1,1,0,0} };

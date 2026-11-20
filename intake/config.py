@@ -8,18 +8,19 @@ LIBRARY_DIR = Path(os.environ.get("MFYN_LIBRARY", r"H:\My Drive\MFYN_Library"))
 
 # Step 2 ends with the finished episode here, as "D_M_YYYY- Episode Name\Tracks".
 SHOW_ARCHIVE_DIR = Path(os.environ.get("MFYN_SHOW_ARCHIVE", r"H:\My Drive\MFYN_Show_Archive"))
-# Step 2a writes each episode's Reels here, for review, then Publishing.
-REELS_DIR = Path(os.environ.get("MFYN_REELS", r"H:\My Drive\MFYN_Reels"))
-REEL_SECONDS = 30
+# Step 2a writes each episode's video posts here, for review, then Publishing.
+# (MFYN_Reels is an archive for now; nothing writes to it.)
+POSTS_DIR = Path(os.environ.get("MFYN_POSTS", r"H:\My Drive\MFYN_Posts"))
+POST_SECONDS = 30
 
-# The Reel sketch, in this repo. Processing's command-line runner is found
+# The ON AIR video post sketch, in this repo. Processing's command-line runner is found
 # automatically; set MFYN_PROCESSING to its full path if it isn't.
-REEL_SKETCH = Path(__file__).resolve().parent.parent / "processing" / "MFYN_Reel"
+POST_SKETCH = Path(__file__).resolve().parent.parent / "processing" / "MFYN_VideoPost_OnAir"
 
 # Make Album Story writes each featured-album Story here, for review, then Publishing.
 STORIES_DIR = Path(os.environ.get("MFYN_STORIES", r"H:\My Drive\MFYN_Stories"))
 STORY_SECONDS = 30
-ALBUM_SKETCH = Path(__file__).resolve().parent.parent / "processing" / "MFYN_Album"
+STORY_SKETCH = Path(__file__).resolve().parent.parent / "processing" / "MFYN_Story_Album"
 
 # The archive cover, made for each episode in MFYN_Show_Archive. Numbering
 # starts at No. 3 with the 5 November 2026 episode and counts up by one per

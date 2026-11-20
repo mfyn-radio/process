@@ -5,7 +5,7 @@ pick the album and the featured track; the rest is automatic. Posting it, with
 the Bandcamp link sticker, is part of the Publishing Process.
 
 See also: [process overview](README.md) ·
-[the Album sketch](../processing/MFYN_Album/README.md)
+[the Album sketch](../processing/MFYN_Story_Album/README.md)
 
 | | |
 |---|---|
@@ -13,7 +13,7 @@ See also: [process overview](README.md) ·
 | **Input** | An album folder in `MFYN_Library`, and the featured track you pick |
 | **Output** | `Artist - Album - Track.mp4`, a still `.png` and a `.json` of its details, in `MFYN_Stories\Artist - Album` |
 | **Runs on** | The MFYN PC (Processing 4 and ffmpeg) |
-| **Code** | [`intake/stories.py`](../intake/stories.py), the sketch [`processing/MFYN_Album`](../processing/MFYN_Album), started by [`scripts/make_story.cmd`](../scripts/make_story.cmd) |
+| **Code** | [`intake/stories.py`](../intake/stories.py), the sketch [`processing/MFYN_Story_Album`](../processing/MFYN_Story_Album), started by [`scripts/make_story.cmd`](../scripts/make_story.cmd) |
 | **Next** | You review it, then post it with the album link as a sticker |
 
 ## What it does

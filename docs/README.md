@@ -11,15 +11,15 @@ starts after that.
 |---|---|---|---|
 | 1 | [Acquire](01-acquire.md) | A Bandcamp purchase is downloaded as FLAC into `MFYN_Library` | Live (2026-10-23) |
 | 2 | [Create the show](02-create-show.md) | **The parent.** Pick tracks, make the episode, archive it in `MFYN_Show_Archive`, then start the sub-automations below | Manual today |
-| 2a | [Make Reels](02a-make-reels.md) | The episode's tracks become 30-second Reels in `MFYN_Reels` | Built, being tested |
-| 2b | [Instagram copy](02b-instagram-copy.md) | A caption for each Reel, from its details and the MFYN Artists sheet | Built, runs at the end of Make Reels |
+| 2a | [Make Reels](02a-make-reels.md) | The episode's tracks become 30-second 1080×1920 video posts in `MFYN_Posts` | Built, being tested |
+| 2b | [Instagram copy](02b-instagram-copy.md) | A caption for each video post, from its details and the MFYN Artists sheet | Built, runs at the end of Make Reels |
 | — | **Manual stop** | You review everything made for a post, then trigger Publishing | Not built yet |
 | → | *Publishing Process* | Starts after your review: scheduling the posts on Instagram, among other things | Separate process, not built yet |
 
 Steps 2a and 2b are sub-automations of step 2: when a show is ready, step 2
 runs and triggers them. Each is its own step, with its own doc. Together they
 produce all the content for a post, so they belong to production. What they
-leave in `MFYN_Reels` is what you review at the manual stop.
+leave in `MFYN_Posts` is what you review at the manual stop.
 
 Ground rule: **MFYN only uses music it owns.** Everything starts with a
 Bandcamp purchase.
@@ -49,9 +49,9 @@ The logs keep four files of up to 1 MB each, and Make Reels and Make Album Story
 | admin@nothingflatdigital.com | Google Workspace | Workspace and Google Cloud administration |
 | MFYN Artists | Google Sheet in mfyn@'s Drive, kept by the automation | The artist library (Instagram handles, tags, links), releases and labels |
 | `MFYN_Show_Archive` | mfyn@'s My Drive, `H:\My Drive\MFYN_Show_Archive` | Finished episodes, `D_M_YYYY- Episode Name\Tracks` |
-| `MFYN_Reels` | mfyn@'s My Drive, `H:\My Drive\MFYN_Reels` | Each episode's Reels, their details and captions, for your review and then Publishing |
+| `MFYN_Posts` | mfyn@'s My Drive, `H:\My Drive\MFYN_Posts` | Each episode's video posts, their details and captions, for your review and then Publishing |
 | `MFYN_Stories` | mfyn@'s My Drive, `H:\My Drive\MFYN_Stories` | Featured-album Stories and their details, for your review and then Publishing |
-| Processing sketches | this repo, `processing\` | `MFYN_Reel` makes the Reels; `MFYN_Album` makes the featured-album Stories; `MFYN_Archive` makes the archive episode covers ([automated](archive-cover.md), or by hand: [README](../processing/MFYN_Archive/README.md)) |
+| Processing sketches | this repo, `processing\` | `MFYN_VideoPost_OnAir` makes the video posts; `MFYN_Story_Album` makes the featured-album Stories; `MFYN_Archive` makes the archive episode covers ([automated](archive-cover.md), or by hand: [README](../processing/MFYN_Archive/README.md)) |
 | `MFYN_Library` | mfyn@'s My Drive, synced to `H:\My Drive\MFYN_Library` on the MFYN PC | The music library, one folder per album |
 | MFYN PC | Windows, signed in, running Google Drive for desktop and Chrome | Runs the automation (Task Scheduler) |
 | `mfyn-library-agent` | Google Cloud project, Internal audience | Lets the automation read and label mail ([setup](setup/google-cloud.md)) |
@@ -83,7 +83,7 @@ list of open work. There are two kinds:
   - `Confirmed` or `No Instagram`: set by you in step 2a.
 - **Episode folders:** `D_M_YYYY- Episode Name`, using the air date. Each gets
   its archive cover, `MFYN_archive_NN.png`, numbered from No. 3 (5 November 2026).
-- **Reels:** `MFYN_Reels\<episode folder>\Artist - Title.mp4`, plus `.json`
+- **Video posts:** `MFYN_Posts\<episode folder>\Artist - Title.mp4`, plus `.json`
   details and the `.txt` caption.
 - **Secrets:** never in the repo. Google sign-in tokens live on the PC in
   `%APPDATA%\mfyn-intake\`.

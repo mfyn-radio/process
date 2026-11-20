@@ -5,14 +5,15 @@ class Encoder {
   File out;
   Process proc;
   java.io.OutputStream os;
-  byte[] buf = new byte[W * H * 3];
+  byte[] buf;
 
-  Encoder(File out, File audio, float start, float dur) {
+  Encoder(File out, File audio, float start, float dur, int w, int h) {
     this.out = out;
+    buf = new byte[w * h * 3];
     File tmp = new File(out.getAbsolutePath() + ".part.mp4");
     try {
       ProcessBuilder pb = new ProcessBuilder(FFMPEG, "-y", "-loglevel", "error",
-        "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", W + "x" + H, "-r", str(FPS), "-i", "-",
+        "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", w + "x" + h, "-r", str(FPS), "-i", "-",
         "-ss", str(start), "-t", str(dur), "-i", audio.getAbsolutePath(),
         "-map", "0:v", "-map", "1:a",
         "-c:v", "libx264", "-crf", "17", "-preset", "medium", "-pix_fmt", "yuv420p",

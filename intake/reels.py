@@ -1,4 +1,4 @@
-"""Step 2a, Make Reels: turn an episode's tracks into 30-second Instagram Reels.
+"""Step 2a, Make Reels: turn an episode's tracks into 30-second 1080x1920 video posts.
 
 Double-click scripts\\make_reels.cmd (or its desktop shortcut), or run:
 
@@ -89,7 +89,7 @@ def processing_command():
 
 
 def render(tracks, out_dir, seconds):
-    """Run the Reel sketch on these tracks. Returns {track path: rendered mp4}."""
+    """Run the ON AIR video post sketch on these tracks. Returns {track path: rendered mp4}."""
     with tempfile.TemporaryDirectory(prefix="mfyn-reels-") as tmp:
         staging_in, staging_out = Path(tmp) / "input", Path(tmp) / "output"
         staging_in.mkdir()
@@ -98,16 +98,16 @@ def render(tracks, out_dir, seconds):
         for track in tracks:
             shutil.copy2(track.path, staging_in / track.path.name)
         cmd = processing_command() + [
-            f"--sketch={config.REEL_SKETCH}", "--run",
+            f"--sketch={config.POST_SKETCH}", "--run",
             f"input={staging_in}", f"output={staging_out}", f"seconds={seconds}",
         ]
-        log.info("Rendering %d Reel(s) with Processing. A preview window opens while it works.", len(tracks))
+        log.info("Rendering %d video post(s) with Processing. A preview window opens while it works.", len(tracks))
         result = subprocess.run(cmd)
         if result.returncode != 0:
             log.error("Processing exited with code %d", result.returncode)
         rendered = {}
         for track in tracks:
-            mp4 = staging_out / f"{track.path.stem}_reel.mp4"
+            mp4 = staging_out / f"{track.path.stem}_post.mp4"
             if mp4.exists():
                 kept = out_dir / mp4.name
                 shutil.move(mp4, kept)
@@ -205,7 +205,7 @@ def main(argv=None, ask=input):
     try:
         cat = catalog.Catalog(google_auth.credentials())
     except (Exception, SystemExit) as e:
-        log.warning("Couldn't open the %s sheet (%s). Reels will be made without Instagram handles.",
+        log.warning("Couldn't open the %s sheet (%s). Video posts will be made without Instagram handles.",
                     config.ARTISTS_SHEET, e)
         cat = None
 
@@ -214,30 +214,30 @@ def main(argv=None, ask=input):
         handles.confirm(cat.artists, list(dict.fromkeys(t.artist for t in tracks)), "artist", ask=ask)
         handles.confirm(cat.labels, labels_for(tracks, cat), "label", ask=ask)
 
-    out_dir = config.REELS_DIR / ep.folder.name
+    out_dir = config.POSTS_DIR / ep.folder.name
     out_dir.mkdir(parents=True, exist_ok=True)
     names = dict(zip((t.path for t in tracks), reel_names(tracks)))
     pending = [t for t in tracks if not (out_dir / f"{names[t.path]}.mp4").exists()]
     if len(pending) < len(tracks):
-        log.info("%d track(s) already have a Reel; skipping them.", len(tracks) - len(pending))
+        log.info("%d track(s) already have a video post; skipping them.", len(tracks) - len(pending))
 
-    made = render(pending, out_dir, config.REEL_SECONDS) if pending else {}
+    made = render(pending, out_dir, config.POST_SECONDS) if pending else {}
     for track in pending:
         mp4 = made.get(track.path)
         if mp4 is None:
-            log.error("No Reel was made for %s", track.path.name)
+            log.error("No video post was made for %s", track.path.name)
             continue
         name = names[track.path]
         mp4.replace(out_dir / f"{name}.mp4")
         (out_dir / f"{name}.json").write_text(
-            json.dumps(details(track, ep, cat, config.REEL_SECONDS), indent=2, ensure_ascii=False), encoding="utf-8")
+            json.dumps(details(track, ep, cat, config.POST_SECONDS), indent=2, ensure_ascii=False), encoding="utf-8")
         log.info("Made %s.mp4", name)
 
     # Step 2b: a caption for every Reel that doesn't have one yet.
     written = captions.write_all(out_dir, cat)
 
     failed = len(pending) - len(made)
-    log.info("\nDone: %d Reel(s) made, %d failed, %d caption(s) written. They're in %s",
+    log.info("\nDone: %d video post(s) made, %d failed, %d caption(s) written. They're in %s",
              len(made), failed, written, out_dir)
     if cover_failed:
         log.error("The archive cover wasn't made. Scroll up for Processing's messages.")

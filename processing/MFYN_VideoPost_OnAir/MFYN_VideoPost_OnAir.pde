@@ -1,9 +1,13 @@
-// MFYN Reel generator
+// MFYN Video Post generator: ON AIR
 // ------------------------------------------------------------
 // Drop audio files (FLAC / MP3 / WAV with tags) into  input/
 // Press Run. Every track that doesn't have a video in  output/  yet
-// is rendered as a 1080x1920 Instagram Reel with its audio, then the
+// is rendered as a 1080x1920 video post with its audio, then the
 // sketch closes itself when the queue is empty.
+//
+// Instagram publishes every uploaded video as a Reel, so the file is 9:16.
+// The player sits in the exact centre, so it also fits the profile grid
+// (the middle 1080x1440) and a 4:5 feed crop (the middle 1080x1350).
 //
 // Needs ffmpeg + ffprobe installed (winget install Gyan.FFmpeg).
 //
@@ -13,7 +17,7 @@
 // ------------------------------------------------------------
 
 // ---------- settings ----------
-float CLIP_SECONDS   = 30;      // reel length (max 60)
+float CLIP_SECONDS   = 30;      // video length (max 60)
 float START_OVERRIDE = -1;      // -1 = auto-pick the loudest stretch, otherwise seconds into the track
 int   FPS            = 30;
 boolean PREVIEW      = true;    // draw frames in the window while rendering (slightly slower)
@@ -24,6 +28,14 @@ String FFMPEG  = "";
 String FFPROBE = "";
 
 final int W = 1080, H = 1920;
+
+// The layout tabs draw the player off-centre (the middle of the
+// panels, X0..X1 and T1..B2). Every finished frame is shifted by this much so
+// the player's centre lands on (W/2, H/2). Pixels pushed past one edge wrap
+// round to the opposite edge: those edges are plain dot-grid background, and
+// W and H are multiples of the 6 px grid, so no seam shows.
+// (Set in setup(): the layout constants live in Player.pde.)
+int SHIFT_X, SHIFT_Y;
 
 ArrayList<File> queue = new ArrayList<File>();
 Job job;              // the track currently rendering
@@ -36,6 +48,8 @@ void settings() {
 
 void setup() {
   frameRate(1000);
+  SHIFT_X = W / 2 - (X0 + X1) / 2;
+  SHIFT_Y = H / 2 - (T1 + B2) / 2;
   readArgs();
   findTools();
   loadFonts();
@@ -64,7 +78,7 @@ void draw() {
   // render a few frames per draw() so the window stays responsive
   long t0 = millis();
   while (frameIdx < frameCount_ && millis() - t0 < 200) {
-    int[] px = job.renderFrame(frameIdx);
+    int[] px = centre(job.renderFrame(frameIdx));
     enc.write(px);
     if (PREVIEW && (frameIdx % 3 == 0 || frameIdx == frameCount_ - 1)) showPreview(px);
     frameIdx++;
@@ -82,7 +96,7 @@ void startJob(File f) {
   job = new Job(f);
   frameIdx = 0;
   frameCount_ = round(job.dur * FPS);
-  enc = new Encoder(outputFor(f), f, job.start, job.dur);
+  enc = new Encoder(outputFor(f), f, job.start, job.dur, W, H);
 }
 
 // command-line overrides: input=<folder> output=<folder> seconds=<n>
@@ -100,7 +114,18 @@ void readArgs() {
 
 File outputFor(File audio) {
   String base = audio.getName().replaceAll("\\.[^.]+$", "");
-  return new File(sketchPath(OUTPUT_DIR), base + "_reel.mp4");
+  return new File(sketchPath(OUTPUT_DIR), base + "_post.mp4");
+}
+
+// move the finished frame so the player is centred, wrapping at the edges
+int[] shifted;
+int[] centre(int[] px) {
+  if (shifted == null) shifted = new int[px.length];
+  for (int y = 0; y < H; y++) {
+    int ny = (y + SHIFT_Y + H) % H;
+    for (int x = 0; x < W; x++) shifted[ny * W + (x + SHIFT_X + W) % W] = px[y * W + x];
+  }
+  return shifted;
 }
 
 PImage previewImg;

@@ -9,7 +9,7 @@ FAKE_PROCESSING = '''#!{python}
 import sys
 from pathlib import Path
 args = dict(a.split("=", 1) for a in sys.argv[1:] if "=" in a and not a.startswith("--"))
-assert "--run" in sys.argv and any(a.startswith("--sketch=") and "MFYN_Album" in a for a in sys.argv)
+assert "--run" in sys.argv and any(a.startswith("--sketch=") and "MFYN_Story_Album" in a for a in sys.argv)
 assert args["seconds"] == "30"
 for album in Path(args["input"]).iterdir():
     featured = (album / "featured.txt").read_text()
