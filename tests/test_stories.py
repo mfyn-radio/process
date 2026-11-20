@@ -9,7 +9,7 @@ FAKE_PROCESSING = '''#!{python}
 import sys
 from pathlib import Path
 args = dict(a.split("=", 1) for a in sys.argv[1:] if "=" in a and not a.startswith("--"))
-assert "--run" in sys.argv and any(a.startswith("--sketch=") and "MFYN_Album" in a for a in sys.argv)
+assert "--run" in sys.argv and any(a.startswith("--sketch=") and "MFYN_Story_Album" in a for a in sys.argv)
 assert args["seconds"] == "30"
 for album in Path(args["input"]).iterdir():
     featured = (album / "featured.txt").read_text()
@@ -59,6 +59,10 @@ def test_make_story_end_to_end(tmp_path, monkeypatch):
     fake.write_text(FAKE_PROCESSING.format(python=sys.executable))
     fake.chmod(fake.stat().st_mode | stat.S_IEXEC)
     out = tmp_path / "stories"
+    archive = tmp_path / "archive"
+    (archive / "5_11_2026- Normal Show").mkdir(parents=True)
+    (archive / "12_11_2026- Later Show").mkdir()
+    monkeypatch.setattr(config, "SHOW_ARCHIVE_DIR", archive)
     monkeypatch.setattr(config, "LIBRARY_DIR", lib)
     monkeypatch.setattr(config, "STORIES_DIR", out)
     monkeypatch.setattr(config, "PROCESSING", str(fake))
@@ -68,18 +72,24 @@ def test_make_story_end_to_end(tmp_path, monkeypatch):
 
     answers = iter(["human", "3"])
     assert stories.main([], ask=lambda p: next(answers), say=lambda *_: None) == 0
-    folder = out / "CADY - Limitations of the Human Form"
-    name = "CADY - Limitations of the Human Form - Constellation Indifference"
+    folder = out / "12_11_2026- Later Show"
+    name = "CADY - Constellation Indifference"
     assert sorted(p.name for p in folder.iterdir()) == [f"{name}.json", f"{name}.mp4", f"{name}.png"]
     assert (folder / f"{name}.mp4").read_text() == "mp4 featuring 10"
     info = json.loads((folder / f"{name}.json").read_text())
     assert info["album"] == "Limitations of the Human Form" and info["artist"] == "CADY"
     assert info["featured_track"]["title"] == "Constellation Indifference"
     assert info["clip_seconds"] == 30
+    assert info["episode"] == {"name": "Later Show", "air_date": "2026-11-12", "folder": "12_11_2026- Later Show"}
 
     # Same album and track again: nothing to do.
     assert stories.main(["--album", "cady", "--track", "3"], ask=lambda p: "", say=lambda *_: None) == 0
     assert "already exists" in (tmp_path / "app" / "stories.log").read_text()
+
+    # Another episode gets its own folder.
+    assert stories.main(["--album", "cady", "--track", "3", "--episode", "Normal"], ask=lambda p: "",
+                        say=lambda *_: None) == 0
+    assert (out / "5_11_2026- Normal Show" / f"{name}.mp4").exists()
 
 
 def test_pick_album_asks_again_and_chooses_from_several(tmp_path):
