@@ -7,9 +7,11 @@
 // List episodes in  input/episodes.csv , one per line:  2,8 October 2026
 // Press Run. Every episode without a cover in  output/  yet is rendered as
 // output/MFYN_archive_02.png (2160 x 2160), then the sketch closes itself.
+// Alongside it goes the YouTube playlist image, output/MFYN_tracklist_02.png:
+// the same cover inverted, in the same paper colour.
 //
 // From the command line, one cover:  number=2 date="8 October 2026"
-// (also input=<folder> output=<folder> size=<px>).
+// (also input=<folder> output=<folder> size=<px> colour=#RRGGBB).
 //
 // The look is defined in Spec.pde. It is independent of the Reel and Album
 // sketches on purpose: this cover is the brand anchor and should not drift.
@@ -28,6 +30,7 @@ class Episode { int number; String date; Episode(int n, String d) { number = n; 
 
 ArrayList<Episode> queue = new ArrayList<Episode>();
 String argNumber = null, argDate = null;
+float[] argColour = null;             // colour=#RRGGBB: use this paper colour instead of a random one
 PImage lastCover;
 String status = "";
 
@@ -63,9 +66,14 @@ void draw() {
   Episode ep = queue.remove(0);
   File out = outputFor(ep);
   status = "rendering " + out.getName() + " (" + queue.size() + " left)";
-  PImage cover = render(ep.number, ep.date);
+  float[] colour = argColour != null ? argColour : paperColour();
+  println("MFYN: NO. " + nf(ep.number, 2) + " paper " + hex(colour));
+  PImage cover = render(ep.number, ep.date, colour);
   cover.save(out.getAbsolutePath());
   println("MFYN: wrote " + out.getName());
+  File tl = tracklistFor(ep);
+  renderTracklist(ep.number, ep.date, colour).save(tl.getAbsolutePath());
+  println("MFYN: wrote " + tl.getName());
   lastCover = cover;
 }
 
@@ -87,25 +95,38 @@ File outputFor(Episode ep) {
   return new File(sketchPath(OUTPUT_DIR), name);
 }
 
-// The whole cover: paper, then the wordmark in ink, then the small text in ink.
-PImage render(int number, String date) {
+File tracklistFor(Episode ep) {
+  return new File(sketchPath(OUTPUT_DIR), "MFYN_tracklist_" + nf(ep.number, 2) + ".png");
+}
+
+// The whole cover: paper in `colour`, then the wordmark in ink, then the small text in ink.
+PImage render(int number, String date, float[] colour) {
+  return compose(number, date, colour, INK, LABEL, WORDMARK_BASELINE, LINE1_BASELINE, LINE2_BASELINE);
+}
+
+// The YouTube playlist image: the cover inverted (INK paper, type in the
+// cover's colour), with the type further in from the top and bottom.
+PImage renderTracklist(int number, String date, float[] colour) {
+  return compose(number, date, INK, colour, TRACKLIST_LABEL, TL_WORDMARK_BASELINE, TL_LINE1_BASELINE, TL_LINE2_BASELINE);
+}
+
+PImage compose(int number, String date, float[] paper, float[] ink, String labelText,
+               float wordmarkBaseline, float line1Baseline, float line2Baseline) {
   int S = SIZE;
   java.util.Random rng = new java.util.Random(SEED);
-  float[] colour = paperColour();
-  println("MFYN: NO. " + nf(number, 2) + " paper " + hex(colour));
-  float[][] img = makePaper(rng, S, colour);
+  float[][] img = makePaper(rng, S, paper);
 
-  Line[] big = { new Line(WORDMARK, wordmarkFont, WORDMARK_SIZE, WORDMARK_TRACK, WORDMARK_X, WORDMARK_BASELINE) };
-  applyInk(rng, img, textMask(big, S, WORDMARK_BASELINE - WORDMARK_SIZE, WORDMARK_BASELINE + WORDMARK_SIZE * 0.3), S);
+  Line[] big = { new Line(WORDMARK, wordmarkFont, WORDMARK_SIZE, WORDMARK_TRACK, WORDMARK_X, wordmarkBaseline) };
+  applyInk(rng, img, textMask(big, S, wordmarkBaseline - WORDMARK_SIZE, wordmarkBaseline + WORDMARK_SIZE * 0.3), S, ink);
 
-  String label = LABEL.toUpperCase();
+  String label = labelText.toUpperCase();
   float labelX = B - MARGIN - trackedWidth(label, smallFont, SMALL_SIZE, SMALL_TRACK);
   Line[] small = {
-    new Line("NO. " + nf(number, 2), smallFont, SMALL_SIZE, SMALL_TRACK, MARGIN, LINE1_BASELINE),
-    new Line(date.toUpperCase(), smallFont, SMALL_SIZE, SMALL_TRACK, MARGIN, LINE2_BASELINE),
-    new Line(label, smallFont, SMALL_SIZE, SMALL_TRACK, labelX, LINE2_BASELINE),
+    new Line("NO. " + nf(number, 2), smallFont, SMALL_SIZE, SMALL_TRACK, MARGIN, line1Baseline),
+    new Line(date.toUpperCase(), smallFont, SMALL_SIZE, SMALL_TRACK, MARGIN, line2Baseline),
+    new Line(label, smallFont, SMALL_SIZE, SMALL_TRACK, labelX, line2Baseline),
   };
-  applyInk(rng, img, textMask(small, S, LINE1_BASELINE - SMALL_SIZE * 1.5, LINE2_BASELINE + SMALL_SIZE * 0.6), S);
+  applyInk(rng, img, textMask(small, S, line1Baseline - SMALL_SIZE * 1.5, line2Baseline + SMALL_SIZE * 0.6), S, ink);
 
   PImage out = createImage(S, S, RGB);
   out.loadPixels();
@@ -129,6 +150,10 @@ void readArgs() {
     else if (key.equals("input")) INPUT_DIR = value;
     else if (key.equals("output")) OUTPUT_DIR = value;
     else if (key.equals("size")) SIZE = int(value);
+    else if (key.equals("colour") && value.matches("#?[0-9A-Fa-f]{6}")) {
+      int c = unhex(value.replace("#", ""));
+      argColour = new float[] { (c >> 16) & 255, (c >> 8) & 255, c & 255 };
+    }
   }
 }
 
