@@ -122,7 +122,7 @@ def render(folder, tracks, featured_index, seconds):
     return Path(tmp), out / f"{folder.name}_story.mp4", out / f"{folder.name}_story.png"
 
 
-def details(folder, tracks, featured, cat, seconds):
+def details(folder, tracks, featured, cat, seconds, ep):
     """What Publishing needs for the Story: the link for the sticker, handles,
     credits. Handles are as of now; look them up again before posting."""
     first = tracks[0]
@@ -150,6 +150,7 @@ def details(folder, tracks, featured, cat, seconds):
         "artist_instagram_status": artist.get("Status", ""),
         "label_instagram": label.get("Instagram", ""),
         "label_instagram_status": label.get("Status", ""),
+        "episode": {"name": ep.name, "air_date": ep.air_date.isoformat(), "folder": ep.folder.name},
         "library_folder": folder.name,
         "clip_seconds": seconds,
         "made": datetime.datetime.now().isoformat(timespec="seconds"),
@@ -159,6 +160,8 @@ def details(folder, tracks, featured, cat, seconds):
 def main(argv=None, ask=input, say=print):
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--album", help="the album whose library folder name contains this")
+    parser.add_argument("--episode", help="file the Story under the episode whose folder name contains this "
+                                         "(default: the newest)")
     parser.add_argument("--track", type=int, help="the featured track's number in the list")
     parser.add_argument("--skip-handles", action="store_true", help="don't stop to confirm Instagram handles")
     args = parser.parse_args(argv)
@@ -167,12 +170,20 @@ def main(argv=None, ask=input, say=print):
     if not config.LIBRARY_DIR.is_dir():
         log.error("Library %s not found. Is Google Drive for desktop running?", config.LIBRARY_DIR)
         return 1
+    if not config.SHOW_ARCHIVE_DIR.is_dir():
+        log.error("Show archive %s not found. Is Google Drive for desktop running?", config.SHOW_ARCHIVE_DIR)
+        return 1
+    ep = episode.find(config.SHOW_ARCHIVE_DIR, args.episode)
+    if ep is None:
+        log.error("No episode folder (named like 5_11_2026- Episode Name) found in %s", config.SHOW_ARCHIVE_DIR)
+        return 1
     folder = pick_album(albums(config.LIBRARY_DIR), args.album, ask, say)
     if folder is None:
         return 0
     tracks = album_tracks(folder)
 
-    say(f"\n{folder.name}")
+    say(f"\nEpisode: {ep.folder.name}")
+    say(f"{folder.name}")
     for i, t in enumerate(tracks, 1):
         say(f"  {i:2}. {t.title}")
     if args.track is not None:
@@ -186,8 +197,8 @@ def main(argv=None, ask=input, say=print):
             return 0
     featured = tracks[index]
 
-    out_dir = config.STORIES_DIR / folder.name
-    name = library.clean(f"{folder.name} - {featured.title}")
+    out_dir = config.STORIES_DIR / ep.folder.name
+    name = library.clean(f"{featured.artist} - {featured.title}")
     if (out_dir / f"{name}.mp4").exists():
         log.info("%s.mp4 already exists in %s. Delete it to make it again.", name, out_dir)
         return 0
@@ -199,7 +210,7 @@ def main(argv=None, ask=input, say=print):
                     config.ARTISTS_SHEET, e)
         cat = None
     if cat and not args.skip_handles:
-        who = details(folder, tracks, featured, cat, config.STORY_SECONDS)
+        who = details(folder, tracks, featured, cat, config.STORY_SECONDS, ep)
         say("\nInstagram handles. Only ones that aren't confirmed yet are asked about.")
         handles.confirm(cat.artists, [who["artist"]], "artist", ask=ask)
         if who["label"] and who["label"] != "Self-released":
@@ -215,7 +226,7 @@ def main(argv=None, ask=input, say=print):
         if png.exists():
             shutil.move(png, out_dir / f"{name}.png")
         (out_dir / f"{name}.json").write_text(
-            json.dumps(details(folder, tracks, featured, cat, config.STORY_SECONDS), indent=2, ensure_ascii=False),
+            json.dumps(details(folder, tracks, featured, cat, config.STORY_SECONDS, ep), indent=2, ensure_ascii=False),
             encoding="utf-8")
     finally:
         shutil.rmtree(tmp, ignore_errors=True)

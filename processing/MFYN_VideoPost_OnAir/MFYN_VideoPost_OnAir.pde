@@ -1,13 +1,11 @@
-// MFYN Video Post generator: ON AIR
+// MFYN_VideoPost_OnAir: the ON AIR player as a video post
 // ------------------------------------------------------------
 // Drop audio files (FLAC / MP3 / WAV with tags) into  input/
 // Press Run. Every track that doesn't have a video in  output/  yet
-// is rendered as a 1080x1920 video post with its audio, then the
-// sketch closes itself when the queue is empty.
-//
-// Instagram publishes every uploaded video as a Reel, so the file is 9:16.
-// The player sits in the exact centre, so it also fits the profile grid
-// (the middle 1080x1440) and a 4:5 feed crop (the middle 1080x1350).
+// is rendered as a 1080x1920 video post with its audio, the player in the
+// exact centre, then the sketch closes itself when the queue is empty.
+// Instagram publishes every video as a Reel; with the player centred it fits
+// the full-screen Reel, the 3:4 profile grid and the 4:5 feed crop.
 //
 // Needs ffmpeg + ffprobe installed (winget install Gyan.FFmpeg).
 //
@@ -28,18 +26,18 @@ String FFMPEG  = "";
 String FFPROBE = "";
 
 final int W = 1080, H = 1920;
-
-// The layout tabs draw the player off-centre (the middle of the
-// panels, X0..X1 and T1..B2). Every finished frame is shifted by this much so
-// the player's centre lands on (W/2, H/2). Pixels pushed past one edge wrap
-// round to the opposite edge: those edges are plain dot-grid background, and
-// W and H are multiples of the 6 px grid, so no seam shows.
-// (Set in setup(): the layout constants live in Player.pde.)
-int SHIFT_X, SHIFT_Y;
+// The layout tabs draw the player with its centre at x 495, y 849 (Player.pde).
+// Each frame is shifted so that lands in the middle of the frame (540, 960).
+// SHIFT_Y is 57 + 54: the Drive sketch's layout sat 54 px lower than this one.
+// What shifts off one edge comes back on the opposite one; that is plain
+// background with the same 6 px dot grid, so the seam doesn't show.
+final int SHIFT_X = 45;
+final int SHIFT_Y = 111;
 
 ArrayList<File> queue = new ArrayList<File>();
 Job job;              // the track currently rendering
 Encoder enc;
+int[] centred;
 int frameIdx = 0, frameCount_ = 0;
 
 void settings() {
@@ -48,8 +46,6 @@ void settings() {
 
 void setup() {
   frameRate(1000);
-  SHIFT_X = W / 2 - (X0 + X1) / 2;
-  SHIFT_Y = H / 2 - (T1 + B2) / 2;
   readArgs();
   findTools();
   loadFonts();
@@ -78,9 +74,9 @@ void draw() {
   // render a few frames per draw() so the window stays responsive
   long t0 = millis();
   while (frameIdx < frameCount_ && millis() - t0 < 200) {
-    int[] px = centre(job.renderFrame(frameIdx));
-    enc.write(px);
-    if (PREVIEW && (frameIdx % 3 == 0 || frameIdx == frameCount_ - 1)) showPreview(px);
+    centred = centre(job.renderFrame(frameIdx), centred);
+    enc.write(centred);
+    if (PREVIEW && (frameIdx % 3 == 0 || frameIdx == frameCount_ - 1)) showPreview(centred);
     frameIdx++;
   }
   drawStatus();
@@ -99,6 +95,16 @@ void startJob(File f) {
   enc = new Encoder(outputFor(f), f, job.start, job.dur, W, H);
 }
 
+// move the player to the exact centre of the frame
+int[] centre(int[] px, int[] out) {
+  if (out == null) out = new int[W * H];
+  for (int y = 0; y < H; y++) {
+    int sy = (y - SHIFT_Y + H) % H;
+    for (int x = 0; x < W; x++) out[y * W + x] = px[sy * W + (x - SHIFT_X + W) % W];
+  }
+  return out;
+}
+
 // command-line overrides: input=<folder> output=<folder> seconds=<n>
 void readArgs() {
   if (args == null) return;
@@ -115,17 +121,6 @@ void readArgs() {
 File outputFor(File audio) {
   String base = audio.getName().replaceAll("\\.[^.]+$", "");
   return new File(sketchPath(OUTPUT_DIR), base + "_post.mp4");
-}
-
-// move the finished frame so the player is centred, wrapping at the edges
-int[] shifted;
-int[] centre(int[] px) {
-  if (shifted == null) shifted = new int[px.length];
-  for (int y = 0; y < H; y++) {
-    int ny = (y + SHIFT_Y + H) % H;
-    for (int x = 0; x < W; x++) shifted[ny * W + (x + SHIFT_X + W) % W] = px[y * W + x];
-  }
-  return shifted;
 }
 
 PImage previewImg;

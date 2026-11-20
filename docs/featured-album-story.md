@@ -11,7 +11,7 @@ See also: [process overview](README.md) ·
 |---|---|
 | **Trigger** | You, double-clicking **MFYN – Make Album Story**, whenever you want to feature an album |
 | **Input** | An album folder in `MFYN_Library`, and the featured track you pick |
-| **Output** | `Artist - Album - Track.mp4`, a still `.png` and a `.json` of its details, in `MFYN_Stories\Artist - Album` |
+| **Output** | `Artist - Title.mp4` (the featured track), a still `.png` and a `.json` of its details, in `MFYN_Stories\<episode folder>`, the same layout as `MFYN_Posts` |
 | **Runs on** | The MFYN PC (Processing 4 and ffmpeg) |
 | **Code** | [`intake/stories.py`](../intake/stories.py), the sketch [`processing/MFYN_Story_Album`](../processing/MFYN_Story_Album), started by [`scripts/make_story.cmd`](../scripts/make_story.cmd) |
 | **Next** | You review it, then post it with the album link as a sticker |
@@ -28,11 +28,12 @@ See also: [process overview](README.md) ·
    player (cover, album info, tracklist with the featured track highlighted,
    moving seek bar) over the rotating dot-matrix globe, which pulses with the
    track. A preview window shows it as it renders.
-5. **File it** in `H:\My Drive\MFYN_Stories\<album folder>\`:
+5. **File it** under the episode it goes with: the newest in `MFYN_Show_Archive`, or the one you name with `--episode`.
+   It goes in `H:\My Drive\MFYN_Stories\<episode folder>\`, named `Artist - Title` like the video posts:
    ```
-   CADY - Limitations of the Human Form - Umbrella.mp4
-   CADY - Limitations of the Human Form - Umbrella.png    <- the first frame, for a still Story
-   CADY - Limitations of the Human Form - Umbrella.json
+   CADY - Umbrella.mp4
+   CADY - Umbrella.png    <- the first frame, for a still Story
+   CADY - Umbrella.json
    ```
 
 ## The details file (for Publishing)
@@ -42,6 +43,7 @@ See also: [process overview](README.md) ·
 | `artist`, `album`, `featured_track` (number, title, file), `year` | the tracks' tags |
 | `label`, `release_date`, `album_link`, `tags` | the Releases tab |
 | `artist_instagram` (+ `_status`), `label_instagram` (+ `_status`) | the Artists and Labels tabs |
+| `episode` | `name` and `air_date` from the folder name, and the `folder` itself |
 | `library_folder`, `clip_seconds`, `made` | the run itself |
 
 `album_link` is the Bandcamp page for the link sticker. The handles are as they
@@ -65,10 +67,11 @@ To set up the shortcut (one time):
 ```
 python -m intake.stories                          # asks for the album and track
 python -m intake.stories --album NAME --track N   # the album whose folder name contains NAME, track N of its list
+python -m intake.stories --episode NAME           # file it under the episode whose folder name contains NAME
 python -m intake.stories --skip-handles           # don't stop to confirm handles
 ```
 
-**Re-running is safe.** If that album and track already have a Story, it says
+**Re-running is safe.** If that track already has a Story in the episode's folder, it says
 so and stops. To remake it, delete its `.mp4`, then run again. Featuring a
 different track from the same album makes a second Story next to the first.
 

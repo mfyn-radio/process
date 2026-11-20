@@ -15,9 +15,12 @@ session is first.
   `MFYN_POSTS`), with the same per-episode folders, `Artist - Title` names and
   captions as before. `MFYN_Reels` is an archive for now; nothing writes to it.
   The command, script and desktop shortcut keep the name **Make Reels**.
-- The centring and the `Player.pde` spacing were rebuilt in the repo from a
-  written handoff, not copied from the PC, and have not been rendered here.
-  Check one frame on the PC before the next run.
+- **Album Stories are filed like the posts:** `MFYN_Stories\<episode folder>\Artist - Title.*`,
+  under the newest episode or the one named with `--episode`.
+- The ON AIR sketch's main file is the Drive version plus the command-line
+  options. Its layout is the repo's (54 px higher than Drive's), so `SHIFT_Y`
+  is 111 and `B2` 1452. Neither has been rendered here: check one frame on the
+  PC before the next run.
 
 ## 2026-11-05
 

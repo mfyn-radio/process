@@ -15,8 +15,9 @@ the player in the exact centre. That one frame works in all three places:
 | Feed, if cropped | the middle 1080×1350 (4:5) | yes |
 
 The layout tabs draw the player off-centre; `MFYN_VideoPost_OnAir.pde` shifts every
-finished frame (`SHIFT_X`, `SHIFT_Y`) so the middle of the panels lands on
-(540, 960). Pixels pushed past one edge wrap round to the opposite edge. Those
+finished frame by `SHIFT_X` and `SHIFT_Y` (set at the top of that file) so the
+player lands in the middle of the frame, (540, 960). Move the panels in
+`Player.pde` and those two numbers need changing too. Pixels pushed past one edge wrap round to the opposite edge. Those
 edges are plain dot-grid background and 1080 and 1920 are multiples of the 6 px
 grid, so no seam shows.
 
