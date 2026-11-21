@@ -25,7 +25,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-from . import config, episode, reels
+from . import config, episode, reels, runlog
 
 log = logging.getLogger("archive_cover")
 
@@ -101,6 +101,10 @@ def make(ep, episodes, ask=input, show=open_image):
 
 
 def main(argv=None):
+    return runlog.track("Archive cover", lambda run: _main(argv, run))
+
+
+def _main(argv, run):
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--episode", help="the episode whose folder name contains this")
     args = parser.parse_args(argv)
@@ -113,6 +117,9 @@ def main(argv=None):
         log.error("No episode folder (named like 5_11_2026- Episode Name) found in %s", config.SHOW_ARCHIVE_DIR)
         return 1
     made = make(ep, episode.all_in(config.SHOW_ARCHIVE_DIR))
+    if made:
+        run.summary = f"{made.name} for {ep.folder.name}"
+        run.add(ep.folder.name, runlog.OK, run.summary)
     return 0 if made or number_for(ep, episode.all_in(config.SHOW_ARCHIVE_DIR)) is None else 1
 
 

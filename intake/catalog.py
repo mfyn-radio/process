@@ -33,24 +33,26 @@ class Catalog:
     def __init__(self, creds):
         drive = build("drive", "v3", credentials=creds, cache_discovery=False)
         sheets = build("sheets", "v4", credentials=creds, cache_discovery=False)
-        sheet_id = self._find_or_create(drive, sheets)
+        sheet_id = find_or_create(drive, sheets, config.ARTISTS_SHEET, "Artists")
         self.artists = Table(sheets, sheet_id, "Artists", ARTISTS, key="Artist", list_fields=("Tags",))
         self.releases = Table(sheets, sheet_id, "Releases", RELEASES, key=("Album", "Artist"), list_fields=("Tags",))
         self.labels = Table(sheets, sheet_id, "Labels", LABELS, key="Label")
         self.tags = Table(sheets, sheet_id, "Tags", TAGS, key=("Tag", "Artist", "Album"))
 
-    @staticmethod
-    def _find_or_create(drive, sheets):
-        # drive.file only sees files this app created, so a name search is safe.
-        q = (f"name = '{config.ARTISTS_SHEET}' and trashed = false "
-             "and mimeType = 'application/vnd.google-apps.spreadsheet'")
-        found = drive.files().list(q=q, fields="files(id)", pageSize=1).execute()["files"]
-        if found:
-            return found[0]["id"]
-        return sheets.spreadsheets().create(body={
-            "properties": {"title": config.ARTISTS_SHEET},
-            "sheets": [{"properties": {"title": "Artists", "gridProperties": {"frozenRowCount": 1}}}],
-        }, fields="spreadsheetId").execute()["spreadsheetId"]
+
+
+def find_or_create(drive, sheets, title, first_tab):
+    """The id of the Google Sheet with this title, made (with first_tab) if there isn't one."""
+    # drive.file only sees files this app created, so a name search is safe.
+    q = (f"name = '{title}' and trashed = false "
+         "and mimeType = 'application/vnd.google-apps.spreadsheet'")
+    found = drive.files().list(q=q, fields="files(id)", pageSize=1).execute()["files"]
+    if found:
+        return found[0]["id"]
+    return sheets.spreadsheets().create(body={
+        "properties": {"title": title},
+        "sheets": [{"properties": {"title": first_tab, "gridProperties": {"frozenRowCount": 1}}}],
+    }, fields="spreadsheetId").execute()["spreadsheetId"]
 
 
 def _with_status(table, record):

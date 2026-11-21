@@ -19,7 +19,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-from . import catalog, config, episode, google_auth, handles, library, reels
+from . import catalog, config, episode, google_auth, handles, library, reels, runlog
 
 log = logging.getLogger("stories")
 
@@ -158,6 +158,10 @@ def details(folder, tracks, featured, cat, seconds, ep):
 
 
 def main(argv=None, ask=input, say=print):
+    return runlog.track("Album Story", lambda run: _main(argv, ask, say, run))
+
+
+def _main(argv, ask, say, run):
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--album", help="the album whose library folder name contains this")
     parser.add_argument("--episode", help="file the Story under the episode whose folder name contains this "
@@ -201,6 +205,7 @@ def main(argv=None, ask=input, say=print):
     name = library.clean(f"{featured.artist} - {featured.title}")
     if (out_dir / f"{name}.mp4").exists():
         log.info("%s.mp4 already exists in %s. Delete it to make it again.", name, out_dir)
+        run.summary = f"{name}.mp4 was already made"
         return 0
 
     try:
@@ -220,6 +225,7 @@ def main(argv=None, ask=input, say=print):
     try:
         if not mp4.exists():
             log.error("No Story was made for %s. Scroll up for the sketch's own messages.", folder.name)
+            run.add(f"{folder.name} ({ep.folder.name})", runlog.FAILED, "Processing made no video")
             return 1
         out_dir.mkdir(parents=True, exist_ok=True)
         shutil.move(mp4, out_dir / f"{name}.mp4")
@@ -231,6 +237,8 @@ def main(argv=None, ask=input, say=print):
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
     log.info("\nDone: %s.mp4 (and .png, .json) in %s", name, out_dir)
+    run.summary = f"made {name}.mp4 for {ep.folder.name}"
+    run.add(f"{folder.name} ({ep.folder.name})", runlog.OK, run.summary)
     return 0
 
 

@@ -41,6 +41,8 @@ STORIES_LOG_FILE = APP_DIR / "stories.log"
 # Google Sheet of artists and their Instagram handles, in mfyn@'s Drive.
 # Created by the automation on first use.
 ARTISTS_SHEET = "MFYN Artists"
+# What the automations have done, for the status page. Also made on first use.
+RUN_LOG_SHEET = "MFYN Run Log"
 
 # Added to a purchase email once it has been handled.
 DONE_LABEL = "MFYN/Downloaded"
