@@ -8,6 +8,22 @@ Code and docs for Music for Your Neighbors (MFYN). Start at
 - Changes go through pull requests. Don't merge one unless asked.
 - The code runs on the MFYN Windows PC. Docs use Windows paths.
 
+## Working on the MFYN PC
+
+Rendering sketches, running the automations and reading their logs need the
+PC. Do it yourself through a Remote Control session on `H:\My Drive`; don't
+hand Bryant commands to paste. [`docs/working-on-the-pc.md`](docs/working-on-the-pc.md)
+has the paths and the render command.
+
+- GitHub is the master for code, docs and sketches. Changes go through a
+  branch and a pull request, from the cloud or the PC.
+- The PC's clone is `C:\Users\admin\mfyn-process`. Start with `git status`;
+  if there are local changes that aren't on GitHub, stop and ask.
+- `H:\My Drive\MFYN_Processing` is a copy of `processing\`, refreshed by
+  `scripts\sync_sketches.cmd`. Never edit it.
+- Any `MFYN_` folder in `H:\My Drive` is a work folder you may use. Finished
+  output there is final: don't overwrite it without asking.
+
 ## Issues are the single list of open work
 
 Open work, deferred decisions and open questions live in GitHub Issues, not in

@@ -51,7 +51,7 @@ The logs keep four files of up to 1 MB each, and Make Reels and Make Album Story
 | `MFYN_Show_Archive` | mfyn@'s My Drive, `H:\My Drive\MFYN_Show_Archive` | Finished episodes, `D_M_YYYY- Episode Name\Tracks` |
 | `MFYN_Posts` | mfyn@'s My Drive, `H:\My Drive\MFYN_Posts` | Each episode's video posts, their details and captions, for your review and then Publishing |
 | `MFYN_Stories` | mfyn@'s My Drive, `H:\My Drive\MFYN_Stories` | Featured-album Stories and their details, one folder per episode like `MFYN_Posts`, for your review and then Publishing |
-| Processing sketches | this repo, `processing\` | `MFYN_VideoPost_OnAir` makes the video posts; `MFYN_Story_Album` makes the featured-album Stories; `MFYN_Archive` makes the archive episode covers ([automated](archive-cover.md), or by hand: [README](../processing/MFYN_Archive/README.md)) |
+| Processing sketches | this repo, `processing\` (master); a copy in `H:\My Drive\MFYN_Processing` ([working on the PC](working-on-the-pc.md)) | `MFYN_VideoPost_OnAir` makes the video posts; `MFYN_Story_Album` makes the featured-album Stories; `MFYN_Archive` makes the archive episode covers ([automated](archive-cover.md), or by hand: [README](../processing/MFYN_Archive/README.md)) |
 | `MFYN_Library` | mfyn@'s My Drive, synced to `H:\My Drive\MFYN_Library` on the MFYN PC | The music library, one folder per album |
 | MFYN PC | Windows, signed in, running Google Drive for desktop and Chrome | Runs the automation (Task Scheduler) |
 | `mfyn-library-agent` | Google Cloud project, Internal audience | Lets the automation read and label mail ([setup](setup/google-cloud.md)) |
@@ -88,10 +88,14 @@ list of open work. There are two kinds:
 - **Secrets:** never in the repo. Google sign-in tokens live on the PC in
   `%APPDATA%\mfyn-intake\`.
 - **Changing the code:** changes go through pull requests on GitHub. On the
-  PC, `git pull` in `%USERPROFILE%\mfyn-process` picks them up.
+  PC, `git pull` in `%USERPROFILE%\mfyn-process` picks them up, and
+  `scripts\sync_sketches.cmd` refreshes the sketches in `MFYN_Processing`.
+  See [working on the PC](working-on-the-pc.md).
 
 ## Docs
 
+- **[Working on the MFYN PC](working-on-the-pc.md):** where the repo,
+  Processing and output live, and how Claude renders and runs things there.
 - **[Session log](session-log.md): where we left off.** Open work and open
   questions are tracked in the repo's
   [GitHub Issues](https://github.com/mfyn-radio/process/issues), the single

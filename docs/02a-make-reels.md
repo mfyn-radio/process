@@ -101,7 +101,8 @@ skipped. To remake one, delete its `.mp4` and `.json`, then run again.
     path.
 - The repo's sketch is the master copy: `processing\MFYN_VideoPost_OnAir` in
   `%USERPROFILE%\mfyn-process`. Changes reach the PC with `git pull`.
-  `H:\My Drive\MFYN_Processing` is no longer used: make sketch changes in the repo.
+  `H:\My Drive\MFYN_Processing` is a copy made by `scripts\sync_sketches.cmd`:
+  make sketch changes in the repo ([working on the PC](working-on-the-pc.md)).
 - Google Drive for desktop running, for `MFYN_Show_Archive` and `MFYN_Posts`.
 - The Google sign-in from [setting up step 1](01-acquire.md#setting-it-up-on-the-pc),
   to read the MFYN Artists sheet. Without it the video posts are still made, with

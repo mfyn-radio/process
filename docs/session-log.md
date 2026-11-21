@@ -3,6 +3,18 @@
 Where the MFYN intake project stands, and where to pick up. The newest
 session is first.
 
+## 2026-11-21
+
+- **Claude now works on the MFYN PC itself**, through a Remote Control session
+  on `H:\My Drive`, instead of handing you commands to paste. It rendered the
+  archive cover with `Processing.exe cli` (Processing 4.5.6) from the repo
+  clone at `C:\Users\admin\mfyn-process`. See [working on the PC](working-on-the-pc.md).
+- **GitHub stays the master for the sketches.** `MFYN_Processing` on Drive is
+  kept as an always-available copy, refreshed by `scripts\sync_sketches.cmd`.
+  It replaces the earlier plan to delete that folder. Changes made on the PC
+  go to a branch and a pull request, not straight to `main`.
+- Finished output in the `MFYN_` folders on H: is final.
+
 ## 2026-11-20
 
 - **The Reel became the ON AIR video post.** The sketch is now
@@ -223,12 +235,14 @@ Found along the way, still to do:
 | Google Cloud project | `mfyn-library-agent`, client `mfyn-intake-cli` |
 | Troubleshooting | [step 1](01-acquire-troubleshooting.md), [step 2a](02a-make-reels.md#troubleshooting) |
 
-**Saving sketch changes from the PC:**
+**Saving sketch changes from the PC** (a branch and a pull request, never
+straight to `main`; see [working on the PC](working-on-the-pc.md)):
 ```
 cd %USERPROFILE%\mfyn-process
+git checkout -b sketch-change
 git add processing
 git -c user.name="MFYN" -c user.email="mfyn@nothingflatdigital.com" commit -m "Describe the change"
-git push
+git push -u origin sketch-change
 ```
 
 **Working with Claude:** changes come as pull requests on GitHub. Merge them
