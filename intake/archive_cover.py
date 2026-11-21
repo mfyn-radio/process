@@ -63,12 +63,11 @@ def open_image(path):
         log.info("Have a look at %s", path)
 
 
-def make(ep, episodes, ask=input, show=open_image, tracklist_image=True):
+def make(ep, episodes, ask=input, show=open_image):
     """Render the episode's cover and tracklist image, show them, and save
     both into the episode folder once you keep them; a new colour each time
-    you don't. With tracklist_image=False only the cover is shown and kept.
-    Returns the cover's path, or None if the episode gets no cover or it
-    couldn't be made."""
+    you don't. Returns the cover's path, or None if the episode gets no cover
+    or it couldn't be made."""
     number = number_for(ep, episodes)
     if number is None:
         log.info("%s is before %s, so it gets no archive cover.", ep.folder.name, cover_date(config.ARCHIVE_FIRST_DATE))
@@ -77,7 +76,7 @@ def make(ep, episodes, ask=input, show=open_image, tracklist_image=True):
     tracklist = ep.folder / tracklist_name(number)
     if target.exists():
         log.info("Archive cover %s is already there.", target.name)
-        if tracklist_image and not tracklist.exists():
+        if not tracklist.exists():
             log.warning("%s has no %s. It can't be made to match a cover that is already there; "
                         "see docs/archive-cover.md.", ep.folder.name, tracklist.name)
         return target
@@ -102,21 +101,28 @@ def make(ep, episodes, ask=input, show=open_image, tracklist_image=True):
                           ep.folder.name, result.returncode)
                 return None
             show(made)
-            if tracklist_image:
-                show(made_tracklist)
-                answer = ask("Keep this cover and tracklist image? [Y = keep, n = make another pair with a new colour] ")
-            else:
-                answer = ask("Keep this cover? [Y = keep, n = make another with a new colour] ")
-            answer = answer.strip().lower()
+            show(made_tracklist)
+            answer = ask("Keep this cover and tracklist image? [Y = keep, n = make another pair with a new colour] ").strip().lower()
             if answer in ("", "y", "yes"):
                 break
         shutil.copyfile(made, target)
-        if tracklist_image:
-            shutil.copyfile(made_tracklist, tracklist)
+        shutil.copyfile(made_tracklist, tracklist)
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
-    log.info("Made %s in %s", f"{target.name} and {tracklist.name}" if tracklist_image else target.name, ep.folder)
+    log.info("Made %s and %s in %s", target.name, tracklist.name, ep.folder)
     return target
+
+
+def for_episode(ep, ask=input, show=open_image):
+    """Make Episode Content's step: the cover and tracklist image for `ep`.
+    Returns (ok, summary)."""
+    episodes = episode.all_in(config.SHOW_ARCHIVE_DIR)
+    if number_for(ep, episodes) is None:
+        return True, "no archive cover (before the first numbered episode)"
+    made = make(ep, episodes, ask=ask, show=show)
+    if made is None:
+        return False, "archive cover not made"
+    return True, f"{made.name} and {tracklist_name(number_for(ep, episodes))}"
 
 
 def main(argv=None):
@@ -135,11 +141,9 @@ def _main(argv, run):
     if ep is None:
         log.error("No episode folder (named like 5_11_2026- Episode Name) found in %s", config.SHOW_ARCHIVE_DIR)
         return 1
-    made = make(ep, episode.all_in(config.SHOW_ARCHIVE_DIR))
-    if made:
-        run.summary = f"{made.name} for {ep.folder.name}"
-        run.add(ep.folder.name, runlog.OK, run.summary)
-    return 0 if made or number_for(ep, episode.all_in(config.SHOW_ARCHIVE_DIR)) is None else 1
+    ok, run.summary = for_episode(ep)
+    run.add(ep.folder.name, runlog.OK if ok else runlog.FAILED, run.summary)
+    return 0 if ok else 1
 
 
 if __name__ == "__main__":

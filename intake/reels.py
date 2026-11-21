@@ -1,7 +1,7 @@
 """The ON AIR video posts: an episode's tracks as 30-second 1080x1920 videos.
 
-Make Episode Content (intake.content) makes these as part of its run. To make
-only the video posts (with the archive cover and captions), run:
+Make Episode Content (intake.content) runs this when you ask for ON AIR posts.
+To make only the video posts and their captions, run:
 
     python -m intake.reels                    # the newest episode in MFYN_Show_Archive
     python -m intake.reels --episode NAME     # the episode whose folder name contains NAME
@@ -24,7 +24,7 @@ from pathlib import Path
 
 import mutagen
 
-from . import archive_cover, captions, catalog, config, episode, google_auth, handles, library, runlog
+from . import captions, catalog, config, episode, google_auth, handles, library, runlog
 
 log = logging.getLogger("reels")
 
@@ -189,6 +189,33 @@ def make_posts(ep, tracks, cat):
     return len(made), len(pending) - len(made), written, out_dir
 
 
+def open_catalog(what):
+    """The MFYN Artists sheet, or None (with a warning) if it can't be opened."""
+    try:
+        return catalog.Catalog(google_auth.credentials())
+    except (Exception, SystemExit) as e:
+        log.warning("Couldn't open the %s sheet (%s). %s will be made without Instagram handles.",
+                    config.ARTISTS_SHEET, e, what)
+        return None
+
+
+def for_episode(ep, ask=input, skip_handles=False):
+    """Make Episode Content's step: confirm handles, then make the episode's
+    video posts and captions. Returns (ok, summary)."""
+    tracks = [read_track(p) for p in ep.tracks()]
+    if not tracks:
+        log.error("'%s' has no audio files in its Tracks folder.", ep.folder.name)
+        return False, "no tracks"
+    cat = open_catalog("Video posts")
+    if cat and not skip_handles:
+        print("\nInstagram handles for the video posts. Only ones that aren't confirmed yet are asked about.")
+        handles.confirm(cat.artists, list(dict.fromkeys(t.artist for t in tracks)), "artist", ask=ask)
+        handles.confirm(cat.labels, labels_for(tracks, cat), "label", ask=ask)
+    made, failed, written, out_dir = make_posts(ep, tracks, cat)
+    log.info("%d video post(s) made, %d failed, %d caption(s) written, in %s", made, failed, written, out_dir)
+    return not failed, f"{made} video post(s) made, {failed} failed, {written} caption(s) written"
+
+
 def setup_logging(log_file=None):
     config.APP_DIR.mkdir(parents=True, exist_ok=True)
     fmt = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
@@ -232,33 +259,10 @@ def _main(argv, ask, run):
         run.summary = f"stopped before making anything for {ep.folder.name}"
         return 0
 
-    # The episode's archive cover, saved in its folder in MFYN_Show_Archive.
-    cover_failed = archive_cover.number_for(ep, episode.all_in(config.SHOW_ARCHIVE_DIR)) is not None \
-        and archive_cover.make(ep, episode.all_in(config.SHOW_ARCHIVE_DIR), ask=ask) is None
-
-    try:
-        cat = catalog.Catalog(google_auth.credentials())
-    except (Exception, SystemExit) as e:
-        log.warning("Couldn't open the %s sheet (%s). Video posts will be made without Instagram handles.",
-                    config.ARTISTS_SHEET, e)
-        cat = None
-
-    if cat and not args.skip_handles:
-        print("\nInstagram handles. Only ones that aren't confirmed yet are asked about.")
-        handles.confirm(cat.artists, list(dict.fromkeys(t.artist for t in tracks)), "artist", ask=ask)
-        handles.confirm(cat.labels, labels_for(tracks, cat), "label", ask=ask)
-
-    made, failed, written, out_dir = make_posts(ep, tracks, cat)
-    log.info("\nDone: %d video post(s) made, %d failed, %d caption(s) written. They're in %s",
-             made, failed, written, out_dir)
-    if cover_failed:
-        log.error("The archive cover wasn't made. Scroll up for Processing's messages.")
-    summary = (f"{made} video post(s) made, {failed} failed, {written} caption(s) written"
-               + (", archive cover not made" if cover_failed else ""))
-    run.add(ep.folder.name, runlog.FAILED if failed or cover_failed else runlog.OK, summary)
+    ok, summary = for_episode(ep, ask=ask, skip_handles=args.skip_handles)
+    run.add(ep.folder.name, runlog.OK if ok else runlog.FAILED, summary)
     run.summary = summary
-    return 1 if failed or cover_failed else 0
-
+    return 0 if ok else 1
 
 if __name__ == "__main__":
     sys.exit(main())
