@@ -72,7 +72,7 @@ access to the MFYN Artists sheet). Sign in again with `--setup`, as above.
 
 ### `couldn't open the MFYN Artists sheet` or `couldn't update the MFYN Artists sheet`
 
-Downloads carry on without it. (Make Reels carries on too, just without handles.) Check the error that follows:
+Downloads carry on without it. (Make Episode Content carries on too, just without handles.) Check the error that follows:
 
 - `Google Sheets API has not been used in project …`: enable the **Google
   Sheets API** in the `mfyn-library-agent` Cloud project
