@@ -5,12 +5,14 @@ class Job {
   File file;
   String title = "", artist = "";
   float length, start, dur;
-  Canvas base;          // finished static frame (with cover)
-  Canvas baseNoCover;   // same frame without the cover, for the scope to pass behind
-  float[] coverAlpha;   // where the cover sits (scope is hidden there)
+  Canvas flat;          // static frame with cover, before the glow
+  Canvas base;          // the same with the glow
+  Canvas baseNoCover;   // static frame without the cover, for the scope to pass behind
+  float[] coverAlpha;   // the black area behind the cover (scope is hidden there)
+  float[] noGlow;       // the cover itself (no glow there)
   float[] boxAlpha;     // where the scope is allowed to show (inside the panel)
   Scope scope;
-  Canvas work;
+  Canvas flatWork, work;
   int[] px;
 
   Job(File f) {
@@ -92,49 +94,53 @@ class Job {
     drawHeader(c);
     drawNowPlaying(c);
     drawTitle(c, title, artist.length() > 0 ? artist : "UNKNOWN ARTIST");
-    // static grain, so the screen doesn't look perfectly clean
-    float[] gr = new float[W * H];
-    randomSeed(3);
-    for (int i = 0; i < gr.length; i++) gr[i] = randomGaussian();
-    gaussian(gr, W, H, 0.6);
-    for (int i = 0; i < gr.length; i++) { float v = gr[i] * 3; c.r[i] += v; c.g[i] += v; c.b[i] += v; }
 
-    baseNoCover = c.copy();
-    Canvas art = treatCover(cover, COVER_S);
-    drawCover(c, art);
-    base = c;
-
-    int S = COVER_S, pad = 24;
+    // the area cleared behind the cover (the scope hides there) and the cover itself (no glow there)
+    int S = COVER_S, pad = 24, ax = COVER_CX - S / 2;
     coverAlpha = new float[W * H];
-    Mask rr = roundRect(S + 2 * pad, S + 2 * pad, 30);
-    int ax = COVER_CX - S / 2 - pad, ay = COVER_CY - S / 2 - pad;
-    for (int y = 0; y < rr.h; y++) for (int x = 0; x < rr.w; x++) coverAlpha[(ay + y) * W + ax + x] = rr.v[y * rr.w + x];
+    for (int y = COVER_Y0 - pad; y < COVER_Y0 + S + pad; y++) for (int x = ax - pad; x < ax + S + pad; x++) coverAlpha[y * W + x] = 1;
+    noGlow = new float[W * H];
+    for (int y = COVER_Y0 - 4; y < COVER_Y0 + S + 4; y++) for (int x = ax - 4; x < ax + S + 4; x++) noGlow[y * W + x] = 1;
     boxAlpha = new float[W * H];
     for (int y = T2 + 8; y < B2 - 8; y++) for (int x = 128; x < 862; x++) boxAlpha[y * W + x] = 1;
+
+    baseNoCover = c.copy();
+    drawCover(c, treatCover(cover, S));
+    flat = c;
+    base = new Canvas(W, H);
+    applyGlow(flat, noGlow, base, 0, H);
+    flatWork = flat.copy();
+    work = base.copy();
+  }
+
+  // rows that change from frame to frame: the scope, the progress row, the ON AIR lamp
+  int[][] bands() {
+    int sy0 = scope.sy0 - 40, sy1 = scope.sy0 + SCOPE_ROWS * SCOPE_P + 40;
+    return new int[][] { { sy0, sy1 }, { PROGRESS_Y - 30, PROGRESS_Y + 90 }, { ONAIR_DOT[1] - 50, ONAIR_DOT[1] + 50 } };
   }
 
   int[] renderFrame(int i) {
     float t = start + i / (float) FPS;
-    // only these regions change between frames
-    int sy0 = scope.sy0 - 40, sy1 = scope.sy0 + SCOPE_ROWS * SCOPE_P + 40;
-    work.copyRect(base, 0, sy0, W, sy1);
-    work.copyRect(base, 0, PROGRESS_Y - 30, W, PROGRESS_Y + 90);
-    work.copyRect(base, ONAIR_DOT[0] - 50, ONAIR_DOT[1] - 50, ONAIR_DOT[0] + 50, ONAIR_DOT[1] + 50);
+    int[][] bs = bands();
+    for (int[] b : bs) flatWork.copyRect(flat, 0, b[0], W, b[1]);
 
     // scope: draw on a copy of the cover-less screen, show it only inside the panel, keep the cover on top
+    int sy0 = bs[0][0], sy1 = bs[0][1];
     Canvas layer = baseNoCover.copyRegion(sy0, sy1);
-    dm(layer, 0, scope.sy0 - sy0, scope.bitmap(t), SCOPE_P, OR, 0.5, 0.40);
+    dm(layer, 0, scope.sy0 - sy0, scope.bitmap(t), SCOPE_P, MID, 0, 0.40);
     for (int y = sy0; y < sy1; y++) for (int x = 0; x < W; x++) {
       int gi = y * W + x, li = (y - sy0) * W + x;
       float a = boxAlpha[gi] * (1 - coverAlpha[gi]);
       if (a <= 0) continue;
-      work.r[gi] += (layer.r[li] - work.r[gi]) * a;
-      work.g[gi] += (layer.g[li] - work.g[gi]) * a;
-      work.b[gi] += (layer.b[li] - work.b[gi]) * a;
+      flatWork.r[gi] += (layer.r[li] - flatWork.r[gi]) * a;
+      flatWork.g[gi] += (layer.g[li] - flatWork.g[gi]) * a;
+      flatWork.b[gi] += (layer.b[li] - flatWork.b[gi]) * a;
     }
+    drawProgress(flatWork, t, (int) length);
+    drawOnAirPulse(flatWork, t);
 
-    drawProgress(work, t, (int) length);
-    drawOnAirPulse(work, t);
+    // glow: redo it wherever a changed row can reach
+    for (int[] b : bs) applyGlow(flatWork, noGlow, work, b[0] - GLOW_REACH, b[1] + GLOW_REACH);
     px = work.toPixels(px);
     return px;
   }

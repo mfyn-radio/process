@@ -107,6 +107,20 @@ class Mask {
 
   Mask blur(float sigma) { Mask m = copy(); gaussian(m.v, w, h, sigma); return m; }
 
+  // half size, each pixel the average of a 2x2 block
+  Mask half() {
+    Mask m = new Mask((w + 1) / 2, (h + 1) / 2);
+    for (int y = 0; y < m.h; y++) for (int x = 0; x < m.w; x++) {
+      float s = 0;
+      for (int dy = 0; dy < 2; dy++) for (int dx = 0; dx < 2; dx++) {
+        int sx = 2 * x + dx, sy = 2 * y + dy;
+        if (sx < w && sy < h) s += v[sy * w + sx];
+      }
+      m.v[y * m.w + x] = s / 4;
+    }
+    return m;
+  }
+
   Mask times(float k) { Mask m = copy(); for (int i = 0; i < v.length; i++) m.v[i] *= k; return m; }
 }
 
@@ -150,6 +164,10 @@ int reflect(int i, int n) {
 
 
 // ---------- anti-aliased shapes ----------
+// Dots are drawn 1/6 px wider than their nominal radius, to match the approved
+// mockups (the tool that drew them renders discs that much larger).
+final float DOT_BIAS = 1 / 6.0;
+
 HashMap<String, Mask> spriteCache = new HashMap<String, Mask>();
 
 // one round (or square) dot centred in a p x p cell; r = radius as a fraction of p
@@ -158,7 +176,7 @@ Mask sprite(int p, float r, boolean square) {
   if (spriteCache.containsKey(key)) return spriteCache.get(key);
   int ss = 8;
   Mask m = new Mask(p, p);
-  float c = p / 2.0, rr = p * r;
+  float c = p / 2.0, rr = p * r + DOT_BIAS;
   for (int y = 0; y < p; y++) for (int x = 0; x < p; x++) {
     int hit = 0;
     for (int sy = 0; sy < ss; sy++) for (int sx = 0; sx < ss; sx++) {
@@ -193,7 +211,7 @@ Mask disc(float rad) {
     int hit = 0;
     for (int sy = 0; sy < ss; sy++) for (int sx = 0; sx < ss; sx++) {
       float dx = x + (sx + 0.5) / ss - R, dy = y + (sy + 0.5) / ss - R;
-      if (dx * dx + dy * dy <= rad * rad) hit++;
+      if (dx * dx + dy * dy <= sq(rad + DOT_BIAS)) hit++;
     }
     m.v[y * N + x] = hit / float(ss * ss);
   }

@@ -9,3 +9,5 @@ processing/*/input/*
 processing/*/output/*
 !processing/*/input/.keep
 !processing/*/output/.keep
+# the list of archive episodes is kept
+!processing/MFYN_Archive/input/episodes.csv

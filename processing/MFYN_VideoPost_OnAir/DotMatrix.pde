@@ -31,13 +31,57 @@ void loadFonts() {
       pf.rows.put(cs.charAt(0), bits);
       pf.adv.put(cs.charAt(0), g.getInt("adv"));
     }
+    // Ø: the font's own O with its slash through it
+    if (pf.rows.containsKey('O') && pf.rows.containsKey('/')) {
+      int[][] o = pf.rows.get('O'), sl = pf.rows.get('/');
+      int[][] g = new int[o.length][];
+      int holes = 0;
+      for (int j = 0; j < o.length; j++) {
+        g[j] = o[j].clone();
+        for (int i = 0; i < g[j].length && j < sl.length && i < sl[j].length; i++) g[j][i] |= sl[j][i];
+        for (int i = 0; i < g[j].length; i++) holes += 1 - g[j][i];
+      }
+      int adv = pf.adv.get('O');
+      // narrow fonts: the slash would fill the O, so widen the O by two
+      // pixels and draw a one-pixel diagonal across the wider inside
+      if (holes < 4) {
+        int w = o[0].length, h = o.length, nw = w + 2;
+        int r0 = -1, r1 = -1;
+        g = new int[h][nw];
+        for (int j = 0; j < h; j++) {
+          for (int i = 0; i < nw; i++) g[j][i] = i < 2 ? o[j][i] : i >= nw - 2 ? o[j][w - (nw - i)] : o[j][w / 2];
+          if (o[j][w / 2] == 0) { if (r0 < 0) r0 = j; r1 = j; }
+        }
+        for (int j = r0; r0 >= 0 && j <= r1; j++) g[j][2 + round((r1 - j) * (nw - 5) / float(max(1, r1 - r0)))] = 1;
+        adv += 2;
+      }
+      pf.rows.put('Ø', g);
+      pf.adv.put('Ø', adv);
+    }
     FONTS.put(key, pf);
   }
+}
+
+// Letters the fonts don't have: Æ -> AE, accents dropped (Å -> A, É -> E). Ø is built above.
+String fold(String s, PixelFont pf) {
+  StringBuilder b = new StringBuilder();
+  for (int i = 0; i < s.length(); i++) {
+    char c = s.charAt(i);
+    if (pf.rows.containsKey(c)) { b.append(c); continue; }
+    if (c == 'Æ' || c == 'æ') { b.append("AE"); continue; }
+    if (c == 'Œ' || c == 'œ') { b.append("OE"); continue; }
+    if (c == 'ß') { b.append("SS"); continue; }
+    if (c == 'ø') { b.append(pf.rows.containsKey('Ø') ? 'Ø' : 'O'); continue; }
+    String d = java.text.Normalizer.normalize(String.valueOf(c), java.text.Normalizer.Form.NFD).replaceAll("\\p{M}", "");
+    b.append(d.length() > 0 ? d : "?");
+  }
+  return b.toString();
 }
 
 // render a string to a 0/1 bitmap (rows x cols), trailing empty columns trimmed
 float[][] bitmap(String s, String font) {
   PixelFont pf = FONTS.get(font);
+  s = fold(s, pf);
   int total = 0;
   for (int i = 0; i < s.length(); i++) total += advance(pf, s.charAt(i));
   float[][] bm = new float[pf.height][total + 64];
@@ -73,18 +117,36 @@ int dm(Canvas cv, float x0, float y0, float[][] bm, int p, float[] col, float gl
   cv.composite((int) x0, (int) y0, col, m);
   return cols(bm) * p;
 }
-int dm(Canvas cv, float x0, float y0, float[][] bm, int p, float[] col, float glow) { return dm(cv, x0, y0, bm, p, col, glow, 0.40); }
+int dm(Canvas cv, float x0, float y0, float[][] bm, int p, float[] col, float glow) { return dm(cv, x0, y0, bm, p, col, glow, DOT_R); }
+int dm(Canvas cv, float x0, float y0, float[][] bm, int p, float[] col) { return dm(cv, x0, y0, bm, p, col, 0); }
 
-int txt(Canvas cv, float x, float y, String s, String font, int p, float[] col, float glow) {
-  return dm(cv, x, y, bitmap(s, font), p, col, glow);
+// The glow comes from the whole-frame pass in Glow.pde, so text is drawn without its own.
+int txt(Canvas cv, float x, float y, String s, String font, int p, float[] col) {
+  return dm(cv, x, y, bitmap(s, font), p, col);
 }
-int txt(Canvas cv, float x, float y, String s, String font, int p, float[] col) { return txt(cv, x, y, s, font, p, col, 0.55); }
 
-int dmWidth(String s, String font, int p) { return s.length() == 0 ? 0 : cols(bitmap(s, font)) * p; }
+// text at a fractional dot pitch (e.g. 4.5): drawn at twice the pitch, then halved
+int txtFine(Canvas cv, float x0, float y0, String s, String font, float p, float[] col) {
+  if (p == round(p)) return txt(cv, x0, y0, s, font, round(p), col);
+  float[][] bm = bitmap(s, font);
+  Mask m = dotMask(bm, round(p * 2), DOT_R).half();
+  cv.composite((int) x0, (int) y0, col, m);
+  return round(cols(bm) * p);
+}
+
+// width including the last glyph's advance (for right-aligning, like the mockup)
+int advWidth(String s, String font) {
+  PixelFont pf = FONTS.get(font);
+  int w = 0;
+  for (int i = 0; i < s.length(); i++) w += advance(pf, s.charAt(i));
+  return w;
+}
+
+int dmWidth(String s, String font, float p) { return s.length() == 0 ? 0 : round(cols(bitmap(s, font)) * p); }
 
 
-// ---------- long titles and artists: wrap onto two lines, then cut with "..." ----------
-String ellipsize(String s, String font, int p, int maxw) {
+// ---------- long titles: wrap onto two lines, then cut with "..." ----------
+String ellipsize(String s, String font, float p, int maxw) {
   if (dmWidth(s, font, p) <= maxw) return s;
   String[] words = splitTokens(s, " ");
   for (int k = words.length - 1; k > 0; k--) {           // prefer cutting at a word boundary
@@ -100,7 +162,22 @@ String trimEnd(String s, String chars) {
   return s;
 }
 
-String[] wrapTitle(String s, String font, int p, int maxw) {
+// fill up to maxLines lines word by word; whatever doesn't fit is cut with "..."
+String[] wrapLines(String s, String font, float p, int maxw, int maxLines) {
+  String[] words = splitTokens(s, " ");
+  ArrayList<String> out = new ArrayList<String>();
+  int i = 0;
+  while (i < words.length && out.size() < maxLines) {
+    String cur = words[i++];
+    while (i < words.length && dmWidth(cur + " " + words[i], font, p) <= maxw) cur += " " + words[i++];
+    if (out.size() == maxLines - 1 && i < words.length) cur = cur + " " + join(subset(words, i), " ");
+    out.add(ellipsize(cur, font, p, maxw));
+  }
+  if (out.isEmpty()) out.add("");
+  return out.toArray(new String[0]);
+}
+
+String[] wrapTitle(String s, String font, float p, int maxw) {
   String[] words = splitTokens(s.toUpperCase(), " ");
   String all = join(words, " ");
   if (dmWidth(all, font, p) <= maxw) return new String[] { all };

@@ -1,11 +1,13 @@
-// MFYN Reel generator
+// MFYN_VideoPost_OnAir: the ON AIR player as a video post
 // ------------------------------------------------------------
 // Drop audio files (FLAC / MP3 / WAV with tags) into  input/
 // Press Run. Every track that doesn't have a video in  output/  yet
-// is rendered as a 1080x1920 Instagram Reel with its audio, then the
-// sketch closes itself when the queue is empty.
+// is rendered as a 1080x1920 video post with its audio, the player in the
+// exact centre, then the sketch closes itself when the queue is empty.
+// Instagram publishes every video as a Reel; with the player centred it fits
+// the full-screen Reel, the 3:4 profile grid and the 4:5 feed crop.
 //
-// Needs ffmpeg + ffprobe installed (brew install ffmpeg).
+// Needs ffmpeg + ffprobe installed (winget install Gyan.FFmpeg).
 //
 // The Make Reels automation (intake/reels.py) runs this from the command
 // line with  input=<folder> output=<folder> seconds=<n>  to override the
@@ -13,21 +15,29 @@
 // ------------------------------------------------------------
 
 // ---------- settings ----------
-float CLIP_SECONDS   = 30;      // reel length (max 60)
+float CLIP_SECONDS   = 30;      // video length (max 60)
 float START_OVERRIDE = -1;      // -1 = auto-pick the loudest stretch, otherwise seconds into the track
 int   FPS            = 30;
 boolean PREVIEW      = true;    // draw frames in the window while rendering (slightly slower)
 String  INPUT_DIR    = "input";
 String  OUTPUT_DIR   = "output";
-// If Processing can't find ffmpeg, put the full path here, e.g. "/opt/homebrew/bin/ffmpeg"
+// If Processing can't find ffmpeg, put the full path here, e.g. "C:\\ffmpeg\\bin\\ffmpeg.exe"
 String FFMPEG  = "";
 String FFPROBE = "";
 
 final int W = 1080, H = 1920;
+// The layout tabs draw the player with its centre at x 495, y 849 (Player.pde).
+// Each frame is shifted so that lands in the middle of the frame (540, 960).
+// SHIFT_Y is 57 + 54: the Drive sketch's layout sat 54 px lower than this one.
+// What shifts off one edge comes back on the opposite one; that is plain
+// background with the same 6 px dot grid, so the seam doesn't show.
+final int SHIFT_X = 45;
+final int SHIFT_Y = 111;
 
 ArrayList<File> queue = new ArrayList<File>();
 Job job;              // the track currently rendering
 Encoder enc;
+int[] centred;
 int frameIdx = 0, frameCount_ = 0;
 
 void settings() {
@@ -64,9 +74,9 @@ void draw() {
   // render a few frames per draw() so the window stays responsive
   long t0 = millis();
   while (frameIdx < frameCount_ && millis() - t0 < 200) {
-    int[] px = job.renderFrame(frameIdx);
-    enc.write(px);
-    if (PREVIEW && (frameIdx % 3 == 0 || frameIdx == frameCount_ - 1)) showPreview(px);
+    centred = centre(job.renderFrame(frameIdx), centred);
+    enc.write(centred);
+    if (PREVIEW && (frameIdx % 3 == 0 || frameIdx == frameCount_ - 1)) showPreview(centred);
     frameIdx++;
   }
   drawStatus();
@@ -82,7 +92,17 @@ void startJob(File f) {
   job = new Job(f);
   frameIdx = 0;
   frameCount_ = round(job.dur * FPS);
-  enc = new Encoder(outputFor(f), f, job.start, job.dur);
+  enc = new Encoder(outputFor(f), f, job.start, job.dur, W, H);
+}
+
+// move the player to the exact centre of the frame
+int[] centre(int[] px, int[] out) {
+  if (out == null) out = new int[W * H];
+  for (int y = 0; y < H; y++) {
+    int sy = (y - SHIFT_Y + H) % H;
+    for (int x = 0; x < W; x++) out[y * W + x] = px[sy * W + (x - SHIFT_X + W) % W];
+  }
+  return out;
 }
 
 // command-line overrides: input=<folder> output=<folder> seconds=<n>
@@ -100,7 +120,7 @@ void readArgs() {
 
 File outputFor(File audio) {
   String base = audio.getName().replaceAll("\\.[^.]+$", "");
-  return new File(sketchPath(OUTPUT_DIR), base + "_reel.mp4");
+  return new File(sketchPath(OUTPUT_DIR), base + "_post.mp4");
 }
 
 PImage previewImg;

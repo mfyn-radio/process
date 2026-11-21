@@ -7,26 +7,29 @@ glows and pulses with the featured track. The video has the featured
 track's audio. A still PNG of the first frame is saved next to it for posting
 as a static story.
 
-## One-time setup
+Normally the [Make Album Story](../../docs/featured-album-story.md)
+automation runs this for you: you pick an album from `MFYN_Library` and the
+featured track, and it does the rest. The steps below are for running the
+sketch by hand.
 
-Same as the Reel sketch:
+## One-time setup (Windows)
 
-- **macOS:** install Processing 4 from processing.org and ffmpeg with `brew install ffmpeg`.
-- **Windows:** install Processing 4, run `winget install Gyan.FFmpeg`, then restart the PC.
-  If Processing still can't find ffmpeg, set `FFMPEG` / `FFPROBE` at the top of
-  `MFYN_Album.pde` to the full paths, e.g. `"C:\\ffmpeg\\bin\\ffmpeg.exe"`.
+Same as the ON AIR video post sketch: install Processing 4, run `winget install Gyan.FFmpeg`,
+then restart the PC. If Processing still can't find ffmpeg, set `FFMPEG` /
+`FFPROBE` at the top of `MFYN_Story_Album.pde` to the full paths, e.g.
+`"C:\\ffmpeg\\bin\\ffmpeg.exe"`.
 
-Keep this folder named `MFYN_Album` (Processing needs the folder and the main
+Keep this folder named `MFYN_Story_Album` (Processing needs the folder and the main
 `.pde` to share a name).
 
 ## Making a story
 
-1. Make one folder per album inside `MFYN_Album/input/`, and put the album's
+1. Make one folder per album inside `MFYN_Story_Album/input/`, and put the album's
    tracks in it (FLAC, MP3, WAV, M4A, AIFF or OGG, tagged as Bandcamp delivers them).
 2. Pick the featured track: add a text file called `featured.txt` to the
    album folder containing either the track number (`6`) or part of the title
    (`umbrella`). Without it, track 1 is featured.
-3. Open `MFYN_Album.pde` and press **Run**.
+3. Open `MFYN_Story_Album.pde` and press **Run**.
 4. `output/<album folder>_story.mp4` and `output/<album folder>_story.png` appear.
    Albums that already have a video in `output/` are skipped.
 
@@ -55,11 +58,11 @@ so the player stays inside the Story safe zone.
 
 ## Settings
 
-Top of `MFYN_Album.pde`:
+Top of `MFYN_Story_Album.pde`:
 
 | Setting | Default | |
 |---|---|---|
-| `CLIP_SECONDS` | 15 | story length, max 60 |
+| `CLIP_SECONDS` | 30 | story length, max 60 |
 | `START_OVERRIDE` | -1 | -1 = auto, or a number of seconds into the featured track |
 | `PREVIEW` | true | draw frames in the window while rendering |
 | `SAVE_STILL` | true | also save the PNG |
@@ -73,17 +76,28 @@ Top of `Skin.pde`: the player's colours and layout.
 
 ## Running it without opening the editor
 
-Like the Reel sketch:
+Like the ON AIR video post sketch (newer versions of Processing use `Processing.exe cli`
+instead of `processing-java.exe`):
 
 ```
-processing-java --sketch="/path/to/MFYN_Album" --run
+"C:\Program Files\Processing\processing-java.exe" --sketch="C:\path\to\MFYN_Story_Album" --run
 ```
 
-(on Windows: `"C:\Program Files\Processing\processing-java.exe" --sketch="C:\path\to\MFYN_Album" --run`)
+## Command-line options
+
+Make Album Story (`intake/stories.py`) runs the sketch with options that
+override the settings:
+
+```
+"C:\Program Files\Processing\processing-java.exe" --sketch="C:\path\to\MFYN_Story_Album" --run input="<folder>" output="<folder>" seconds=30
+```
+
+`input` and `output` can be absolute paths; relative ones are inside the
+sketch folder, as before. Keep `readArgs()` in `MFYN_Story_Album.pde`.
 
 ## Files
 
-- `MFYN_Album.pde`: settings, the album queue, the preview window
+- `MFYN_Story_Album.pde`: settings, the album queue, the preview window
 - `Album.pde`: reads tags, cover and audio; picks the featured track and start; renders frames
 - `Skin.pde`: the media player (frames, buttons, album info, tracklist, seek bar)
 - `Globe.pde`: the dot-matrix globe, its glow and the music pulse

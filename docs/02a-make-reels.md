@@ -1,25 +1,27 @@
 # Step 2a: Make Reels
 
-Turning an episode's tracks into 30-second Instagram Reels. A sub-automation of
+Turning an episode's tracks into 30-second 1080×1920 video posts (Instagram publishes every uploaded video as a Reel). The command is still called Make Reels. A sub-automation of
 [step 2, Create the show](02-create-show.md).
 
 See also: [process overview](README.md) ·
-[the Reel sketch](../processing/MFYN_Reel/README.md)
+[the ON AIR video post sketch](../processing/MFYN_VideoPost_OnAir/README.md)
 
 | | |
 |---|---|
 | **Trigger** | Step 2 triggers it once a show is ready. Until step 2 is automated, you double-click **MFYN – Make Reels** as step 2's last action |
 | **Input** | The newest episode's `Tracks` folder in `MFYN_Show_Archive` |
-| **Output** | One `Artist - Title.mp4` Reel per track, plus a `.json` of its details, in `MFYN_Reels\<episode>` |
+| **Output** | One `Artist - Title.mp4` video post per track, plus a `.json` of its details, in `MFYN_Posts\<episode>` |
 | **Runs on** | The MFYN PC (Processing 4 and ffmpeg) |
-| **Code** | [`intake/reels.py`](../intake/reels.py), the sketch [`processing/MFYN_Reel`](../processing/MFYN_Reel), started by [`scripts/make_reels.cmd`](../scripts/make_reels.cmd) |
-| **Next** | Its sibling under step 2, 2b (Instagram copy, not built yet). Then you review it all, before the Publishing Process starts |
+| **Code** | [`intake/reels.py`](../intake/reels.py), the sketch [`processing/MFYN_VideoPost_OnAir`](../processing/MFYN_VideoPost_OnAir), started by [`scripts/make_reels.cmd`](../scripts/make_reels.cmd) |
+| **Next** | Its sibling under step 2, [2b, Instagram copy](02b-instagram-copy.md), which runs at the end of every Make Reels run. Then you review it all, before the Publishing Process starts |
 
 ## What it does
 
 1. **Find the episode:** the newest one in `MFYN_Show_Archive`, going by the
    air date in its folder name. It lists the tracks and asks
    `Make Reels for these N track(s)? [Y/n]`.
+   Once you confirm, it first makes the episode's
+   [archive cover](archive-cover.md) in its folder, if it isn't there yet.
 2. **Confirm Instagram handles** in the [MFYN Artists sheet](01-acquire.md#the-mfyn-artists-sheet).
    It goes through each artist in the episode, then each label of their
    releases, and asks only about those not settled yet. It shows the
@@ -34,12 +36,13 @@ See also: [process overview](README.md) ·
 
    Once confirmed (or marked `No Instagram`), an artist or label isn't asked
    about again in later episodes.
-3. **Render:** your Reel sketch runs on the tracks that don't have a Reel yet.
-   - Each Reel is **30 seconds** long, from the loudest stretch of the track.
+3. **Render:** the ON AIR sketch runs on the tracks that don't have a video post yet.
+   - Each video is **30 seconds** long, 1080×1920, from the loudest stretch of the track.
+   - The player is in the exact centre of the frame, so it fits the full-screen Reel, the profile grid (middle 3:4) and a feed crop (middle 4:5).
    - It shows the title and artist from the tags, the embedded cover, the
      scope line, a progress bar and the ON AIR pulse.
-   - A preview window shows each Reel as it renders, and closes when done.
-4. **File the Reels** in `H:\My Drive\MFYN_Reels\<episode folder>\`, named
+   - A preview window shows each video as it renders, and closes when done.
+4. **File the video posts** in `H:\My Drive\MFYN_Posts\<episode folder>\`, named
    `Artist - Title` (characters Windows doesn't allow become `_`; two tracks
    with the same name get ` (2)`, ` (3)`…):
    ```
@@ -49,7 +52,7 @@ See also: [process overview](README.md) ·
 
 ## The details file (for captions and Publishing)
 
-Instagram strips metadata from uploads, so each Reel gets a `.json` file
+Instagram strips metadata from uploads, so each video post gets a `.json` file
 beside it with what the post needs:
 
 | Field | From |
@@ -61,7 +64,7 @@ beside it with what the post needs:
 | `episode` | `name` and `air_date` from the folder name, and the `folder` itself |
 | `source_track`, `clip_seconds`, `made` | the run itself |
 
-The handles are as they were when the Reel was made. Whatever uses them later should look
+The handles are as they were when the video post was made. Whatever uses them later should look
 them up again in the sheet, in case one was corrected later.
 
 ## Running it
@@ -85,7 +88,7 @@ python -m intake.reels --episode NAME   # the episode whose folder name contains
 python -m intake.reels --skip-handles   # don't stop to confirm handles
 ```
 
-**Re-running is safe.** Tracks that already have a Reel in `MFYN_Reels` are
+**Re-running is safe.** Tracks that already have a video post in `MFYN_Posts` are
 skipped. To remake one, delete its `.mp4` and `.json`, then run again.
 
 ## Requirements on the PC
@@ -96,12 +99,12 @@ skipped. To remake one, delete its `.mp4` and `.json`, then run again.
     usual install folders.
   - If it can't, set the `MFYN_PROCESSING` environment variable to its full
     path.
-- The repo's sketch is the master copy: `processing\MFYN_Reel` in
+- The repo's sketch is the master copy: `processing\MFYN_VideoPost_OnAir` in
   `%USERPROFILE%\mfyn-process`. Changes reach the PC with `git pull`.
-  `H:\My Drive\MFYN_Processing` is no longer used.
-- Google Drive for desktop running, for `MFYN_Show_Archive` and `MFYN_Reels`.
+  `H:\My Drive\MFYN_Processing` is no longer used: make sketch changes in the repo.
+- Google Drive for desktop running, for `MFYN_Show_Archive` and `MFYN_Posts`.
 - The Google sign-in from [setting up step 1](01-acquire.md#setting-it-up-on-the-pc),
-  to read the MFYN Artists sheet. Without it the Reels are still made, with
+  to read the MFYN Artists sheet. Without it the video posts are still made, with
   no handles.
 - The Python packages in `requirements.txt` (Make Reels reads tags with
   `mutagen`).
@@ -109,7 +112,7 @@ skipped. To remake one, delete its `.mp4` and `.json`, then run again.
 ## Troubleshooting
 
 The log is `%APPDATA%\mfyn-intake\reels.log`. The run exits with an error
-if any Reel failed.
+if any video post failed.
 
 | Message | What to do |
 |---|---|
@@ -117,14 +120,15 @@ if any Reel failed.
 | `No episode folder … found` | Check the folder name: `5_11_2026- Episode Name` (day_month_year). |
 | `… has no audio files in its Tracks folder` | Put the episode's FLACs in `Tracks`. |
 | `Can't find Processing's command-line runner` | Set `MFYN_PROCESSING`, e.g. `setx MFYN_PROCESSING "C:\Program Files\Processing\Processing.exe"`, then open a new window. |
-| `Processing exited with code …` / `No Reel was made for …` | Scroll up for the sketch's own messages, e.g. `Couldn't run ffmpeg`. Test the sketch by opening it in Processing and pressing Run. |
-| `Couldn't open the MFYN Artists sheet` | The Reels are still made, without handles. See [step 1 troubleshooting](01-acquire-troubleshooting.md). |
+| `Processing exited with code …` / `No video post was made for …` | Scroll up for the sketch's own messages, e.g. `Couldn't run ffmpeg`. Test the sketch by opening it in Processing and pressing Run. |
+| `Couldn't open the MFYN Artists sheet` | The video posts are still made, without handles. See [step 1 troubleshooting](01-acquire-troubleshooting.md). |
 
 ## Not part of this step (yet)
 
-- **The Album Story** (`processing\MFYN_Album`): a media-player Story for a
-  featured album. It's in the repo but not automated.
+- **The Album Story** (`processing\MFYN_Story_Album`): a media-player Story for a
+  featured album, made separately by [Make Album Story](featured-album-story.md).
 - **Instagram copy:** step 2b, a separate sub-automation of step 2 that
-  reads `MFYN_Reels`.
+  reads `MFYN_Posts`. Make Reels runs it at the end; see
+  [its doc](02b-instagram-copy.md).
 - **Scheduling posts:** part of the Publishing Process, which starts after
   your review.

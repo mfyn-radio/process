@@ -3,6 +3,53 @@
 Where the MFYN intake project stands, and where to pick up. The newest
 session is first.
 
+## 2026-11-20
+
+- **The Reel became the ON AIR video post.** The sketch is now
+  `processing\MFYN_VideoPost_OnAir` (1080×1920, the player centred so it also
+  fits the profile grid and a 4:5 crop) and writes `<track>_post.mp4`.
+  Instagram publishes every uploaded video as a Reel, so a 3:4 file would get
+  black bars. The Album sketch is now `processing\MFYN_Story_Album`. Sketches
+  are named `MFYN_ComponentType_ContentName`; Stories leave out "Post".
+- **Make Reels now files into `MFYN_Posts`** (`config.POSTS_DIR`, set with
+  `MFYN_POSTS`), with the same per-episode folders, `Artist - Title` names and
+  captions as before. `MFYN_Reels` is an archive for now; nothing writes to it.
+  The command, script and desktop shortcut keep the name **Make Reels**.
+- **Album Stories are filed like the posts:** `MFYN_Stories\<episode folder>\Artist - Title.*`,
+  under the newest episode or the one named with `--episode`.
+- The ON AIR sketch's main file is the Drive version plus the command-line
+  options. Its layout is the repo's (54 px higher than Drive's), so `SHIFT_Y`
+  is 111 and `B2` 1452. Neither has been rendered here: check one frame on the
+  PC before the next run.
+
+## 2026-11-05
+
+- **Reel sketch finalized** (white design) and brought in from Drive:
+  mfyn-radio/process#28. Edit it in the repo from now on.
+- **Step 2b, Instagram copy, built:** a `.txt` caption next to each Reel,
+  written at the end of Make Reels. mfyn-radio/process#29, closing
+  mfyn-radio/process#20.
+- **Make Album Story built** ([doc](featured-album-story.md),
+  mfyn-radio/process#18): pick an album from `MFYN_Library` and a featured
+  track; the Story, a still and a `.json` (with the album link for the
+  sticker) go to `MFYN_Stories`. The Album sketch got `input=` / `output=`
+  options; its look is unchanged.
+- **Sketches can now be rendered in the cloud session**, for previews,
+  without Processing on the PC.
+- **Reel player centred in Instagram's safe area** (moved up 54 px), after a
+  phone screenshot showed the progress bar touching the caption. The Album
+  Story is now 30 seconds, like the Reels. Captions' Air Date line has the
+  date only.
+- **Archive cover sketch** (`processing\MFYN_Archive`) built from the design
+  handoff: orange card, black ink, episode number and date. Run by hand from
+  `input/episodes.csv`. Matches the approved episode 2 cover on every
+  acceptance check.
+- **Archive covers are automatic** ([doc](archive-cover.md)): Make Reels
+  saves `MFYN_archive_NN.png` in the episode folder. The date comes from the
+  folder name; 5 November 2026 is No. 3 and later episodes count up. Covers
+  are 2160×2160 (the minimum is 1800), each with a random paper colour
+  that keeps the ink readable; you confirm each one, or make another.
+
 ## 2026-10-23: first session
 
 ### Where we got to
@@ -14,8 +61,8 @@ artist directory built along the way:
 |---|---|---|
 | 1 | [Acquire](01-acquire.md): Bandcamp purchase → `MFYN_Library` + the MFYN Artists sheet | **Live**, hourly on the MFYN PC |
 | 2 | [Create the show](02-create-show.md) → `MFYN_Show_Archive\D_M_YYYY- Episode Name\Tracks` | Manual |
-| 2a | [Make Reels](02a-make-reels.md): episode tracks → 30-second Reels + `.json` details in `MFYN_Reels` | **Built**, runs on the PC; sketch layout being tuned |
-| 2b | Instagram copy (captions) | **Not built.** Next up. |
+| 2a | [Make Reels](02a-make-reels.md): episode tracks → 30-second Reels + `.json` details in `MFYN_Reels` | **Built**, runs on the PC; sketch finalized 5 Nov (white design) |
+| 2b | [Instagram copy](02b-instagram-copy.md): a `.txt` caption next to each Reel | **Built** 5 Nov, runs at the end of Make Reels; not yet run on the PC |
 | — | Manual stop: you review all the content | **Not built** (the hand-off) |
 | → | Publishing Process (schedule posts, …) | Separate process, **not built** |
 
@@ -110,9 +157,10 @@ Found along the way, still to do:
         isn't the artist, let the automation replace its own
         "Self-released", then re-run `--artists`.
       - **Waiting on:** confirmation that AT EASE is a label.
-- [ ] **The Reel's pixel font only has the 95 basic characters,** so ø, ù, é
-      and non-Latin text come out as `?` (Daufødt, FOSCØ, Put Pùrana,
-      *Nisemono 偽者*).
+- [ ] **The Reel's pixel font only has the 95 basic characters.** Since the
+      5 Nov sketch, Ø/ø, Æ, Œ and ß are handled and accents are dropped
+      (Daufødt, FOSCØ and Put Pùrana now render). Non-Latin text still comes
+      out as `?` (*Nisemono 偽者*).
       - **Proposed fix, in Make Reels, without touching the sketch:**
         1. check names against the sketch's `data/fonts.json`;
         2. write plain-letter versions (ø→O, é→E…) into the *temporary
@@ -134,8 +182,11 @@ Found along the way, still to do:
 - [x] **Merge mfyn-radio/process#12.** It restores the Album Story sketch,
       which mfyn-radio/process#11 changed by mistake. Merged; `git pull` on the
       PC if it hasn't been done.
-- [ ] **Finish tuning the Reel sketch** locally: long titles and artists,
-      the smaller text size. Commit and push it from the PC.
+- [x] **Finish tuning the Reel sketch.** Finalized 5 Nov in
+      `H:\My Drive\MFYN_Processing\MFYN_Reel` and brought into the repo
+      (white design, glow, title and artist sizes, accented letters). Make
+      future changes in `%USERPROFILE%\mfyn-process\processing\MFYN_Reel`,
+      which is what Make Reels runs.
 - [ ] **Test Make Reels end to end** on a real episode, and check the
       `.json` files.
 - [ ] **Backlog:** handled selectively. See "Selected backlog" above.
@@ -145,20 +196,11 @@ Found along the way, still to do:
 
 ### Next session
 
-1. **Instagram copy, then test it.** A generator that turns each Reel's
-   `.json`, plus fresh handles from the MFYN Artists sheet, into a caption
-   with:
-   - `@artist` and `@label` tags, or the artist's name and other links when
-     they have no Instagram;
-   - album and label credit;
-   - Bandcamp link wording;
-   - hashtags from the Bandcamp tags;
-   - the episode name and air date.
-
-   To decide: tone and template, hashtag rules, a fixed sign-off, where the
-   caption is saved (e.g. `Artist - Title.txt` next to the Reel, or in a
-   sheet for review), and whether you review or edit captions before
-   scheduling.
+1. **Test Instagram copy on the PC** ([step 2b](02b-instagram-copy.md),
+   built 5 Nov for [mfyn-radio/process#20](https://github.com/mfyn-radio/process/issues/20)).
+   It uses the issue's template under the opening line "Music worth paying
+   for, follow to find and support an artist", with no hashtags or link
+   wording, and saves `Artist - Title.txt` next to each Reel.
 2. **The Publishing Process** (starts after your review; not part of this
    repo's steps yet). First piece, scheduling posts. To decide:
    - **Which tool:** Instagram's own API (needs a Business or Creator

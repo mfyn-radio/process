@@ -68,9 +68,12 @@ import sys
 from pathlib import Path
 args = dict(a.split("=", 1) for a in sys.argv[1:] if "=" in a and not a.startswith("--"))
 assert "--run" in sys.argv and any(a.startswith("--sketch=") for a in sys.argv)
+if any("MFYN_Archive" in a for a in sys.argv):
+    (Path(args["output"]) / ("MFYN_archive_%02d.png" % int(args["number"]))).write_text(args["date"])
+    sys.exit(0)
 assert args["seconds"] == "30"
 for f in Path(args["input"]).iterdir():
-    (Path(args["output"]) / (f.stem + "_reel.mp4")).write_bytes(b"mp4")
+    (Path(args["output"]) / (f.stem + "_post.mp4")).write_bytes(b"mp4")
 '''
 
 
@@ -86,18 +89,25 @@ def test_make_reels_end_to_end(tmp_path, monkeypatch, capsys):
     fake.chmod(fake.stat().st_mode | stat.S_IEXEC)
 
     monkeypatch.setattr(config, "SHOW_ARCHIVE_DIR", archive)
-    monkeypatch.setattr(config, "REELS_DIR", out)
+    monkeypatch.setattr(config, "POSTS_DIR", out)
     monkeypatch.setattr(config, "PROCESSING", str(fake))
     monkeypatch.setattr(config, "APP_DIR", tmp_path / "app")
     monkeypatch.setattr(config, "REELS_LOG_FILE", tmp_path / "app" / "reels.log")
     monkeypatch.setattr(config, "TOKEN_FILE", tmp_path / "app" / "missing-token.json")
 
     assert reels.main([], ask=lambda prompt: "y") == 0
+    cover = archive / "5_11_2026- Official Unofficial" / "MFYN_archive_03.png"
+    assert cover.read_text() == "5 November 2026"
     ep_out = out / "5_11_2026- Official Unofficial"
     assert sorted(p.name for p in ep_out.iterdir()) == [
-        "Other Artist - Song_Two.json", "Other Artist - Song_Two.mp4",
+        "Other Artist - Song_Two.json", "Other Artist - Song_Two.mp4", "Other Artist - Song_Two.txt",
         "applied communications - donna deegan.json", "applied communications - donna deegan.mp4",
+        "applied communications - donna deegan.txt",
     ]
+    assert (ep_out / "applied communications - donna deegan.txt").read_text(encoding="utf-8") == (
+        "Music worth paying for, follow to find and support an artist\n\n"
+        "Artist: applied communications\nSong Title: donna deegan\nAlbum: bites the big one\n\n"
+        "Air Date: 5 November 2026\n")
     info = json.loads((ep_out / "applied communications - donna deegan.json").read_text())
     assert info["title"] == "donna deegan" and info["album"] == "bites the big one"
     assert info["episode"] == {"name": "Official Unofficial", "air_date": "2026-11-05",
@@ -106,4 +116,4 @@ def test_make_reels_end_to_end(tmp_path, monkeypatch, capsys):
 
     # A second run has nothing left to do.
     assert reels.main([], ask=lambda prompt: "y") == 0
-    assert "2 track(s) already have a Reel" in (tmp_path / "app" / "reels.log").read_text()
+    assert "2 track(s) already have a video post" in (tmp_path / "app" / "reels.log").read_text()
