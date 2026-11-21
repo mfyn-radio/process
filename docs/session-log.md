@@ -3,6 +3,25 @@
 Where the MFYN intake project stands, and where to pick up. The newest
 session is first.
 
+## 2026-11-20
+
+- **The Reel became the ON AIR video post.** The sketch is now
+  `processing\MFYN_VideoPost_OnAir` (1080×1920, the player centred so it also
+  fits the profile grid and a 4:5 crop) and writes `<track>_post.mp4`.
+  Instagram publishes every uploaded video as a Reel, so a 3:4 file would get
+  black bars. The Album sketch is now `processing\MFYN_Story_Album`. Sketches
+  are named `MFYN_ComponentType_ContentName`; Stories leave out "Post".
+- **Make Reels now files into `MFYN_Posts`** (`config.POSTS_DIR`, set with
+  `MFYN_POSTS`), with the same per-episode folders, `Artist - Title` names and
+  captions as before. `MFYN_Reels` is an archive for now; nothing writes to it.
+  The command, script and desktop shortcut keep the name **Make Reels**.
+- **Album Stories are filed like the posts:** `MFYN_Stories\<episode folder>\Artist - Title.*`,
+  under the newest episode or the one named with `--episode`.
+- The ON AIR sketch's main file is the Drive version plus the command-line
+  options. Its layout is the repo's (54 px higher than Drive's), so `SHIFT_Y`
+  is 111 and `B2` 1452. Neither has been rendered here: check one frame on the
+  PC before the next run.
+
 ## 2026-11-13
 
 - **Show calendar built** ([doc](show-calendar.md)), mfyn-radio/process#36,

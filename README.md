@@ -12,7 +12,7 @@ It ends at a manual stop, where you review everything. The separate
   the pipeline, the systems involved, and each step's spec, decisions and
   troubleshooting.
 - `intake/` — the automation code.
-- `processing/` — the Processing sketches that make the Reels (and the Album
+- `processing/` — the Processing sketches that make the video posts (and the Album
   Story, not automated yet).
 - `scripts/` — launchers: the daily Acquire task, and the Make Reels
   double-click.
@@ -29,8 +29,8 @@ It ends at a manual stop, where you review everything. The separate
    When you're ready to make a show, step 2 is the parent: it starts the
    sub-automations below, each its own step.
    - 2a. [Make Reels](docs/02a-make-reels.md) — the episode's tracks become
-     30-second Instagram Reels. Double-click to start. *(built, being tested)*
-   - 2b. Instagram copy — a caption for each Reel. *(not built yet; next up)*
+     30-second video posts. Double-click to start. *(built, being tested)*
+   - 2b. Instagram copy — a caption for each video post. *(not built yet; next up)*
 
 **Manual stop:** you review all the content made for a post. When you're happy,
 you trigger the Publishing Process (scheduling the posts, among other things).

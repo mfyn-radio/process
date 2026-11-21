@@ -12,7 +12,7 @@ well on it (a contrast ratio of at least 5 at the paper's darkest corner). The
 ranges are in `Spec.pde`. Set `RANDOM_COLOUR` to false for the original orange
 on every cover. The paper texture and the type are the same on every cover.
 
-This cover is the brand anchor, so it is kept apart from the Reel and Album
+This cover is the brand anchor, so it is kept apart from the video post and Story
 sketches: it shares no code or settings with them, every look constant is in
 `Spec.pde`, the fonts are bundled in `data/`, and the paper uses a fixed random
 seed. Re-rendering an episode gives the identical file.

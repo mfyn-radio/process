@@ -115,7 +115,7 @@ to count the library by tag. Bandcamp tags mix genres with places like
 |---|---|
 | `Suggested` | A handle was found on Bandcamp, not yet checked |
 | `Not found` | No Instagram link was found |
-| *(set in step 2a)* | Confirmed or corrected when Reels are made |
+| *(set in step 2a)* | Confirmed or corrected when video posts are made |
 
 #### How it's filled in
 

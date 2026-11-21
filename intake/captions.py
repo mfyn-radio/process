@@ -1,9 +1,9 @@
-"""Step 2b, Instagram copy: a caption for each Reel in MFYN_Reels.
+"""Step 2b, Instagram copy: a caption for each video post in MFYN_Posts.
 
 Make Reels runs this at its end, so it normally needs no double-click of its
 own. To run it by hand:
 
-    python -m intake.captions                  # the newest episode in MFYN_Reels
+    python -m intake.captions                  # the newest episode in MFYN_Posts
     python -m intake.captions --episode NAME   # the episode whose folder name contains NAME
 
 Each Reel's .json gives the track details. Instagram handles are looked up
@@ -104,12 +104,12 @@ def main(argv=None):
     args = parser.parse_args(argv)
     logging.basicConfig(level=logging.INFO, format="%(message)s")
 
-    if not config.REELS_DIR.is_dir():
-        log.error("%s not found. Is Google Drive for desktop running?", config.REELS_DIR)
+    if not config.POSTS_DIR.is_dir():
+        log.error("%s not found. Is Google Drive for desktop running?", config.POSTS_DIR)
         return 1
-    ep = episode.find(config.REELS_DIR, args.episode)
+    ep = episode.find(config.POSTS_DIR, args.episode)
     if ep is None:
-        log.error("No episode folder found in %s", config.REELS_DIR)
+        log.error("No episode folder found in %s", config.POSTS_DIR)
         return 1
     try:
         cat = catalog.Catalog(google_auth.credentials())
