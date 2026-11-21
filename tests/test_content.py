@@ -108,7 +108,37 @@ def test_in_library_matches_album_and_title(tmp_path, monkeypatch):
     umbrella = reels.Track(tmp_path / "x.flac", "CADY", "umbrella", "Limitations of the Human Form")
     folder, tracks, index = stories.in_library(umbrella, folders)
     assert folder.name == "CADY - Limitations of the Human Form" and tracks[index].title == "Umbrella"
-    assert stories.in_library(reels.Track(tmp_path / "y.flac", "CADY", "Umbrella", ""), folders) is None
+    assert stories.in_library(reels.Track(tmp_path / "y.flac", "Nobody", "Umbrella", ""), folders) is None
+
+
+def test_in_library_finds_albums_the_folder_name_doesnt_name(tmp_path, monkeypatch):
+    setup(tmp_path, monkeypatch)
+    from intake import reels
+    lib = config.LIBRARY_DIR
+    # Folder named after a shortened artist, not the album.
+    album(lib, "i practice saying sorry to you", "i practice saying sorry to you so i can do it in front of the mirror one day",
+          "thank you for so little, sorry for so much", ["bicho", "solaris"])
+    # "/" in the album tag, " - " in the folder name.
+    album(lib, "ALIEN DINER - snake obamna - SONIC SODA!!!!!", "ALIEN DINER", "snake obamna / SONIC SODA!!!!!", ["Fizz"])
+    # The played track itself is missing from the library's album.
+    album(lib, "Daufødt - Glitter", "Daufødt", "Glitter", ["Stemmene i hodet", "Klokka"])
+    # A single with no album tag.
+    single = lib / "Morgan Garrett - Honest Mistake"
+    single.mkdir()
+    flac(single / "Honest Mistake.flac", "Morgan Garrett", "Honest Mistake", "")
+    folders = stories.albums(lib)
+
+    def find(artist, title, album_tag):
+        found = stories.in_library(reels.Track(tmp_path / "t.flac", artist, title, album_tag), folders)
+        return found and (found[0].name, found[1][found[2]].title)
+
+    assert find("i practice saying sorry to you so i can do it in front of the mirror one day", "solaris",
+                "thank you for so little, sorry for so much") == ("i practice saying sorry to you", "solaris")
+    assert find("ALIEN DINER", "Fizz", "snake obamna / SONIC SODA!!!!!") == (
+        "ALIEN DINER - snake obamna - SONIC SODA!!!!!", "Fizz")
+    assert find("Daufødt", "Glitter", "Glitter") == ("Daufødt - Glitter", "Stemmene i hodet")
+    assert find("Morgan Garrett", "Honest Mistake", "") == ("Morgan Garrett - Honest Mistake", "Honest Mistake")
+    assert find("Nobody", "Nothing", "Not Here") is None
 
 
 def test_only_the_archive_cover_when_you_say_no_to_the_rest(tmp_path, monkeypatch):

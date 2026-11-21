@@ -20,8 +20,12 @@ See also: [process overview](README.md) ·
 ## What it does
 
 1. **One Story per artist:** for each artist in the episode, the album of the
-   track you played is found in `MFYN_Library`, by its album and title tags,
-   in the folder Bandcamp named `Artist - Album`. If you played several of
+   track you played is found in `MFYN_Library`: a folder whose name holds the
+   album or the artist (Bandcamp names them `Artist - Album`, sometimes with
+   the artist cut short) and which has a track with the same album tag. Case,
+   spaces and punctuation don't matter, so `A / B` matches `A - B`. The played
+   track doesn't need to be in that folder. A single with no album tag is
+   matched by its artist and title. If you played several of
    their tracks, one of those albums is picked at random. The album art is
    already in that folder. Because the album always comes from this
    episode's tracks, an album from an earlier show is never featured.

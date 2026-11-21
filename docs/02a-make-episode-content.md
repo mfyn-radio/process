@@ -181,7 +181,7 @@ if any sub-script failed; the summary says which.
 | `… has no audio files in its Tracks folder` | Put the episode's FLACs in `Tracks`. |
 | `Can't find Processing's command-line runner` | Set `MFYN_PROCESSING`, e.g. `setx MFYN_PROCESSING "C:\Program Files\Processing\Processing.exe"`, then open a new window. |
 | `Processing exited with code …` / `No video post was made for …` | Scroll up for the sketch's own messages, e.g. `Couldn't run ffmpeg`. Test the sketch by opening it in Processing and pressing Run. |
-| `… no album of theirs from this episode is in …` | That artist's album isn't in `MFYN_Library` under a folder named after the album (Bandcamp's `Artist - Album`), or the episode track's album or title tag differs from the library's. |
+| `… no album of theirs from this episode is in …` | No folder in `MFYN_Library` whose name holds the album or the artist (Bandcamp's `Artist - Album`) has a track with the same album tag (for a single with no album tag: the same artist and title). Check the episode track's tags against the library's. |
 | `No Story was made for …` | Scroll up for the Album sketch's messages. |
 | `Couldn't open the MFYN Artists sheet` | The video posts and Stories are still made, without handles. See [step 1 troubleshooting](01-acquire-troubleshooting.md). |
 
