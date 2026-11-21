@@ -17,7 +17,7 @@ import logging.handlers
 import sys
 from dataclasses import dataclass, field
 
-from . import alerts, catalog, config, flyer, gmail, google_auth, instagram, event_calendar, table
+from . import alerts, catalog, config, flyer, gmail, google_auth, instagram, event_calendar, runlog, table
 
 log = logging.getLogger("events")
 
@@ -185,6 +185,10 @@ def setup_logging():
 
 
 def main(argv=None):
+    return runlog.track("Event Calendar", lambda run_log: _main(argv, run_log))
+
+
+def _main(argv, run_log):
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--setup-instagram", action="store_true", help="sign in to Instagram as MFYN in Chrome, once")
     parser.add_argument("--dry-run", action="store_true", help="read posts but don't add events or remember the posts")
@@ -195,6 +199,8 @@ def main(argv=None):
     parser.add_argument("--post", metavar="SHORTCODE", help="read only this post (the code after /p/ in its link)")
     args = parser.parse_args(argv)
     setup_logging()
+    if args.dry_run or args.setup_instagram:
+        run_log.runs = run_log.last_run = None  # nothing to log
 
     browser = instagram.Browser(config.INSTAGRAM_PROFILE_DIR)
     try:
@@ -205,12 +211,13 @@ def main(argv=None):
         if not (args.post or args.fill_sheet) and not config.INSTAGRAM_COLLECTION_URL:
             log.error("Set MFYN_INSTAGRAM_COLLECTION to the collection's address. See docs/event-calendar.md.")
             return 1
-        return run(browser, args)
+        return run(browser, args, run_log)
     finally:
         browser.close()
 
 
-def run(browser, args):
+def run(browser, args, run_log=None):
+    run_log = run_log or runlog.RunLog("Event Calendar")  # one that writes nothing
     state = load_state(config.EVENTS_STATE_FILE)
     creds = None
     if args.dry_run:
@@ -235,6 +242,7 @@ def run(browser, args):
             log.error("--fill-sheet needs the %s sheet and can't be a dry run", config.ARTISTS_SHEET)
             return 1
         fill_sheet(target, datetime.date.today())
+        run_log.summary = f"gave every event on the calendar a row on the Events tab of {config.ARTISTS_SHEET}"
         return 0
     claude = flyer.find_claude()
 
@@ -246,7 +254,7 @@ def run(browser, args):
     log.info("%d new post(s) to read", len(codes))
 
     today = datetime.date.today()
-    failures = 0
+    failures = total_added = 0
     for code in codes:
         try:
             post = browser.post(code)
@@ -256,17 +264,24 @@ def run(browser, args):
                          f"{len(post.image) // 1024} KB" if post.image else "none", post.caption[:300])
             events = flyer.read(post, config.EVENTS_MODEL, claude=claude)
             added = handle(post, events, target, today, args.dry_run, redo=bool(args.post))
-        except Exception:
+        except Exception as e:
             log.exception("%s: failed; will retry next run", code)
+            run_log.add(f"Post {code}", runlog.FAILED, f"{type(e).__name__}: {e}; will retry next run")
             failures += 1
             continue
+        if added:
+            total_added += added
+            run_log.add(f"Post {code}", runlog.OK, f"{added} event(s) added")
         if not args.dry_run:
             # Remember the post so it isn't read again.
             state["posts"][code] = {"read": today.isoformat(), "events": len(events), "added": added}
             save_state(config.EVENTS_STATE_FILE, state)
 
     if target.alerts:
-        send_alert(creds, target.alerts)
+        send_alert(creds, target.alerts, run_log)
+
+    run_log.summary = f"{len(codes)} new post(s) read, {total_added} event(s) added" + (
+        f", {failures} post(s) failed" if failures else "")
 
     if failures:
         log.error("%d post(s) failed", failures)
@@ -274,15 +289,17 @@ def run(browser, args):
     return 0
 
 
-def send_alert(creds, matches):
+def send_alert(creds, matches, run_log=None):
     """One email for the run's events with library artists. A failure is only
     logged: the events are on the calendar, with the alert colour, anyway."""
     subject, text = alerts.email(matches)
     try:
         alerts.send(gmail.client(creds), config.ALERT_EMAIL, subject, text)
         log.info("Emailed %s: %s", config.ALERT_EMAIL, subject)
-    except Exception:
+    except Exception as e:
         log.exception("couldn't send the alert email (%s)", subject)
+        if run_log:
+            run_log.add("Alert email", runlog.FAILED, f"{subject}: {type(e).__name__}: {e}")
 
 
 if __name__ == "__main__":

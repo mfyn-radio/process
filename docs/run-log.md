@@ -12,8 +12,8 @@ Background: [#44](https://github.com/mfyn-radio/process/issues/44).
 | Column | What it holds |
 |---|---|
 | Time | When, on the MFYN PC's clock (`2026-11-21 08:05`) |
-| Automation | Acquire, Make Episode Content, or ON AIR posts, Album Story and Archive cover when run on their own |
-| About | The album folder, episode folder, or `(the run)` when the run stopped before it got to one |
+| Automation | Acquire, Make Episode Content, Event Calendar, or ON AIR posts, Album Story and Archive cover when run on their own |
+| About | The album folder, episode folder, Instagram post (`Post DAbc123`), or `(the run)` when the run stopped before it got to one |
 | Result | `ok`, `failed` or `excluded` |
 | Details | What it made, or the error |
 
@@ -30,6 +30,7 @@ than an hour or two old here means the Task Scheduler task isn't running.
 | ON AIR posts (`intake.reels` run on its own) | It finishes an episode: posts made, failed, captions, archive cover | The same |
 | Album Story (`intake.stories` run on its own) | A Story is made, or Processing made no video | What it made |
 | Archive cover (run on its own) | A cover is made | What it made |
+| Event Calendar | A post adds events, a post fails (with the error; it's retried next run), or the alert email can't be sent. Posts with no new events get no row, since there are up to 15 a day | How many new posts it read, events it added and posts that failed |
 
 Any run that ends with an error and hasn't logged a failed row gets one, with
 the errors it logged, so "Drive for desktop isn't running" shows up too.

@@ -495,3 +495,60 @@ def test_old_calendar_name_is_renamed_once():
     assert cal.summary == "Event Calendar"
     assert event_calendar.ensure_name(cal, "cal", config.EVENT_CALENDAR) is False
     assert len(cal.patched) == 1
+
+
+# Run log
+
+class RecordingRunLog:
+    def __init__(self):
+        self.rows, self.summary = [], ""
+
+    def add(self, about, result, details=""):
+        self.rows.append((about, result, details))
+
+
+def test_run_log_gets_added_and_failed_posts_with_the_error(tmp_path, monkeypatch):
+    from intake import config, runlog
+    monkeypatch.setattr(config, "EVENTS_STATE_FILE", tmp_path / "events.json")
+    monkeypatch.setattr(config, "INSTAGRAM_COLLECTION_URL", "https://www.instagram.com/x/saved/shows/1/")
+    monkeypatch.setattr(google_auth, "credentials", lambda *a, **k: None)
+    monkeypatch.setattr(event_calendar, "client", lambda creds: FakeCalendar())
+    monkeypatch.setattr(event_calendar, "create", lambda *a: "cal-id")
+    monkeypatch.setattr(event_calendar, "ensure_name", lambda *a: False)
+    monkeypatch.setattr(events, "open_catalog", lambda creds: None)
+    monkeypatch.setattr(flyer, "find_claude", lambda: "claude")
+    monkeypatch.setattr(flyer, "read", lambda post, model, claude: [event()])
+
+    class Browser:
+        def collection(self, *a, **k):
+            return ["GOOD", "BAD", "EMPTY"]
+
+        def post(self, code):
+            if code == "BAD":
+                raise RuntimeError("page didn't load")
+            return None if code == "EMPTY" else POST
+
+    # GOOD adds two events, EMPTY none (no row for it).
+    monkeypatch.setattr(events, "handle", lambda post, evs, *a, **k: 0 if post is None else 2)
+    browser = Browser()
+    run_log = RecordingRunLog()
+    args = SimpleNamespace(dry_run=False, fill_sheet=False, post=None, backlog=False)
+
+    assert events.run(browser, args, run_log) == 1
+    assert run_log.rows == [
+        ("Post GOOD", runlog.OK, "2 event(s) added"),
+        ("Post BAD", runlog.FAILED, "RuntimeError: page didn't load; will retry next run"),
+    ]
+    assert run_log.summary == "3 new post(s) read, 2 event(s) added, 1 post(s) failed"
+
+
+def test_a_failed_alert_email_is_logged(monkeypatch):
+    from intake import runlog
+    monkeypatch.setattr(alerts, "email", lambda matches: ("Shows with library artists", "text"))
+    monkeypatch.setattr(events.gmail, "client", lambda creds: None)
+    def fail(*a):
+        raise RuntimeError("quota")
+    monkeypatch.setattr(alerts, "send", fail)
+    run_log = RecordingRunLog()
+    events.send_alert(None, [], run_log)
+    assert run_log.rows == [("Alert email", runlog.FAILED, "Shows with library artists: RuntimeError: quota")]
