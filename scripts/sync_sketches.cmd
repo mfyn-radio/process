@@ -14,5 +14,6 @@ for /d %%S in (processing\MFYN_*) do (
     exit /b 1
   )
 )
+copy /y processing\README.md "%DEST%\README.md" >nul || (echo Copying README.md failed.& exit /b 1)
 echo Sketches copied to %DEST%.
 exit /b 0

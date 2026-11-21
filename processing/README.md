@@ -9,3 +9,15 @@ Three sketches, set up and run the same way (Processing 4; the video post and St
 
 Each folder has its own README with setup, inputs and settings.
 Open a sketch by double-clicking its main `.pde` file (MFYN_VideoPost_OnAir.pde / MFYN_Story_Album.pde / MFYN_Archive.pde).
+
+## Naming
+
+Sketches are named `MFYN_ComponentType_ContentName`, for example
+`MFYN_VideoPost_OnAir`. Stories leave out "Post": `MFYN_Story_Album`.
+
+## Where to edit
+
+This folder in the repo is the master copy. `H:\My Drive\MFYN_Processing` is
+a copy that `scripts\sync_sketches.cmd` refreshes after each `git pull`, so
+the sketches are always available in Drive. Don't edit that copy: the next
+sync overwrites it. See [working on the PC](../docs/working-on-the-pc.md).
