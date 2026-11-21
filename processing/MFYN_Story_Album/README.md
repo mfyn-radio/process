@@ -80,7 +80,7 @@ Like the ON AIR video post sketch (newer versions of Processing use `Processing.
 instead of `processing-java.exe`):
 
 ```
-"C:\Program Files\Processing\processing-java.exe" --sketch="C:\path\to\MFYN_Story_Album" --run
+"C:\Program Files\Processing\Processing.exe" cli --sketch="C:\Users\admin\mfyn-process\processing\MFYN_Story_Album" --run
 ```
 
 ## Command-line options

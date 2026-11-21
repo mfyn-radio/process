@@ -83,7 +83,7 @@ Processing use `Processing.exe cli` instead). This renders everything in
 `input/`:
 
 ```
-"C:\Program Files\Processing\processing-java.exe" --sketch="C:\path\to\MFYN_VideoPost_OnAir" --run
+"C:\Program Files\Processing\Processing.exe" cli --sketch="C:\Users\admin\mfyn-process\processing\MFYN_VideoPost_OnAir" --run
 ```
 
 A window opens briefly while it renders, so the PC needs to be signed in.
