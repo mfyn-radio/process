@@ -11,6 +11,7 @@ Runs on the MFYN PC (daily, from Task Scheduler). See docs/event-calendar.md.
 """
 import argparse
 import datetime
+import html
 import json
 import logging
 import logging.handlers
@@ -120,6 +121,11 @@ def handle(post, events, target, today, dry_run, redo=False):
             if old.get("status") != "cancelled":
                 record_row(target, old, today)
             continue
+        if old is None and not redo:
+            twin = find_duplicate(target, event, body, post)
+            if twin is not None:
+                merge_duplicate(target, twin, event, body, post, tags, today)
+                continue
         if old is not None:
             link = event_calendar.restore(target.calendar, target.calendar_id, body)
             log.info("%s: rewrote '%s' on %s: %s", post.url, body["summary"], when, link)
@@ -142,6 +148,85 @@ def handle(post, events, target, today, dry_run, redo=False):
             log.warning("%s: the flyer for '%s' wasn't clear; check the event against the post",
                         post.url, event.title)
     return added
+
+
+# Two saved posts for the same night, such as the venue's and a band's, make one
+# event. It keeps the details of the post that has more of them, and links the
+# band's own post to repost, since Bryant reposts the band rather than the venue.
+
+def _extra(event_body):
+    return event_body.get("extendedProperties", {}).get("private", {})
+
+
+def _venue_key(event_body):
+    venue = _extra(event_body).get("venue") or ""
+    if not venue:
+        location = event_body.get("location") or ""
+        venue = location.rpartition(", ")[0] or location
+    return alerts.key(venue)
+
+
+def _acts(event_body):
+    return [a.strip() for a in _extra(event_body).get("acts", "").split(",") if a.strip()]
+
+
+def band_account(account, acts):
+    """Whether an Instagram account is one of the acts' own: sick__pack is
+    Sick Pack's, and so is sickpackband."""
+    handle = alerts.key(account)
+    return bool(handle) and any(
+        len(k) >= 4 and (handle.startswith(k) or handle.endswith(k)) for k in map(alerts.key, acts))
+
+
+def _detail(event_body):
+    """How much an event says: a start time first, then how many acts."""
+    return ("dateTime" in event_body.get("start", {}), len(_acts(event_body)))
+
+
+def find_duplicate(target, event, event_body, post):
+    """An event from another post on the same date at the same venue, or None."""
+    venue = _venue_key(event_body)
+    if len(venue) < 3:
+        return None
+    for other in event_calendar.on_date(target.calendar, target.calendar_id, event.date):
+        extra = _extra(other)
+        if post.url in (extra.get("post"), extra.get("also")):
+            continue  # the same post: a second event that night, or the event itself
+        theirs = _venue_key(other)
+        if len(theirs) >= 3 and (theirs.startswith(venue) or venue.startswith(theirs)):
+            return other
+    return None
+
+
+def merge_duplicate(target, twin, event, event_body, post, tags, today):
+    """Fold a second post for an event already on the calendar into that event."""
+    old = _extra(twin)
+    old_post, old_account = old.get("post", ""), old.get("account", "")
+    acts = list(event.acts) + _acts(twin)
+    if band_account(post.account, acts) and not band_account(old_account, acts):
+        share, account, also = post.url, post.account, old_post
+    else:
+        share, account, also = old_post or post.url, old_account, post.url
+    if _detail(event_body) > _detail(twin):
+        # This post says more: its details replace the event's, under the same id.
+        fields = {k: event_body[k] for k in ("summary", "start", "end", "source", "location") if k in event_body}
+        fields["description"] = event_calendar.description(event, post, tags, share_url=share,
+                                                           also=[also] if also and also != share else [])
+        private = dict(_extra(event_body))
+    else:
+        fields = {"description": twin.get("description", "")}
+        if share != old_post and old_post:
+            fields["description"] = fields["description"].replace(
+                f'href="{html.escape(old_post, quote=True)}"', f'href="{html.escape(share, quote=True)}"')
+        if also and also != share and also not in fields["description"]:
+            fields["description"] += f"<br>Also posted: {html.escape(also)}"
+        private = dict(old)
+    private.update(post=share, account=account, also=also if also != share else "")
+    fields["extendedProperties"] = {"private": {k: v for k, v in private.items() if v}}
+    link = event_calendar.patch(target.calendar, target.calendar_id, twin["id"], fields)
+    log.info("%s: '%s' on %s is the same event as '%s'; merged into it, reposting %s: %s", post.url,
+             event.title, event.date, twin.get("summary", ""), share, link)
+    record_row(target, dict(twin, **fields), today)
 
 
 def record_row(target, event_body, today):

@@ -3,7 +3,8 @@
 The automation creates the calendar itself and may only touch calendars it
 created (the calendar.app.created permission). Each event gets an id made
 from its post, so a re-run never adds it twice, and an event that's already
-there is left alone, even if you've edited it.
+there is left alone, even if you've edited it. Two posts for the same night at
+the same venue become one event (see events.merge_duplicate).
 """
 import datetime
 import hashlib
@@ -46,21 +47,25 @@ def event_id(shortcode, event, n=0):
     return "mf" + hashlib.sha1(key.encode("utf-8")).hexdigest()
 
 
-def description(event, post, tags=()):
+def description(event, post, tags=(), share_url=None, also=()):
     """The event's notes, as Calendar's simple HTML:
 
         punk, hardcore, noise           (the tags, if any)
 
         <the post's caption>
 
-        Save & Share on Instagram       (a link to the post)
-    """
+        Save & Share on Instagram       (a link to the post to repost)
+        Also posted: <link>             (other posts for the same event, if any)
+
+    `share_url` is the post to repost when it isn't `post` (a band's own post
+    for an event whose details came from the venue's post)."""
     parts = []
     if tags:
         parts.append(html.escape(", ".join(tags)))
     if post.caption:
         parts.append(html.escape(post.caption.strip()).replace("\n", "<br>"))
-    parts.append(f'<a href="{html.escape(post.url, quote=True)}">Save &amp; Share on Instagram</a>')
+    share = f'<a href="{html.escape(share_url or post.url, quote=True)}">Save &amp; Share on Instagram</a>'
+    parts.append("<br>".join([share] + [f"Also posted: {html.escape(url)}" for url in also]))
     return "<br><br>".join(parts)
 
 
@@ -76,7 +81,8 @@ def body(event, post, timezone, tags=(), n=0):
         "extendedProperties": {"private": {k: v[:1000] for k, v in {
             "venue": event.venue or "", "city": event.city or "", "country": event.country or "",
             "acts": ", ".join(event.acts), "tags": ", ".join(tags), "link": event.link or "",
-            "post": post.url, "location_tag": getattr(post, "location", "") or "",
+            "post": post.url, "account": getattr(post, "account", "") or "",
+            "location_tag": getattr(post, "location", "") or "",
         }.items() if v}},
     }
     location = ", ".join(p for p in (event.venue, event.city) if p)
@@ -170,6 +176,24 @@ def row(event_body, added):
         "Post": post, "Location tag": extra.get("location_tag", ""),
         "Event id": event_body.get("id", ""), "Added": added,
     }
+
+
+def on_date(service, calendar_id, date):
+    """The events starting on `date` (YYYY-MM-DD), not counting deleted ones."""
+    day = datetime.date.fromisoformat(date)
+    resp = service.events().list(
+        calendarId=calendar_id, showDeleted=False, singleEvents=True, maxResults=250,
+        # A day either side, in UTC, then the date is checked: the calendar's
+        # time zone decides which day an evening event is on.
+        timeMin=f"{day - datetime.timedelta(days=1)}T12:00:00Z",
+        timeMax=f"{day + datetime.timedelta(days=1)}T12:00:00Z").execute()
+    return [e for e in resp.get("items", []) if _date_and_time(e.get("start", {}))[0] == date]
+
+
+def patch(service, calendar_id, eid, fields):
+    """Change some fields of an event."""
+    made = service.events().patch(calendarId=calendar_id, eventId=eid, body=fields).execute()
+    return (made or {}).get("htmlLink") or "(no link)"
 
 
 def all_events(service, calendar_id):

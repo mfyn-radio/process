@@ -270,6 +270,16 @@ class FakeCalendar:
             return {"htmlLink": "https://calendar/" + body["id"]}
         return SimpleNamespace(execute=execute)
 
+    def list(self, calendarId, showDeleted=False, singleEvents=True, maxResults=250, pageToken=None, **times):
+        items = [b for b in self.added.values() if b.get("status") != "cancelled"]
+        return SimpleNamespace(execute=lambda: {"items": items})
+
+    def patch(self, calendarId, eventId, body):
+        def execute():
+            self.added[eventId] = dict(self.added[eventId], **body)
+            return {"htmlLink": "https://calendar/" + eventId}
+        return SimpleNamespace(execute=execute)
+
 
 class FakeCatalog:
     def __init__(self, rows=()):
@@ -347,8 +357,6 @@ def test_row_for_an_older_event_without_kept_details():
 def test_fill_sheet_gives_every_calendar_event_a_row():
     cal, cat = FakeCalendar(), FakeCatalog()
     events.handle(POST, [event(), event(date="2026-11-22")], events.Target(cal, "cal"), TODAY, dry_run=False)
-    cal.list = lambda calendarId, pageToken, showDeleted, singleEvents, maxResults: SimpleNamespace(
-        execute=lambda: {"items": list(cal.added.values())})
     events.fill_sheet(events.Target(cal, "cal", cat), TODAY)
     assert sorted(r["Date"] for r in cat.events.rows) == ["2026-11-21", "2026-11-22"]
 
@@ -495,3 +503,59 @@ def test_old_calendar_name_is_renamed_once():
     assert cal.summary == "Event Calendar"
     assert event_calendar.ensure_name(cal, "cal", config.EVENT_CALENDAR) is False
     assert len(cal.patched) == 1
+
+
+# Two posts for the same event
+
+BAND_POST = instagram.Post(shortcode="DBand99", url="https://www.instagram.com/p/DBand99/", account="sick__pack",
+                           posted="2026-11-02", caption="wormin it up")
+VENUE_POST = instagram.Post(shortcode="DVenue1", url="https://www.instagram.com/p/DVenue1/", account="worm.rotterdam",
+                            posted="2026-11-01", caption="Hidden Behind x WORM: Sick Pack, Mitraille & Paracetamol")
+VENUE_EVENT = dict(title="Hidden Behind x WORM", acts=["Sick Pack", "Mitraille", "Paracetamøl"], date="2026-12-05",
+                   start_time="20:30", venue="WORM", city="Rotterdam")
+BAND_EVENT = dict(title="Sick Pack", acts=["Sick Pack"], date="2026-12-05", start_time=None, venue="WORM",
+                  city="Rotterdam")
+
+
+def only_event(cal):
+    (body,) = cal.added.values()
+    return body
+
+
+def test_band_accounts_are_told_from_venues():
+    assert events.band_account("sick__pack", ["Sick Pack"])
+    assert events.band_account("paracetamol.band", ["Paracetamøl"])
+    assert not events.band_account("worm.rotterdam", ["Sick Pack", "Mitraille"])
+    assert not events.band_account("", ["Sick Pack"])
+
+
+def test_band_post_after_the_venue_post_keeps_the_details_and_links_the_band():
+    cal = FakeCalendar()
+    target = events.Target(cal, "cal")
+    events.handle(VENUE_POST, [event(**VENUE_EVENT)], target, TODAY, dry_run=False)
+    assert events.handle(BAND_POST, [event(**BAND_EVENT)], target, TODAY, dry_run=False) == 0
+    body = only_event(cal)
+    assert body["summary"] == "Hidden Behind x WORM" and "dateTime" in body["start"]
+    assert f'href="{BAND_POST.url}"' in body["description"]
+    assert f"Also posted: {VENUE_POST.url}" in body["description"]
+    assert body["extendedProperties"]["private"]["post"] == BAND_POST.url
+
+
+def test_venue_post_after_the_band_post_brings_its_details_but_the_band_stays_linked():
+    cal = FakeCalendar()
+    target = events.Target(cal, "cal")
+    events.handle(BAND_POST, [event(**BAND_EVENT)], target, TODAY, dry_run=False)
+    assert events.handle(VENUE_POST, [event(**VENUE_EVENT)], target, TODAY, dry_run=False) == 0
+    body = only_event(cal)
+    assert body["summary"] == "Hidden Behind x WORM" and body["start"]["dateTime"].startswith("2026-12-05T20:30")
+    assert f'href="{BAND_POST.url}"' in body["description"]
+    assert f"Also posted: {VENUE_POST.url}" in body["description"]
+
+
+def test_events_at_other_venues_that_night_are_kept_apart():
+    cal = FakeCalendar()
+    target = events.Target(cal, "cal")
+    events.handle(VENUE_POST, [event(**VENUE_EVENT)], target, TODAY, dry_run=False)
+    other = dict(BAND_EVENT, venue="Rotown")
+    assert events.handle(BAND_POST, [event(**other)], target, TODAY, dry_run=False) == 1
+    assert len(cal.added) == 2
