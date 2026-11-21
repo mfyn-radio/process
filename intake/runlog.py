@@ -108,7 +108,8 @@ def track(automation, run_main):
     run_main gets the RunLog, to add rows for what it did, and returns the exit
     code. Last run is always updated. A run that failed without adding a
     failed row of its own (it stopped early, or crashed) gets one, with the
-    errors it logged."""
+    errors it logged. The error that stopped it also goes to the automation's
+    own log file."""
     run = RunLog.open(automation)
     errors = _Errors()
     logging.getLogger().addHandler(errors)
@@ -117,9 +118,13 @@ def track(automation, run_main):
     except (KeyboardInterrupt, SystemExit) as e:
         if isinstance(e, SystemExit) and e.code:   # e.g. not signed in to Google
             run.failed(errors.lines + [str(e.code)])
+            if not isinstance(e.code, int):
+                # Otherwise it only reaches the console, which Task Scheduler drops.
+                log.error("%s", e.code)
         raise
     except Exception as e:
         run.failed(errors.lines + [f"{type(e).__name__}: {e}"])
+        log.exception("The run crashed")
         raise
     finally:
         logging.getLogger().removeHandler(errors)

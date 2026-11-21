@@ -167,8 +167,11 @@ to your Claude subscription. Nothing new to buy.
    → Subscribe to calendar**. Share it from there if you like.
 9. **Schedule it daily:**
    ```
-   schtasks /Create /TN "MFYN Event Calendar" /SC DAILY /ST 10:17 /TR "\"%USERPROFILE%\mfyn-process\scripts\run_events.cmd\""
+   schtasks /Create /TN "MFYN Event Calendar" /SC DAILY /ST 20:00 /TR "\"%USERPROFILE%\mfyn-process\scripts\run_events.cmd\""
    ```
+   Then let it catch up when the PC was off or you weren't signed in at
+   20:00, so the missed run starts at your next sign-in (PowerShell):
+   `$t = Get-ScheduledTask -TaskName "MFYN Event Calendar"; $t.Settings.StartWhenAvailable = $true; Set-ScheduledTask -InputObject $t`
 
 Until 21 Nov 2026 this was called the show calendar, its task `MFYN Show
 Calendar`, and its Google calendar **MFYN Shows**. "Show" now means only the

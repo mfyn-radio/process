@@ -100,3 +100,16 @@ def test_sheet_errors_are_only_warnings(sheet, caplog):
     runs._append_row = lambda values: (_ for _ in ()).throw(OSError("offline"))
     assert runlog.track("Acquire", lambda run: run.add("x", runlog.OK) or 0) == 0
     assert "offline" in caplog.text
+
+
+def test_the_error_that_stopped_a_run_goes_to_its_log_file(sheet, caplog):
+    runs, last = sheet
+
+    def main(run):
+        raise SystemExit("The saved Google sign-in is missing newer permissions.")
+
+    with caplog.at_level(logging.ERROR), pytest.raises(SystemExit):
+        runlog.track("Event Calendar", main)
+    assert "missing newer permissions" in caplog.text
+    assert last.rows[0]["Result"] == "failed"
+    assert "missing newer permissions" in last.rows[0]["Details"]

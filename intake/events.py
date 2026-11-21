@@ -17,7 +17,7 @@ import logging.handlers
 import sys
 from dataclasses import dataclass, field
 
-from . import alerts, catalog, config, flyer, gmail, google_auth, instagram, event_calendar, table
+from . import alerts, catalog, config, flyer, gmail, google_auth, instagram, event_calendar, runlog, table
 
 log = logging.getLogger("events")
 
@@ -185,6 +185,11 @@ def setup_logging():
 
 
 def main(argv=None):
+    return runlog.track("Event Calendar", lambda run: _main(argv, run))
+
+
+def _main(argv, run=None):
+    run = run or runlog.RunLog("Event Calendar")
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--setup-instagram", action="store_true", help="sign in to Instagram as MFYN in Chrome, once")
     parser.add_argument("--dry-run", action="store_true", help="read posts but don't add events or remember the posts")
@@ -195,6 +200,8 @@ def main(argv=None):
     parser.add_argument("--post", metavar="SHORTCODE", help="read only this post (the code after /p/ in its link)")
     args = parser.parse_args(argv)
     setup_logging()
+    if args.dry_run or args.setup_instagram:
+        run.runs = run.last_run = None  # nothing to log
 
     browser = instagram.Browser(config.INSTAGRAM_PROFILE_DIR)
     try:
@@ -205,12 +212,13 @@ def main(argv=None):
         if not (args.post or args.fill_sheet) and not config.INSTAGRAM_COLLECTION_URL:
             log.error("Set MFYN_INSTAGRAM_COLLECTION to the collection's address. See docs/event-calendar.md.")
             return 1
-        return run(browser, args)
+        return run_posts(browser, args, run)
     finally:
         browser.close()
 
 
-def run(browser, args):
+def run_posts(browser, args, run=None):
+    run = run or runlog.RunLog("Event Calendar")
     state = load_state(config.EVENTS_STATE_FILE)
     creds = None
     if args.dry_run:
@@ -235,6 +243,7 @@ def run(browser, args):
             log.error("--fill-sheet needs the %s sheet and can't be a dry run", config.ARTISTS_SHEET)
             return 1
         fill_sheet(target, datetime.date.today())
+        run.summary = "filled in the Events tab from the calendar"
         return 0
     claude = flyer.find_claude()
 
@@ -246,7 +255,7 @@ def run(browser, args):
     log.info("%d new post(s) to read", len(codes))
 
     today = datetime.date.today()
-    failures = 0
+    failures = total = 0
     for code in codes:
         try:
             post = browser.post(code)
@@ -256,10 +265,14 @@ def run(browser, args):
                          f"{len(post.image) // 1024} KB" if post.image else "none", post.caption[:300])
             events = flyer.read(post, config.EVENTS_MODEL, claude=claude)
             added = handle(post, events, target, today, args.dry_run, redo=bool(args.post))
-        except Exception:
+        except Exception as e:
             log.exception("%s: failed; will retry next run", code)
+            run.add(post_link(code), runlog.FAILED, f"{type(e).__name__}: {e}")
             failures += 1
             continue
+        if added:
+            total += added
+            run.add(post.url, runlog.OK, f"{added} event(s) added")
         if not args.dry_run:
             # Remember the post so it isn't read again.
             state["posts"][code] = {"read": today.isoformat(), "events": len(events), "added": added}
@@ -268,10 +281,16 @@ def run(browser, args):
     if target.alerts:
         send_alert(creds, target.alerts)
 
+    run.summary = f"{len(codes)} new post(s) read, {total} event(s) added" + (
+        f", {failures} failed" if failures else "")
     if failures:
         log.error("%d post(s) failed", failures)
         return 1
     return 0
+
+
+def post_link(code):
+    return f"https://www.instagram.com/p/{code}/"
 
 
 def send_alert(creds, matches):
