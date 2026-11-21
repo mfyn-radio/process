@@ -14,7 +14,7 @@ See also: [process overview](README.md) ·
 | **Input** | For each artist in the episode, the album in `MFYN_Library` of the track you played |
 | **Output** | `Artist - Title.mp4` (named after the featured track), a still `.png` and a `.json` of its details, in `MFYN_Stories\<episode folder>`, the same layout as `MFYN_Posts` |
 | **Runs on** | The MFYN PC (Processing 4 and ffmpeg) |
-| **Code** | [`intake/stories.py`](../intake/stories.py) and the sketch [`processing/MFYN_Story_Album`](../processing/MFYN_Story_Album), run by [`intake/content.py`](../intake/content.py) |
+| **Code** | [`intake/stories.py`](../intake/stories.py) (`for_episode`) and the sketch [`processing/MFYN_Story_Album`](../processing/MFYN_Story_Album), run by [`intake/content.py`](../intake/content.py) or alone with `python -m intake.stories --per-artist` |
 | **Next** | You review it, then post it with the album link as a sticker |
 
 ## What it does
@@ -27,8 +27,8 @@ See also: [process overview](README.md) ·
    episode's tracks, an album from an earlier show is never featured.
 2. **A random track to feature:** any track of that album, not only the one
    you played. The sketch highlights it as the track playing.
-3. **Instagram handles** for the artist and label are confirmed with the rest
-   of the episode's, at the start of the run.
+3. **Instagram handles** for the artists and labels are confirmed before
+   rendering, the same way as for the [ON AIR posts](02a-make-episode-content.md#instagram-handles).
 4. **Render:** the Album sketch runs on a copy of the album. The Story is
    **30 seconds** from the loudest stretch of the featured track: the media
    player (cover, album info, tracklist with the featured track highlighted,
