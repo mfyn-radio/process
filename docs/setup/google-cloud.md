@@ -13,7 +13,7 @@ the PC, as part of [setting up step 1](../01-acquire.md#setting-it-up-on-the-pc)
   - **Gmail API**
   - **Google Drive API**
   - **Google Sheets API** (needed for the MFYN Artists sheet)
-  - **Google Calendar API** (needed for the [show calendar](../show-calendar.md))
+  - **Google Calendar API** (needed for the [Event Calendar](../event-calendar.md))
 - consent screen **Audience: Internal**. Only nothingflatdigital.com accounts
   can use it, Google doesn't review it, and its login doesn't expire after
   7 days.
@@ -26,8 +26,8 @@ Permissions requested at sign-in:
   creates itself, the MFYN Artists sheet. It can't see the rest of the Drive.
   The library itself is synced by Drive for desktop.
 - `https://www.googleapis.com/auth/calendar.app.created`: only the calendars
-  the automation creates itself, MFYN Shows. It can't see mfyn@'s other
-  calendars. Added for the [show calendar](../show-calendar.md); a sign-in
+  the automation creates itself, MFYN Events from Instagram. It can't see mfyn@'s other
+  calendars. Added for the [Event Calendar](../event-calendar.md); a sign-in
   from before it still works for everything else.
 
 If you ever need to rebuild this from scratch: create the project under the

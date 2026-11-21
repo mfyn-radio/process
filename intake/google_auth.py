@@ -13,7 +13,7 @@ ACCOUNT = "mfyn@nothingflatdigital.com"
 
 GMAIL = "https://www.googleapis.com/auth/gmail.modify"  # read purchase emails and label them
 DRIVE = "https://www.googleapis.com/auth/drive.file"    # only files this app creates: the MFYN Artists sheet
-CALENDAR = "https://www.googleapis.com/auth/calendar.app.created"  # only calendars this app creates: MFYN Shows
+CALENDAR = "https://www.googleapis.com/auth/calendar.app.created"  # only calendars this app creates: MFYN Events from Instagram
 
 # What Acquire, Make Reels and Make Album Story need.
 BASE_SCOPES = [GMAIL, DRIVE]

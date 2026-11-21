@@ -38,8 +38,8 @@ address. For country, give the country the venue is in, in English, worked \
 out from the venue and city if the post doesn't say. For tags, give the music genres the post itself names or hashtags \
 (e.g. punk, hardcore), lowercase, as words (#noiserock is noise rock), not \
 places. Leave a field null rather than guess. Set confident to false if the date, \
-venue or acts are unclear. Include shows whose date has passed; they're skipped later. If the post \
-doesn't announce a show at all (a release, a photo, a look back at a show), \
+venue or acts are unclear. Include events whose date has passed; they're skipped later. If the post \
+doesn't announce an event at all (a release, a photo, a look back at an event), \
 return no events."""
 
 LOCATION_LINE = "Location tag: {tag}\n"
@@ -132,7 +132,7 @@ def find_claude():
         installed = Path.home() / ".local" / "bin" / "claude.exe"
         found = str(installed) if installed.exists() else None
     if not found:
-        raise SystemExit("Claude Code isn't installed on this PC. See docs/show-calendar.md.")
+        raise SystemExit("Claude Code isn't installed on this PC. See docs/event-calendar.md.")
     return found
 
 

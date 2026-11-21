@@ -1,6 +1,6 @@
-"""Show calendar: events from saved Instagram posts go on the MFYN Shows calendar.
+"""Event Calendar: events from saved Instagram posts go on the MFYN Events from Instagram calendar.
 
-Runs on the MFYN PC (daily, from Task Scheduler). See docs/show-calendar.md.
+Runs on the MFYN PC (daily, from Task Scheduler). See docs/event-calendar.md.
 
     python -m intake.events --setup-instagram   # one-time Instagram sign-in in Chrome
     python -m intake.events                     # read new saved posts, add their events
@@ -17,7 +17,7 @@ import logging.handlers
 import sys
 from dataclasses import dataclass, field
 
-from . import alerts, catalog, config, flyer, gmail, google_auth, instagram, show_calendar, table
+from . import alerts, catalog, config, flyer, gmail, google_auth, instagram, event_calendar, table
 
 log = logging.getLogger("events")
 
@@ -41,7 +41,7 @@ class Target:
     calendar: object = None
     calendar_id: str = None
     catalog: object = None
-    alerts: list = field(default_factory=list)  # alerts.Match for library artists on new shows
+    alerts: list = field(default_factory=list)  # alerts.Match for library artists on new events
 
 
 def sheet_tags(catalog, acts):
@@ -94,7 +94,7 @@ def handle(post, events, target, today, dry_run, redo=False):
             log.info("%s: '%s' on %s is over; skipped", post.url, event.title, when)
             continue
         place = country(event)
-        if place and place not in config.SHOW_COUNTRIES:
+        if place and place not in config.EVENT_COUNTRIES:
             log.info("%s: '%s' on %s is in %s, not the Netherlands or Belgium; skipped",
                      post.url, event.title, when, place)
             continue
@@ -102,7 +102,7 @@ def handle(post, events, target, today, dry_run, redo=False):
             log.warning("%s: couldn't tell which country '%s' is in; added anyway, check it",
                         post.url, event.title)
         tags = event_tags(event, target.catalog)
-        body = show_calendar.body(event, post, config.SHOW_TIMEZONE, tags, n)
+        body = event_calendar.body(event, post, config.EVENT_TIMEZONE, tags, n)
         mine = alerts.library_artists(target.catalog, event.acts)
         if mine:
             body["colorId"] = config.ALERT_COLOR
@@ -111,9 +111,9 @@ def handle(post, events, target, today, dry_run, redo=False):
                 log.info("%s: would alert: library artist(s) %s", post.url, ", ".join(mine))
             log.info("%s: would add '%s' on %s at %s (location tag: %s)\n%s", post.url, body["summary"], when,
                      body.get("location", "?"), post.location or "none",
-                     show_calendar.description(event, post, tags).replace("<br>", "\n"))
+                     event_calendar.description(event, post, tags).replace("<br>", "\n"))
             continue
-        old = show_calendar.existing(target.calendar, target.calendar_id, body["id"])
+        old = event_calendar.existing(target.calendar, target.calendar_id, body["id"])
         if old is not None and not redo:
             log.info("%s: '%s' on %s is already on the calendar: %s", post.url, event.title, when,
                      old.get("htmlLink", ""))
@@ -121,14 +121,14 @@ def handle(post, events, target, today, dry_run, redo=False):
                 record_row(target, old, today)
             continue
         if old is not None:
-            link = show_calendar.restore(target.calendar, target.calendar_id, body)
+            link = event_calendar.restore(target.calendar, target.calendar_id, body)
             log.info("%s: rewrote '%s' on %s: %s", post.url, body["summary"], when, link)
         else:
-            link = show_calendar.add(target.calendar, target.calendar_id, body)
+            link = event_calendar.add(target.calendar, target.calendar_id, body)
             if not link:
                 continue
             log.info("%s: added '%s' on %s: %s", post.url, body["summary"], when, link)
-        # Alert for new shows, and for a post redone with --post (so it can be tried).
+        # Alert for new events, and for a post redone with --post (so it can be tried).
         if mine:
             log.info("%s: library artist(s) %s; alert coming", post.url, ", ".join(mine))
             target.alerts.append(alerts.Match(mine, body["summary"], event.date, event.start_time or "",
@@ -151,7 +151,7 @@ def record_row(target, event_body, today):
     if target.catalog is None:
         return
     try:
-        target.catalog.events.upsert(show_calendar.row(event_body, today.isoformat()))
+        target.catalog.events.upsert(event_calendar.row(event_body, today.isoformat()))
     except Exception:
         log.exception("couldn't record '%s' on the Events tab", event_body.get("summary"))
 
@@ -159,10 +159,10 @@ def record_row(target, event_body, today):
 def fill_sheet(target, today):
     """Give every event on the calendar a row on the Events tab."""
     count = 0
-    for event_body in show_calendar.all_events(target.calendar, target.calendar_id):
+    for event_body in event_calendar.all_events(target.calendar, target.calendar_id):
         record_row(target, event_body, today)
         count += 1
-    log.info("%d event(s) on %s are on the Events tab", count, config.SHOW_CALENDAR)
+    log.info("%d event(s) on %s are on the Events tab", count, config.EVENT_CALENDAR)
 
 
 def open_catalog(creds):
@@ -203,7 +203,7 @@ def main(argv=None):
             log.info("Instagram sign-in saved in %s", config.INSTAGRAM_PROFILE_DIR)
             return 0
         if not (args.post or args.fill_sheet) and not config.INSTAGRAM_COLLECTION_URL:
-            log.error("Set MFYN_INSTAGRAM_COLLECTION to the collection's address. See docs/show-calendar.md.")
+            log.error("Set MFYN_INSTAGRAM_COLLECTION to the collection's address. See docs/event-calendar.md.")
             return 1
         return run(browser, args)
     finally:
@@ -217,14 +217,19 @@ def run(browser, args):
         target = Target(catalog=open_catalog(google_auth.credentials()))
     else:
         creds = google_auth.credentials(google_auth.SCOPES)
-        target = Target(show_calendar.client(creds), catalog=open_catalog(creds))
+        target = Target(event_calendar.client(creds), catalog=open_catalog(creds))
         if not state.get("calendar_id"):
-            state["calendar_id"] = show_calendar.create(target.calendar, config.SHOW_CALENDAR, config.SHOW_TIMEZONE)
+            state["calendar_id"] = event_calendar.create(target.calendar, config.EVENT_CALENDAR, config.EVENT_TIMEZONE)
             save_state(config.EVENTS_STATE_FILE, state)
             log.info("Created the %s calendar in mfyn@'s Google Calendar. If it isn't listed there, "
                      "subscribe to it (Other calendars > + > Subscribe to calendar) with this ID: %s",
-                     config.SHOW_CALENDAR, state["calendar_id"])
+                     config.EVENT_CALENDAR, state["calendar_id"])
         target.calendar_id = state["calendar_id"]
+        try:
+            if event_calendar.ensure_name(target.calendar, target.calendar_id, config.EVENT_CALENDAR):
+                log.info("Renamed the calendar to %s.", config.EVENT_CALENDAR)
+        except Exception as e:  # the name is cosmetic; carry on
+            log.warning("Couldn't rename the calendar to %s (%s).", config.EVENT_CALENDAR, e)
     if args.fill_sheet:
         if args.dry_run or target.catalog is None:
             log.error("--fill-sheet needs the %s sheet and can't be a dry run", config.ARTISTS_SHEET)
@@ -270,8 +275,8 @@ def run(browser, args):
 
 
 def send_alert(creds, matches):
-    """One email for the run's shows with library artists. A failure is only
-    logged: the shows are on the calendar, with the alert colour, anyway."""
+    """One email for the run's events with library artists. A failure is only
+    logged: the events are on the calendar, with the alert colour, anyway."""
     subject, text = alerts.email(matches)
     try:
         alerts.send(gmail.client(creds), config.ALERT_EMAIL, subject, text)

@@ -5,8 +5,8 @@ Tabs:
 - Releases: one row per album in the library.
 - Labels: one row per label, with its Instagram handle.
 - Tags: one row per Bandcamp tag per release, for sorting and filtering.
-- Events: one row per show on the MFYN Shows calendar, written by the show
-  calendar (docs/show-calendar.md).
+- Events: one row per event on the MFYN Events from Instagram calendar, written by the Event
+  Calendar automation (docs/event-calendar.md).
 
 Step 1 fills it in automatically, with Instagram handles marked "Suggested"
 or "Not found". Step 2a is where handles are confirmed. The automation only

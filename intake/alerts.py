@@ -1,9 +1,9 @@
-""""Your artist is playing": shows with a library artist on the bill.
+""""Your artist is playing": events with a library artist on the bill.
 
-When the show calendar adds a show whose acts include an artist on the
+When the Event Calendar adds an event whose acts include an artist on the
 Artists tab of the MFYN Artists sheet, the event gets the alert colour and
-the run sends one email from mfyn@ listing those shows. See
-docs/show-calendar.md.
+the run sends one email from mfyn@ listing those events. See
+docs/event-calendar.md.
 """
 import base64
 import datetime
@@ -63,10 +63,10 @@ def email(matches):
     """(subject, text) for one run's matches."""
     names = sorted({a for m in matches for a in m.artists}, key=str.casefold)
     subject = "MFYN: " + (f"{names[0]} is playing" if len(names) == 1 else f"{len(names)} library artists are playing")
-    lines = ["Library artists on the bill of new shows on MFYN Shows:", ""]
+    lines = ["Library artists on the bill of new events on MFYN Events from Instagram:", ""]
     for m in sorted(matches, key=lambda m: (m.date, m.start)):
         names = ", ".join(m.artists)
-        same = [key(a) for a in m.artists] == [key(m.title)]  # the show is named after the artist
+        same = [key(a) for a in m.artists] == [key(m.title)]  # the event is named after the artist
         lines += [names if same else f"{names}: {m.title}",
                   f"{when(m)}" + (f", {m.place}" if m.place else ""),
                   f"Post: {m.post}"]

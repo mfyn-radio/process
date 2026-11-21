@@ -1,4 +1,4 @@
-"""The MFYN Shows Google calendar.
+"""The MFYN Events from Instagram Google calendar.
 
 The automation creates the calendar itself and may only touch calendars it
 created (the calendar.app.created permission). Each event gets an id made
@@ -13,14 +13,27 @@ import re
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
+DESCRIPTION = "Events from posts saved to MFYN's Instagram collection. Made by the MFYN automation."
+
+
 def client(creds):
     return build("calendar", "v3", credentials=creds, cache_discovery=False)
+
+
+def ensure_name(service, calendar_id, name):
+    """Rename the calendar to `name` if it's called something else (it was
+    "MFYN Shows" before 21 Nov 2026). Returns True if it was renamed."""
+    cal = service.calendars().get(calendarId=calendar_id).execute()
+    if cal.get("summary") == name:
+        return False
+    service.calendars().patch(calendarId=calendar_id, body={"summary": name, "description": DESCRIPTION}).execute()
+    return True
 
 
 def create(service, name, timezone):
     """Create the calendar and return its id."""
     body = {"summary": name, "timeZone": timezone,
-            "description": "Shows from posts saved to MFYN's Instagram collection. Made by the MFYN automation."}
+            "description": DESCRIPTION}
     return service.calendars().insert(body=body).execute()["id"]
 
 

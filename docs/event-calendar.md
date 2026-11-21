@@ -1,7 +1,7 @@
-# Show calendar
+# Event Calendar
 
-Live shows from the posts MFYN saves on Instagram go on a Google calendar of
-their own, **MFYN Shows**. Save a show's post to the **events** collection;
+Live events from the posts MFYN saves on Instagram go on a Google calendar of
+their own, **MFYN Events from Instagram**. Save an event's post to the **events** collection;
 once a day the automation reads it and adds the event. This is
 mfyn-radio/process#36, the Instagram half of mfyn-radio/process#15. Other sources come later.
 
@@ -9,11 +9,11 @@ See also: [process overview](README.md) · [Google Cloud setup](setup/google-clo
 
 | | |
 |---|---|
-| **Trigger** | Task Scheduler task `MFYN Show Calendar`, daily |
+| **Trigger** | Task Scheduler task `MFYN Event Calendar`, daily |
 | **Input** | New posts in one saved collection on MFYN's Instagram |
-| **Output** | Events on the **MFYN Shows** calendar, owned by mfyn@ |
+| **Output** | Events on the **MFYN Events from Instagram** calendar, owned by mfyn@ |
 | **Runs on** | The MFYN PC, while signed in (Chrome, Instagram signed in as MFYN) |
-| **Code** | [`intake/events.py`](../intake/events.py), with [`instagram.py`](../intake/instagram.py), [`flyer.py`](../intake/flyer.py) and [`show_calendar.py`](../intake/show_calendar.py), started by [`scripts/run_events.cmd`](../scripts/run_events.cmd) |
+| **Code** | [`intake/events.py`](../intake/events.py), with [`instagram.py`](../intake/instagram.py), [`flyer.py`](../intake/flyer.py) and [`event_calendar.py`](../intake/event_calendar.py), started by [`scripts/run_events.cmd`](../scripts/run_events.cmd) |
 | **Log** | `%APPDATA%\mfyn-intake\events.log` |
 
 ## What it does
@@ -31,7 +31,7 @@ See also: [process overview](README.md) · [Google Cloud setup](setup/google-clo
    each event: title, acts, date, times, venue, city and tickets. A tour
    poster can give several. Flyers often leave out the year, so it's worked
    out from the posting date. A post that isn't an event gives none.
-4. **Adds them to MFYN Shows**, laid out like this:
+4. **Adds them to MFYN Events from Instagram**, laid out like this:
    ```
    Calls From The Hull IV
    V11, Rotterdam
@@ -52,14 +52,14 @@ See also: [process overview](README.md) · [Google Cloud setup](setup/google-clo
    - **The location tag wins.** If the post is tagged with a place, that's
      the venue, city and country, even if the flyer says otherwise; the log
      notes when they disagreed. On a tour poster the tag is only used for
-     the show at that place.
-   - **Only shows in the Netherlands or Belgium** are added. Without a tag,
+     the event at that place.
+   - **Only events in the Netherlands or Belgium** are added. Without a tag,
      Claude works out the country from the venue and city (its own
      knowledge; nothing is looked up). A tour poster's dates elsewhere are
-     skipped. If the country can't be told, the show is added
+     skipped. If the country can't be told, the event is added
      and the log says to check it.
    - Without a start time it's an all-day event; without an end time it's
-     3 hours long. Shows that are already over are skipped.
+     3 hours long. Events that are already over are skipped.
 5. **Remembers the post** in `%APPDATA%\mfyn-intake\events.json`, so it's
    never read again. A post that fails is retried next run.
 
@@ -72,14 +72,14 @@ it stays deleted.
 
 ## "Your artist is playing"
 
-When a newly added show has an artist from the library on the bill (anyone
+When a newly added event has an artist from the library on the bill (anyone
 on the Artists tab of the MFYN Artists sheet), you're told
 (mfyn-radio/process#39):
 
-- **The event is red** (Google Calendar's Tomato) on MFYN Shows. The title
+- **The event is red** (Google Calendar's Tomato) on MFYN Events from Instagram. The title
   and description stay as usual.
 - **An email from mfyn@** goes to mfyn@ at the end of the run, one per run
-  and only if there's a match, listing each show with the artist, date,
+  and only if there's a match, listing each event with the artist, date,
   venue, post and calendar link. To send it elsewhere, set
   `MFYN_ALERT_EMAIL` with `setx`.
 
@@ -92,8 +92,8 @@ instead.
 
 ## The Events tab
 
-Every show the automation adds also gets a row on the **Events** tab of the
-MFYN Artists sheet, so all the shows are in one list you can sort and
+Every event the automation adds also gets a row on the **Events** tab of the
+MFYN Artists sheet, so all the events are in one list you can sort and
 filter: Date, Start, End, Title, Venue, City, Country, Acts, Tags, Link,
 Post, Location tag, Event id, Added. Dates are written `2026-11-28` so they
 sort.
@@ -107,7 +107,7 @@ row failed), run:
 python -m intake.events --fill-sheet
 ```
 
-It reads MFYN Shows, not Instagram. Events added before 13 November 2026
+It reads MFYN Events from Instagram, not Instagram. Events added before 13 November 2026
 get what the calendar has: date, times, title, venue and city, post and
 link. Acts, country, tags and location tag stay empty for those.
 
@@ -139,12 +139,12 @@ to your Claude subscription. Nothing new to buy.
    Check it with `claude --version`. Each post read counts toward the
    subscription's usage limits, like a short chat.
 5. **Make the collection.** On Instagram, signed in as MFYN, make a saved
-   collection (MFYN's is called **events**) and save a show's post to it. Open it in
+   collection (MFYN's is called **events**) and save an event's post to it. Open it in
    Chrome and copy the address, e.g.
-   `https://www.instagram.com/<account>/saved/shows/17900000000000000/`.
+   `https://www.instagram.com/<account>/saved/events/17900000000000000/`.
 6. **Set the collection**, in Command Prompt (it takes effect in new windows):
    ```
-   setx MFYN_INSTAGRAM_COLLECTION "https://www.instagram.com/<account>/saved/shows/<id>/"
+   setx MFYN_INSTAGRAM_COLLECTION "https://www.instagram.com/<account>/saved/events/<id>/"
    ```
    Times on flyers are read as Rotterdam time (`Europe/Amsterdam`). To change
    that, set `MFYN_TIMEZONE` the same way. `MFYN_CLAUDE_MODEL` (e.g. `opus`)
@@ -159,7 +159,7 @@ to your Claude subscription. Nothing new to buy.
    ```
    python -m intake.events --dry-run
    ```
-   Then run it for real. The first real run creates the **MFYN Shows**
+   Then run it for real. The first real run creates the **MFYN Events from Instagram**
    calendar and logs its ID (`c_…@group.calendar.google.com`; it's also
    `calendar_id` in `%APPDATA%\mfyn-intake\events.json`).
    It appears in mfyn@'s Google Calendar under **My calendars**. If it
@@ -167,8 +167,13 @@ to your Claude subscription. Nothing new to buy.
    → Subscribe to calendar**. Share it from there if you like.
 9. **Schedule it daily:**
    ```
-   schtasks /Create /TN "MFYN Show Calendar" /SC DAILY /ST 10:17 /TR "\"%USERPROFILE%\mfyn-process\scripts\run_events.cmd\""
+   schtasks /Create /TN "MFYN Event Calendar" /SC DAILY /ST 10:17 /TR "\"%USERPROFILE%\mfyn-process\scripts\run_events.cmd\""
    ```
+
+Until 21 Nov 2026 this was called the show calendar, its task `MFYN Show
+Calendar`, and its Google calendar **MFYN Shows**. "Show" now means only the
+radio show. The next run renames the existing calendar to MFYN Events from
+Instagram, keeping its events and ID.
 
 ## Running it by hand
 
@@ -176,7 +181,7 @@ to your Claude subscription. Nothing new to buy.
 python -m intake.events [--dry-run] [--backlog] [--post SHORTCODE] [--fill-sheet]
 ```
 
-- `--fill-sheet` gives every event already on MFYN Shows a row on the
+- `--fill-sheet` gives every event already on MFYN Events from Instagram a row on the
   [Events tab](#the-events-tab), then stops.
 - `--backlog` also reads older unread posts below ones already read, 15 a
   run. Repeat it until it says "0 new post(s) to read". Use it once, to add
@@ -197,12 +202,12 @@ python -m intake.events [--dry-run] [--backlog] [--post SHORTCODE] [--fill-sheet
   off for a day or two. Instagram doesn't offer an API for saved posts, so
   Chrome reading it the way a person would is the only automatic way. That's
   why it opens few pages, slowly.
-- **Nothing found in a post that has a show:** the details may be on a later
+- **Nothing found in a post that has an event:** the details may be on a later
   carousel slide, which isn't read. Add the event by hand.
 - **"Claude Code isn't installed"** or **"Claude Code failed"**: run `claude`
   in Command Prompt to check it's signed in. If the subscription's usage
   limit was reached, the posts are retried on the next run.
-- **"couldn't tell which country '…' is in"** in the log: the show was
+- **"couldn't tell which country '…' is in"** in the log: the event was
   added anyway. Delete it if it isn't in the Netherlands or Belgium.
 - **"the location tag '…' differs from the flyer"** in the log: the event
   uses the tag's place. Check it if the tag looks wrong.

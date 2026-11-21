@@ -31,7 +31,7 @@ Purchases from [excluded pages](#excluded-purchases) are skipped and labelled
 
 ## Why it runs on the PC, in Chrome
 
-Bandcamp shows a "Client Challenge" (bot protection) instead of the download
+Bandcamp events a "Client Challenge" (bot protection) instead of the download
 page to anything that isn't a real browser. That rules out plain scripts and
 GitHub Actions. A normal Chrome window on the MFYN PC gets the real page.
 The approach is based on [bcdl](https://github.com/corbin-zip/bcdl). The
@@ -106,8 +106,8 @@ or filter this tab to see, say, every *ambient* artist, or add a pivot table
 to count the library by tag. Bandcamp tags mix genres with places like
 *Brooklyn*; they're kept as Bandcamp has them.
 
-**Events** has one row per show on the MFYN Shows calendar, written by the
-[show calendar](show-calendar.md#the-events-tab), not by Acquire.
+**Events** has one row per event on the MFYN Events from Instagram calendar, written by the
+[Event Calendar](event-calendar.md#the-events-tab), not by Acquire.
 
 #### Status
 
@@ -171,7 +171,7 @@ The email is left unlabelled and retried after the release date.
   complete.
 - Everything is logged to `%APPDATA%\mfyn-intake\acquire.log` (it rolls
   over at 1 MB and keeps three older files).
-- The run exits with an error if any album failed, which shows in Task
+- The run exits with an error if any album failed, which events in Task
   Scheduler's last result.
 
 ### Scope

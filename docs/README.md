@@ -1,7 +1,7 @@
 # MFYN intake and production process
 
 How a song or artist goes from being *discovered* to having all the content
-for a post ready, and a show ready to play on Music for Your Neighbors (MFYN).
+for a post ready, and an event ready to play on Music for Your Neighbors (MFYN).
 It ends at a manual stop, where you review everything. The Publishing Process
 starts after that.
 
@@ -16,7 +16,7 @@ starts after that.
 | — | **Manual stop** | You review everything made for a post, then trigger Publishing | Not built yet |
 | → | *Publishing Process* | Starts after your review: scheduling the posts on Instagram, among other things | Separate process, not built yet |
 
-Steps 2a and 2b are sub-automations of step 2: when a show is ready, step 2
+Steps 2a and 2b are sub-automations of step 2: when an event is ready, step 2
 runs and triggers them. Each is its own step, with its own doc. Together they
 produce the baseline content for an episode, so they belong to production. What they
 leave in the episode folder, `MFYN_Posts` and `MFYN_Stories` is what you review at the manual stop.
@@ -60,7 +60,7 @@ their own) also write what they did to the **MFYN Run Log** sheet, for the statu
 | `MFYN_Library` | mfyn@'s My Drive, synced to `H:\My Drive\MFYN_Library` on the MFYN PC | The music library, one folder per album |
 | MFYN PC | Windows, signed in, running Google Drive for desktop and Chrome | Runs the automation (Task Scheduler) |
 | `mfyn-library-agent` | Google Cloud project, Internal audience | Lets the automation read and label mail, and keep its sheet and calendar ([setup](setup/google-cloud.md)) |
-| Claude Code | installed on the MFYN PC, signed in to the Claude subscription | Reads show flyers for the [show calendar](show-calendar.md) (`claude -p`) |
+| Claude Code | installed on the MFYN PC, signed in to the Claude subscription | Reads event flyers for the [Event Calendar](event-calendar.md) (`claude -p`) |
 | `mfyn-radio/process` | GitHub, this repo | Code and docs; GitHub only runs the tests |
 
 ## Issues

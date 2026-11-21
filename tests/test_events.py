@@ -5,7 +5,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from intake import alerts, events, flyer, google_auth, instagram, show_calendar
+from intake import alerts, events, flyer, google_auth, instagram, event_calendar
 
 POST = instagram.Post(
     shortcode="DAbc123", url="https://www.instagram.com/p/DAbc123/", account="thevenue",
@@ -38,7 +38,7 @@ def test_og_description_that_doesnt_match_is_kept_as_the_caption():
 
 
 class FakeGrid:
-    """A saved-posts page that shows `window` posts at a time and moves down
+    """A saved-posts page that events `window` posts at a time and moves down
     by `step` posts on each scroll, like Instagram's grid."""
 
     def __init__(self, codes, window=12, step=6):
@@ -180,7 +180,7 @@ def test_read_saves_the_flyer_and_runs_claude_code_there(tmp_path):
 # The calendar event
 
 def test_timed_event_body():
-    body = show_calendar.body(event(), POST, "Europe/Amsterdam")
+    body = event_calendar.body(event(), POST, "Europe/Amsterdam")
     assert body["summary"] == "Fellatio"
     assert body["location"] == "The Venue, Hague"
     assert body["start"] == {"dateTime": "2026-11-21T20:00:00", "timeZone": "Europe/Amsterdam"}
@@ -191,47 +191,47 @@ def test_timed_event_body():
 def test_description_follows_the_agreed_layout():
     post = instagram.Post("DAbc123", "https://www.instagram.com/p/DAbc123/",
                           caption="28th of November.. Check out these names..\n\nOnly €18,50 & vinyl <3")
-    assert show_calendar.description(event(), post, ["alternative", "kraut"]) == (
+    assert event_calendar.description(event(), post, ["alternative", "kraut"]) == (
         "alternative, kraut<br><br>"
         "28th of November.. Check out these names..<br><br>Only €18,50 &amp; vinyl &lt;3<br><br>"
         '<a href="https://www.instagram.com/p/DAbc123/">Save &amp; Share on Instagram</a>')
 
 
 def test_description_leaves_out_empty_parts():
-    text = show_calendar.description(event(), instagram.Post("X", "https://i/p/X/"))
+    text = event_calendar.description(event(), instagram.Post("X", "https://i/p/X/"))
     assert text == '<a href="https://i/p/X/">Save &amp; Share on Instagram</a>'
 
 
 def test_post_link_is_the_source_unless_the_post_gives_one():
-    body = show_calendar.body(event(link="https://worm.org/x"), POST, "UTC")
+    body = event_calendar.body(event(link="https://worm.org/x"), POST, "UTC")
     assert body["source"]["url"] == "https://worm.org/x"
 
 
 def test_event_past_midnight_ends_the_next_day():
-    body = show_calendar.body(event(start_time="22:00", end_time="02:00"), POST, "UTC")
+    body = event_calendar.body(event(start_time="22:00", end_time="02:00"), POST, "UTC")
     assert body["end"]["dateTime"] == "2026-11-22T02:00:00"
 
 
 def test_event_without_a_time_is_all_day():
-    body = show_calendar.body(event(start_time=None), POST, "UTC")
+    body = event_calendar.body(event(start_time=None), POST, "UTC")
     assert body["start"] == {"date": "2026-11-21"} and body["end"] == {"date": "2026-11-22"}
 
 
 def test_unreadable_time_becomes_all_day():
-    body = show_calendar.body(event(start_time="8pm"), POST, "UTC")
+    body = event_calendar.body(event(start_time="8pm"), POST, "UTC")
     assert body["start"] == {"date": "2026-11-21"}
 
 
 def test_unclear_event_keeps_its_plain_title():
-    body = show_calendar.body(event(confident=False), POST, "UTC")
+    body = event_calendar.body(event(confident=False), POST, "UTC")
     assert body["summary"] == "Fellatio"  # no "[Check]": an unclear flyer is only noted in the log
 
 
 def test_event_id_is_stable_and_valid_for_calendar():
-    a = show_calendar.event_id("DAbc123", event())
-    assert a == show_calendar.event_id("DAbc123", event(title="FELLATIO live", start_time="21:00"))
-    assert a != show_calendar.event_id("DAbc123", event(date="2026-11-22"))
-    assert a != show_calendar.event_id("DAbc123", event(), 1)
+    a = event_calendar.event_id("DAbc123", event())
+    assert a == event_calendar.event_id("DAbc123", event(title="FELLATIO live", start_time="21:00"))
+    assert a != event_calendar.event_id("DAbc123", event(date="2026-11-22"))
+    assert a != event_calendar.event_id("DAbc123", event(), 1)
     assert set(a) <= set("abcdefghijklmnopqrstuv0123456789") and 5 <= len(a) <= 1024
 
 
@@ -285,7 +285,7 @@ TODAY = datetime.date(2026, 11, 13)
 def test_handle_adds_upcoming_events_once_and_skips_past_ones():
     cal = FakeCalendar()
     target = events.Target(cal, "cal")
-    found = [event(), event(date="2026-11-22"), event(title="Old show", date="2026-11-01")]
+    found = [event(), event(date="2026-11-22"), event(title="Old event", date="2026-11-01")]
     assert events.handle(POST, found, target, TODAY, dry_run=False) == 2
     assert all("attachments" not in b for b in cal.added.values())
     assert events.handle(POST, found, target, TODAY, dry_run=False) == 0  # already there
@@ -327,7 +327,7 @@ def test_each_added_event_gets_a_row_on_the_events_tab():
     assert (row["Title"], row["Venue"], row["City"], row["Country"]) == ("Fellatio", "The Venue", "Hague", "Netherlands")
     assert row["Acts"] == "Fellatio, Daufødt" and row["Tags"] == "noise, punk"
     assert row["Link"] == "https://worm.org/x" and row["Post"] == POST.url
-    assert row["Location tag"] == "WORM Rotterdam" and row["Event id"] == show_calendar.event_id("DAbc123", ev)
+    assert row["Location tag"] == "WORM Rotterdam" and row["Event id"] == event_calendar.event_id("DAbc123", ev)
     assert row["Added"] == "2026-11-13"
     events.handle(post, [ev], events.Target(cal, "cal", cat), TODAY, dry_run=False)
     assert len(cat.events.rows) == 1  # no second row on a rerun
@@ -338,7 +338,7 @@ def test_row_for_an_older_event_without_kept_details():
            "start": {"date": "2026-11-28"}, "end": {"date": "2026-11-29"},
            "description": 'kraut<br><br>caption<br><br><a href="https://www.instagram.com/p/DfhmQJuAaLV/">Save &amp; Share</a>',
            "source": {"url": "https://www.instagram.com/p/DfhmQJuAaLV/"}}
-    row = show_calendar.row(old, "2026-11-13")
+    row = event_calendar.row(old, "2026-11-13")
     assert (row["Date"], row["Start"], row["Title"]) == ("2026-11-28", "", "Calls From The Hull IV")
     assert (row["Venue"], row["City"]) == ("V11", "Rotterdam")
     assert row["Post"] == "https://www.instagram.com/p/DfhmQJuAaLV/" and row["Link"] == ""
@@ -398,7 +398,7 @@ def test_refreshing_for_acquire_keeps_the_calendar_permission(tmp_path, monkeypa
     google_auth.credentials()  # Acquire: gmail and drive only
     saved = json.loads(token.read_text())
     assert saved["token"] == "new" and set(saved["scopes"]) == set(google_auth.SCOPES)
-    google_auth.credentials(google_auth.SCOPES)  # the show calendar still works
+    google_auth.credentials(google_auth.SCOPES)  # the Event Calendar still works
 
 
 def test_setup_only_keeps_a_sign_in_for_mfyn(tmp_path, monkeypatch):
@@ -469,3 +469,29 @@ def test_alert_is_sent_as_one_gmail_message():
     import base64, email
     msg = email.message_from_bytes(base64.urlsafe_b64decode(sent[0]["raw"]))
     assert msg["To"] == "mfyn@nothingflatdigital.com" and msg["Subject"] == "MFYN: test"
+
+
+class FakeCalendars:
+    def __init__(self, summary):
+        self.summary, self.patched = summary, []
+
+    def calendars(self):
+        return self
+
+    def get(self, calendarId):
+        return SimpleNamespace(execute=lambda: {"summary": self.summary})
+
+    def patch(self, calendarId, body):
+        def execute():
+            self.patched.append(body)
+            self.summary = body["summary"]
+        return SimpleNamespace(execute=execute)
+
+
+def test_old_calendar_name_is_renamed_once():
+    from intake import config, event_calendar
+    cal = FakeCalendars("MFYN Shows")
+    assert event_calendar.ensure_name(cal, "cal", config.EVENT_CALENDAR) is True
+    assert cal.summary == "MFYN Events from Instagram"
+    assert event_calendar.ensure_name(cal, "cal", config.EVENT_CALENDAR) is False
+    assert len(cal.patched) == 1

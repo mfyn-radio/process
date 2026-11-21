@@ -65,10 +65,10 @@ PURCHASE_QUERY = 'from:noreply@bandcamp.com subject:"Thank you!" "Thanks for pur
 
 AUDIO_FORMAT = "flac"
 
-# Show calendar: events from the posts saved to one Instagram collection go on
-# a Google calendar of their own. See docs/show-calendar.md.
-# The collection's address, as Chrome shows it when you open it, e.g.
-# https://www.instagram.com/<account>/saved/shows/17900000000000000/
+# Event Calendar: events from the posts saved to one Instagram collection go on
+# a Google calendar of their own. See docs/event-calendar.md.
+# The collection's address, as Chrome events it when you open it, e.g.
+# https://www.instagram.com/<account>/saved/events/17900000000000000/
 INSTAGRAM_COLLECTION_URL = os.environ.get("MFYN_INSTAGRAM_COLLECTION", "")
 # Chrome keeps the Instagram sign-in in this profile, separate from Acquire's.
 # It's outside AppData because the Microsoft Store Python redirects what it
@@ -76,15 +76,15 @@ INSTAGRAM_COLLECTION_URL = os.environ.get("MFYN_INSTAGRAM_COLLECTION", "")
 INSTAGRAM_PROFILE_DIR = Path.home() / "mfyn-chrome-instagram"
 # Posts already read, and the calendar's id.
 EVENTS_STATE_FILE = APP_DIR / "events.json"
-SHOW_CALENDAR = "MFYN Shows"
-# "Your artist is playing": shows with a library artist on the bill get this
+EVENT_CALENDAR = "MFYN Events from Instagram"
+# "Your artist is playing": events with a library artist on the bill get this
 # Google Calendar colour (11 is Tomato, red) and an email to this address.
 ALERT_COLOR = "11"
 ALERT_EMAIL = os.environ.get("MFYN_ALERT_EMAIL", "mfyn@nothingflatdigital.com")
-# Only shows in these countries go on the calendar.
-SHOW_COUNTRIES = ("Netherlands", "Belgium")
+# Only events in these countries go on the calendar.
+EVENT_COUNTRIES = ("Netherlands", "Belgium")
 # Times on flyers are local times here (an IANA name, e.g. Europe/Amsterdam).
-SHOW_TIMEZONE = os.environ.get("MFYN_TIMEZONE", "Europe/Amsterdam")
+EVENT_TIMEZONE = os.environ.get("MFYN_TIMEZONE", "Europe/Amsterdam")
 # Each run opens at most this many new posts, slowly, so Instagram doesn't
 # take Chrome for a bot.
 EVENTS_POSTS_PER_RUN = 15
