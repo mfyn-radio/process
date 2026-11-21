@@ -19,7 +19,7 @@ import json
 import logging
 import sys
 
-from . import catalog, config, episode, google_auth
+from . import catalog, config, episode
 
 log = logging.getLogger("captions")
 
@@ -112,10 +112,10 @@ def main(argv=None):
         log.error("No episode folder found in %s", config.POSTS_DIR)
         return 1
     try:
-        cat = catalog.Catalog(google_auth.credentials())
+        cat = catalog.Catalog()
     except (Exception, SystemExit) as e:
-        log.warning("Couldn't open the %s sheet (%s). Using the handles saved with each Reel.",
-                    config.ARTISTS_SHEET, e)
+        log.warning("Couldn't open the %s base (%s). Using the handles saved with each Reel.",
+                    config.CATALOG, e)
         cat = None
     n = write_all(ep.folder, cat)
     log.info("Done: %d caption(s) written in %s", n, ep.folder)

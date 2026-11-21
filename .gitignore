@@ -11,3 +11,6 @@ processing/*/output/*
 !processing/*/output/.keep
 # the list of archive episodes is kept
 !processing/MFYN_Archive/input/episodes.csv
+
+# The Airtable token (docs/airtable.md). Never commit it.
+airtable_token.txt

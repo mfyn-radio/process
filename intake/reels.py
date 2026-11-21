@@ -24,7 +24,7 @@ from pathlib import Path
 
 import mutagen
 
-from . import captions, catalog, config, episode, google_auth, handles, library, runlog
+from . import captions, catalog, config, episode, handles, library, runlog
 
 log = logging.getLogger("reels")
 
@@ -190,12 +190,12 @@ def make_posts(ep, tracks, cat):
 
 
 def open_catalog(what):
-    """The MFYN Artists sheet, or None (with a warning) if it can't be opened."""
+    """The MFYN Catalog base, or None (with a warning) if it can't be opened."""
     try:
-        return catalog.Catalog(google_auth.credentials())
+        return catalog.Catalog()
     except (Exception, SystemExit) as e:
-        log.warning("Couldn't open the %s sheet (%s). %s will be made without Instagram handles.",
-                    config.ARTISTS_SHEET, e, what)
+        log.warning("Couldn't open the %s base (%s). %s will be made without Instagram handles.",
+                    config.CATALOG, e, what)
         return None
 
 

@@ -50,7 +50,7 @@ stop the others; the summary at the end lists each one as ok or FAILED.
 ### Instagram handles
 
 The ON AIR posts and the Album Stories each check the
-[MFYN Artists sheet](01-acquire.md#the-mfyn-artists-sheet) for the artists
+[MFYN Catalog](01-acquire.md#the-mfyn-catalog) for the artists
 and labels they credit, and ask only about those not settled yet. It shows
 the suggested handle and their links (website, SoundCloud…) to help check.
 
@@ -164,7 +164,7 @@ delete its `.mp4` and `.json` in `MFYN_Stories`; then run again.
   make sketch changes in the repo ([working on the PC](working-on-the-pc.md)).
 - Google Drive for desktop running, for `MFYN_Show_Archive`, `MFYN_Library`, `MFYN_Posts` and `MFYN_Stories`.
 - The Google sign-in from [setting up step 1](01-acquire.md#setting-it-up-on-the-pc),
-  to read the MFYN Artists sheet. Without it the video posts and Stories are still made, with
+  to read the MFYN Catalog. Without it the video posts and Stories are still made, with
   no handles or album links.
 - The Python packages in `requirements.txt` (the run reads tags with
   `mutagen`).
@@ -183,7 +183,7 @@ if any sub-script failed; the summary says which.
 | `Processing exited with code …` / `No video post was made for …` | Scroll up for the sketch's own messages, e.g. `Couldn't run ffmpeg`. Test the sketch by opening it in Processing and pressing Run. |
 | `… no album of theirs from this episode is in …` | No folder in `MFYN_Library` whose name holds the album or the artist (Bandcamp's `Artist - Album`) has a track with the same album tag (for a single with no album tag: the same artist and title). Check the episode track's tags against the library's. |
 | `No Story was made for …` | Scroll up for the Album sketch's messages. |
-| `Couldn't open the MFYN Artists sheet` | The video posts and Stories are still made, without handles. See [step 1 troubleshooting](01-acquire-troubleshooting.md). |
+| `Couldn't open the MFYN Catalog base` | The video posts and Stories are still made, without handles. See [step 1 troubleshooting](01-acquire-troubleshooting.md). |
 
 ## Not part of this step (yet)
 

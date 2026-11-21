@@ -7,6 +7,7 @@ from mutagen.flac import FLAC
 
 from intake import catalog, release_info
 from intake.table import Table, merge
+from fake_airtable import FakeAirtable
 
 BLANK = Path(__file__).parent / "blank.flac"
 
@@ -52,12 +53,10 @@ class MemoryTable(Table):
         pass
 
 
-class MemoryCatalog:
-    def __init__(self, artists=()):
-        self.artists = MemoryTable(catalog.ARTISTS, "Artist", ("Tags",), artists)
-        self.releases = MemoryTable(catalog.RELEASES, ("Album", "Artist"), ("Tags",))
-        self.labels = MemoryTable(catalog.LABELS, "Label")
-        self.tags = MemoryTable(catalog.TAGS, ("Tag", "Artist", "Album"))
+def MemoryCatalog(artists=()):
+    """The real Catalog over an in-memory Airtable."""
+    rows = [{k: (v.split(", ") if k == "Tags" and v else v) for k, v in a.items()} for a in artists]
+    return catalog.Catalog(client=FakeAirtable({"Artists": rows}))
 
 
 class FakeBrowser:
@@ -105,8 +104,14 @@ def test_self_released_album_fills_artist(tmp_path):
     assert (release["Album"], release["Artist"], release["Label"]) == ("Bites", "Solo", "Self-released")
     assert release["Release date"] == "2026-10-30" and release["Purchased"] == "2026-10-23"
     assert release["Library folder"] == "Bites" and release["Credits"] == "Mastered by someone"
-    assert [r["Tag"] for r in cat.tags.rows] == ["ambient", "drone", "Brooklyn"]
+    assert release["Tags"] == "ambient, drone, Brooklyn"
     assert cat.labels.rows == []
+    # Relational: the release links to its artist, and there's no label to link.
+    db = cat.client
+    [stored] = db.fields("Releases")
+    assert [db.by_id("Artists", i)["Artist"] for i in stored["Linked artists"]] == ["Solo"]
+    assert "Linked label" not in stored
+    assert stored["Tags"] == ["ambient", "drone", "Brooklyn"]
 
 
 def test_label_release_puts_instagram_on_the_label(tmp_path):
@@ -122,6 +127,13 @@ def test_label_release_puts_instagram_on_the_label(tmp_path):
     [label] = cat.labels.rows
     assert (label["Label"], label["Instagram"], label["Status"]) == ("Room40", "@seller", "Suggested")
     assert cat.releases.rows[0]["Label"] == "Room40"
+    # The label lists its artists, and the release links to both.
+    db = cat.client
+    [stored_label] = db.fields("Labels")
+    assert [db.by_id("Artists", i)["Artist"] for i in stored_label["Linked artists"]] == \
+        ["Steven Hess + Rutger Zuydervelt"]
+    [stored] = db.fields("Releases")
+    assert [db.by_id("Labels", i)["Label"] for i in stored["Linked label"]] == ["Room40"]
 
 
 def test_compilation_adds_each_artist_without_details(tmp_path):

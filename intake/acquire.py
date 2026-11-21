@@ -7,7 +7,7 @@ Runs on the MFYN PC (daily, from Task Scheduler). See docs/01-acquire.md.
     python -m intake.acquire --backlog             # also purchases before START_DATE
     python -m intake.acquire --dry-run             # show what would happen, change nothing
     python -m intake.acquire --message-id ID       # just this one purchase email
-    python -m intake.acquire --artists             # fill the MFYN Artists sheet from the whole library
+    python -m intake.acquire --artists             # fill the MFYN Catalog base from the whole library
 """
 import argparse
 import datetime
@@ -84,11 +84,11 @@ def handle(service, browser, sheet, message_id, today, dry_run, run=None):
 
 
 def open_artists_sheet(creds):
-    # Downloading doesn't depend on the sheet, so carry on without it.
+    # Downloading doesn't depend on the catalog, so carry on without it.
     try:
         return catalog.Catalog(creds)
     except Exception:
-        log.exception("couldn't open the %s sheet; artists won't be recorded this run", config.ARTISTS_SHEET)
+        log.exception("couldn't open the %s base; artists won't be recorded this run", config.CATALOG)
         return None
 
 
@@ -100,11 +100,11 @@ def record_artists(sheet, browser, folder, purchased=None, album_url=None):
     try:
         catalog.record(sheet, browser, folder, log, purchased, album_url)
     except Exception:
-        log.exception("'%s': couldn't update the %s sheet", folder.name, config.ARTISTS_SHEET)
+        log.exception("'%s': couldn't update the %s base", folder.name, config.CATALOG)
 
 
 def backfill_artists(sheet, browser):
-    """Fill in the sheet from every album already in the library."""
+    """Fill in the catalog from every album already in the library."""
     for folder in sorted(p for p in config.LIBRARY_DIR.iterdir() if p.is_dir()):
         if not folder.name.startswith(library.PARTIAL_PREFIX):
             record_artists(sheet, browser, folder)
@@ -131,7 +131,7 @@ def _main(argv, run):
     parser.add_argument("--backlog", action="store_true", help=f"include purchases before {config.START_DATE}")
     parser.add_argument("--dry-run", action="store_true", help="don't download, add or label anything")
     parser.add_argument("--message-id", help="process only this Gmail message, whatever its date or label")
-    parser.add_argument("--artists", action="store_true", help=f"fill the {config.ARTISTS_SHEET} sheet from the whole library, then stop")
+    parser.add_argument("--artists", action="store_true", help=f"fill the {config.CATALOG} base from the whole library, then stop")
     args = parser.parse_args(argv)
     setup_logging()
     if args.dry_run or args.setup:
@@ -181,7 +181,7 @@ def _main(argv, run):
         finally:
             browser.close()
 
-    run.summary = "filled in the Artists sheet from the library" if args.artists else (
+    run.summary = "filled in the catalog from the library" if args.artists else (
         f"{len(message_ids)} purchase email(s) checked") + (
         f", {waiting} waiting (pre-order or not downloadable yet)" if waiting else "")
     if failures:

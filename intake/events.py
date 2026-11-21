@@ -242,19 +242,18 @@ def record_row(target, event_body, today):
 
 
 def fill_sheet(target, today):
-    """Give every event on the calendar a row on the Events tab."""
-    count = 0
-    for event_body in event_calendar.all_events(target.calendar, target.calendar_id):
-        record_row(target, event_body, today)
-        count += 1
-    log.info("%d event(s) on %s are on the Events tab", count, config.EVENT_CALENDAR)
+    """Give every event on the calendar a record in the Events table."""
+    rows = [event_calendar.row(e, today.isoformat())
+            for e in event_calendar.all_events(target.calendar, target.calendar_id)]
+    target.catalog.events.upsert_many(rows)   # ten records a call, to save API calls
+    log.info("%d event(s) on %s are in the Events table", len(rows), config.EVENT_CALENDAR)
 
 
 def open_catalog(creds):
     try:
         return catalog.Catalog(creds)
     except Exception:
-        log.exception("couldn't open the %s sheet; tags will come from the posts only", config.ARTISTS_SHEET)
+        log.exception("couldn't open the %s base; tags will come from the posts only", config.CATALOG)
         return None
 
 
@@ -325,7 +324,7 @@ def run_posts(browser, args, run=None):
             log.warning("Couldn't rename the calendar to %s (%s).", config.EVENT_CALENDAR, e)
     if args.fill_sheet:
         if args.dry_run or target.catalog is None:
-            log.error("--fill-sheet needs the %s sheet and can't be a dry run", config.ARTISTS_SHEET)
+            log.error("--fill-sheet needs the %s base and can't be a dry run", config.CATALOG)
             return 1
         fill_sheet(target, datetime.date.today())
         run.summary = "filled in the Events tab from the calendar"

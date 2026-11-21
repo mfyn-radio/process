@@ -100,6 +100,9 @@ class Table:
             self.set(index, changes)
         return row
 
+    def upsert_many(self, records):
+        return [self.upsert(r) for r in records]
+
     def set(self, index, changes):
         """Write cells of an existing row (index into self.rows)."""
         self._write_cells([{

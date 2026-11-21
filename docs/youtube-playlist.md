@@ -14,8 +14,8 @@ A sub-script of [Make Episode Content](02a-make-episode-content.md), which asks
 | | |
 |---|---|
 | **When** | After the show has aired, when the Reaper project has the final running order. Make Episode Content runs then too |
-| **Input** | The episode's Reaper project in `MFYN_Show_Archive` (`20261105_….rpp`), the MFYN Artists sheet, and `MFYN_tracklist_NN.png` for the image |
-| **Output** | A proposal in the **Playlists** tab of the MFYN Artists sheet, then a public playlist on mfyn@'s YouTube channel |
+| **Input** | The episode's Reaper project in `MFYN_Show_Archive` (`20261105_….rpp`), the MFYN Catalog, and `MFYN_tracklist_NN.png` for the image |
+| **Output** | A proposal in the **Playlist entries** table of the MFYN Catalog (Airtable), then a public playlist on mfyn@'s YouTube channel |
 | **Runs on** | The MFYN PC (Claude Code judges the search results) |
 | **Code** | [`intake/playlist.py`](../intake/playlist.py), with [`intake/reaper.py`](../intake/reaper.py) for the running order |
 | **Log** | `%APPDATA%\mfyn-intake\playlist.log` on its own, `content.log` from Make Episode Content |
@@ -42,7 +42,7 @@ It takes two runs, so nothing goes on YouTube before you've checked it.
    episode. YouTube's free allowance is 10,000 units a day and a search costs
    100, so about one episode a day fits easily.
 3. **Pick.** Claude Code on the PC (`claude -p`, on the Claude subscription)
-   looks at the results for each artist, with what the MFYN Artists sheet knows
+   looks at the results for each artist, with what the MFYN Catalog knows
    about them (Bandcamp, website, Instagram), and picks per track:
    1. a live video on the **band's own channel**;
    2. a live video by **someone else** (a fan, a venue);
@@ -52,7 +52,7 @@ It takes two runs, so nothing goes on YouTube before you've checked it.
    at the first track it covers. Claude only picks from the search results, and
    says when it isn't sure (is this really the band's channel? is it the same
    band, or another one with the same name?).
-4. **The Playlists tab.** One row per track, under the episode's folder name:
+4. **The Playlist entries table.** One record per track, under the episode's folder name:
 
    | Column | |
    |---|---|
@@ -68,7 +68,7 @@ It takes two runs, so nothing goes on YouTube before you've checked it.
 
 ### Your review
 
-In the Playlists tab, open the links and set every `Use` to `yes` or `no`. You
+In the Playlist entries table (MFYN Catalog on Airtable), open the links and set every `Use` to `yes` or `no`. You
 can also paste a better YouTube link into `Link` (and set `Use` to `yes`), for
 a track where nothing was found, say.
 
@@ -97,7 +97,7 @@ Instagram Story's link sticker.
 **Re-running is safe.** An episode that has rows isn't searched again. A
 playlist that's made isn't made again; if a run stopped partway (YouTube's
 daily quota, say), the next run asks to add the missing videos. To start an
-episode's proposal over, delete its rows from the Playlists tab.
+episode's proposal over, delete its records from the Playlist entries table.
 
 ## Running it
 

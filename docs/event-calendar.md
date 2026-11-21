@@ -44,7 +44,7 @@ See also: [process overview](README.md) · [Google Cloud setup](setup/google-clo
    Save & Share on Instagram                 <- a link to the post
    ```
    - **The first line** is the tags: genres the post names or hashtags,
-     plus the tags in the MFYN Artists sheet for acts already in the library
+     plus the tags in the MFYN Catalog for acts already in the library
      (leaving out their town and country). No tags, no line.
    - **The event's link** (Calendar's "source") is a tickets or event address
      written in the post, else the Instagram post. "Link in bio" doesn't
@@ -82,7 +82,7 @@ it stays deleted.
 ## "Your artist is playing"
 
 When a newly added event has an artist from the library on the bill (anyone
-on the Artists tab of the MFYN Artists sheet), you're told
+in the Artists table of the MFYN Catalog), you're told
 (mfyn-radio/process#39):
 
 - **The event is red** (Google Calendar's Tomato) on Event Calendar. The title
@@ -93,7 +93,7 @@ on the Artists tab of the MFYN Artists sheet), you're told
   `MFYN_ALERT_EMAIL` with `setx`.
 
 Names are matched ignoring case, accents, punctuation and a leading "The",
-so *DAUFODT* on a flyer matches *Daufødt* in the sheet. A band only counts
+so *DAUFODT* on a flyer matches *Daufødt* in the catalog. A band only counts
 if Claude listed it among the acts. Events added before 13 November 2026
 have no acts stored, so they don't alert. Redoing a post with `--post`
 alerts again, which is also how to try it. A dry run logs "would alert"
@@ -101,16 +101,17 @@ instead.
 
 ## The Events tab
 
-Every event the automation adds also gets a row on the **Events** tab of the
-MFYN Artists sheet, so all the events are in one list you can sort and
-filter: Date, Start, End, Title, Venue, City, Country, Acts, Tags, Link,
-Post, Location tag, Event id, Added. Dates are written `2026-11-28` so they
-sort.
+Every event the automation adds also gets a record in the **Events** table of
+the [MFYN Catalog](01-acquire.md#the-mfyn-catalog) (Airtable), so all the events
+are in one list you can sort and filter: Date, Start, End, Title, Venue, City, Country, Acts, Tags, Link,
+Post, Location tag, Event id, Added, and **Linked artists** for the library
+artists on the bill. Dates are written `2026-11-28` so they sort. (The
+heading keeps its old name, "tab", so links to it still work.)
 
-Like the rest of the sheet, the automation only fills empty cells, so what
+Like the rest of the catalog, the automation only fills empty fields, so what
 you type there stays. Each calendar event also keeps its details, so for
-events already on the calendar (before the tab existed, or if writing a
-row failed), run:
+events already on the calendar (before the table existed, or if writing a
+record failed), run:
 
 ```
 python -m intake.events --fill-sheet

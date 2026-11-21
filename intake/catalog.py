@@ -1,54 +1,112 @@
-"""The MFYN Artists Google Sheet: what the library knows about its music.
+"""The MFYN Catalog base on Airtable: what the library knows about its music.
+See docs/airtable.md. (Until 21 Nov 2026 this was the MFYN Artists Google
+Sheet, which is kept as it was, as a backup.)
 
-Tabs:
-- Artists: one row per artist, with their Instagram handle (the artist library).
-- Releases: one row per album in the library.
-- Labels: one row per label, with its Instagram handle.
-- Tags: one row per Bandcamp tag per release, for sorting and filtering.
-- Playlists: one row per track of an episode's YouTube playlist proposal, for review,
-  written by the YouTube playlist step (docs/youtube-playlist.md).
-- Events: one row per event on the Event Calendar Google calendar, written by the Event
-  Calendar automation (docs/event-calendar.md).
+Tables:
+- Artists: one record per artist, with their Instagram handle (the artist library).
+- Releases: one record per album in the library, linked to its artists and label.
+- Labels: one record per label, with its Instagram handle, linked to its artists.
+- Events: one record per event on the Event Calendar Google calendar, written by the
+  Event Calendar automation (docs/event-calendar.md), linked to library artists on the bill.
+- Episodes: one record per episode with a YouTube playlist.
+- Playlist entries: one record per track of an episode's YouTube playlist proposal,
+  for review, written by the YouTube playlist step (docs/youtube-playlist.md).
+
+Tags are a multi-select field on Artists, Releases and Events, so the
+sheet's Tags tab (one row per tag) isn't needed.
 
 Step 1 fills it in automatically, with Instagram handles marked "Suggested"
 or "Not found". Step 2a is where handles are confirmed. The automation only
-fills empty cells and adds tags; it never overwrites what someone typed.
+fills empty fields and adds tags and links; it never overwrites what someone typed.
 """
 import datetime
 
 from googleapiclient.discovery import build
 
-from . import config, release_info, tags
-from .table import Table
+from . import airtable, config, release_info, tags
+from .airtable import Link
 
 SUGGESTED, NOT_FOUND = "Suggested", "Not found"
 # Set when handles are confirmed in step 2a.
 CONFIRMED, NO_INSTAGRAM = "Confirmed", "No Instagram"
+STATUSES = [SUGGESTED, NOT_FOUND, CONFIRMED, NO_INSTAGRAM]
 
 ARTISTS = ["Artist", "Instagram", "Status", "Location", "Tags", "Website", "Other links",
            "Bandcamp page", "Bio", "Added"]
 RELEASES = ["Album", "Artist", "Label", "Release date", "Tags", "Album link", "Credits",
             "Purchased", "Library folder", "Added"]
 LABELS = ["Label", "Instagram", "Status", "Location", "Website", "Other links", "Bandcamp page", "Added"]
-TAGS = ["Tag", "Artist", "Album"]
+TAGS = ["Tag", "Artist", "Album"]   # the old sheet's Tags tab
+EPISODES = ["Episode", "Added"]
 PLAYLISTS = ["Episode", "#", "Artist", "Track", "Album", "Tier", "Use", "Link", "Video", "Uploader", "Note",
              "Bandcamp", "Playlist", "Added"]
 EVENTS = ["Date", "Start", "End", "Title", "Venue", "City", "Country", "Acts", "Tags", "Link", "Post",
           "Location tag", "Event id", "Added"]
 
 
+# Catalog attribute: (Airtable table, columns, key, multi-select fields, links, primary field).
+# The primary field is the one Airtable shows for a record and links match on.
+TABLES = {
+    "artists": ("Artists", ARTISTS, "Artist", ("Tags",), {}, "Artist"),
+    "labels": ("Labels", LABELS, "Label", (), {"Linked artists": Link("artists")}, "Label"),
+    "releases": ("Releases", RELEASES, ("Album", "Artist"), ("Tags",),
+                 {"Linked artists": Link("artists"), "Linked label": Link("labels")}, "Album"),
+    "events": ("Events", EVENTS, "Event id", ("Tags",),
+               {"Linked artists": Link("artists", source="Acts", split=True)}, "Title"),
+    "episodes": ("Episodes", EPISODES, "Episode", (), {}, "Episode"),
+    "playlists": ("Playlist entries", PLAYLISTS, ("Episode", "#"), (),
+                  {"Linked episode": Link("episodes", source="Episode", create=True),
+                   "Linked artist": Link("artists", source="Artist"),
+                   "Linked release": Link("releases", source="Album")}, "Track"),
+}
+# Read when the catalog is opened, as the sheet's tabs were; the rest are read
+# on first use, to save API calls.
+EAGER = ("artists", "releases", "labels")
+
+
 class Catalog:
+    """The base's tables as attributes: catalog.artists, .releases, .labels,
+    .events, .episodes, .playlists. `creds` (the Google sign-in) isn't needed
+    any more and is ignored."""
+
+    def __init__(self, creds=None, client=None):
+        self.client = client or airtable.connect()
+        self._tables = {}
+        for name in EAGER:
+            self.table(name)
+
+    def table(self, name):
+        if name not in self._tables:
+            title, columns, key, lists, links, primary = TABLES[name]
+            self._tables[name] = airtable.AirtableTable(
+                self.client, title, columns, key, lists, links, resolve=self.table, primary=primary)
+        return self._tables[name]
+
+    def __getattr__(self, name):
+        if name in TABLES:
+            return self.table(name)
+        raise AttributeError(name)
+
+
+class SheetCatalog:
+    """The old MFYN Artists Google Sheet, read by the one-off copy to Airtable."""
+
     def __init__(self, creds):
         drive = build("drive", "v3", credentials=creds, cache_discovery=False)
-        sheets = build("sheets", "v4", credentials=creds, cache_discovery=False)
-        sheet_id = find_or_create(drive, sheets, config.ARTISTS_SHEET, "Artists")
-        self.artists = Table(sheets, sheet_id, "Artists", ARTISTS, key="Artist", list_fields=("Tags",))
-        self.releases = Table(sheets, sheet_id, "Releases", RELEASES, key=("Album", "Artist"), list_fields=("Tags",))
-        self.labels = Table(sheets, sheet_id, "Labels", LABELS, key="Label")
-        self.tags = Table(sheets, sheet_id, "Tags", TAGS, key=("Tag", "Artist", "Album"))
-        self.events = Table(sheets, sheet_id, "Events", EVENTS, key="Event id", list_fields=("Tags",))
-        self.playlists = Table(sheets, sheet_id, "Playlists", PLAYLISTS, key=("Episode", "#"))
+        self.sheets = build("sheets", "v4", credentials=creds, cache_discovery=False)
+        self.id = find_or_create(drive, self.sheets, config.ARTISTS_SHEET, "Artists")
 
+    def rows(self, tab):
+        """The tab's rows as dicts, or [] if there's no such tab. Writes nothing."""
+        meta = self.sheets.spreadsheets().get(spreadsheetId=self.id, fields="sheets.properties.title").execute()
+        if tab not in [s["properties"]["title"] for s in meta["sheets"]]:
+            return []
+        values = self.sheets.spreadsheets().values().get(
+            spreadsheetId=self.id, range=f"'{tab}'").execute().get("values", [])
+        if not values:
+            return []
+        header = values[0]
+        return [dict(zip(header, r + [""] * (len(header) - len(r)))) for r in values[1:]]
 
 
 def find_or_create(drive, sheets, title, first_tab):
@@ -69,6 +127,8 @@ def _with_status(table, record):
     """Upsert a row with an Instagram handle and keep its Status in step:
     "Suggested" once a handle is filled in, "Not found" while there's none.
     Only these two automatic values are ever replaced."""
+    if table.find(record)[1] is None:   # a new row gets its Status in the same call
+        record = dict(record, Status=SUGGESTED if (record.get("Instagram") or "").strip() else NOT_FOUND)
     row = table.upsert(record)
     status = row.get("Status", "").strip()
     wanted = SUGGESTED if row.get("Instagram", "").strip() else NOT_FOUND
@@ -96,16 +156,10 @@ def record(catalog, browser, folder, log, purchased=None, album_url=None):
     today = datetime.date.today().isoformat()
     seller = release.seller
 
-    catalog.releases.upsert({
-        "Album": release.album, "Artist": release.artist, "Label": release.label,
-        "Release date": release.release_date, "Tags": release.tags, "Album link": release.album_link,
-        "Credits": release.credits, "Purchased": purchased, "Library folder": folder.name, "Added": today,
-    })
-    for tag in release.tags:
-        catalog.tags.upsert({"Tag": tag, "Artist": release.artist, "Album": release.album})
-
+    # Artists and the label first, so the release can link to them.
+    artists = album.artists or [release.artist]
     single_artist = len(album.artists) <= 1
-    for artist in album.artists or [release.artist]:
+    for artist in artists:
         row = {"Artist": artist, "Added": today}
         if single_artist:
             row["Tags"] = release.tags
@@ -117,10 +171,19 @@ def record(catalog, browser, folder, log, purchased=None, album_url=None):
                 })
         _with_status(catalog.artists, row)
 
+    label = None
     if not release.self_released and release.label:
+        label = release.label
         _with_status(catalog.labels, {
-            "Label": release.label, "Instagram": seller.instagram, "Location": seller.location,
+            "Label": label, "Instagram": seller.instagram, "Location": seller.location,
             "Website": seller.website, "Other links": "\n".join(seller.other_links),
-            "Bandcamp page": seller.page, "Added": today,
+            "Bandcamp page": seller.page, "Added": today, "Linked artists": artists,
         })
+
+    catalog.releases.upsert({
+        "Album": release.album, "Artist": release.artist, "Label": release.label,
+        "Release date": release.release_date, "Tags": release.tags, "Album link": release.album_link,
+        "Credits": release.credits, "Purchased": purchased, "Library folder": folder.name, "Added": today,
+        "Linked artists": artists, "Linked label": [label] if label else [],
+    })
     log.info("'%s': recorded %s (%s), %d tag(s)", folder.name, release.album, release.label, len(release.tags))
