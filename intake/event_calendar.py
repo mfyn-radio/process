@@ -1,4 +1,4 @@
-"""The MFYN Events from Instagram Google calendar.
+"""The Event Calendar Google calendar.
 
 The automation creates the calendar itself and may only touch calendars it
 created (the calendar.app.created permission). Each event gets an id made
@@ -22,7 +22,7 @@ def client(creds):
 
 def ensure_name(service, calendar_id, name):
     """Rename the calendar to `name` if it's called something else (it was
-    "MFYN Shows" before 21 Nov 2026). Returns True if it was renamed."""
+    "MFYN Shows" when the automation made it). Returns True if it was renamed."""
     cal = service.calendars().get(calendarId=calendar_id).execute()
     if cal.get("summary") == name:
         return False

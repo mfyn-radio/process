@@ -1,7 +1,7 @@
 # Event Calendar
 
 Live events from the posts MFYN saves on Instagram go on a Google calendar of
-their own, **MFYN Events from Instagram**. Save an event's post to the **events** collection;
+their own, **Event Calendar**. Save an event's post to the **events** collection;
 once a day the automation reads it and adds the event. This is
 mfyn-radio/process#36, the Instagram half of mfyn-radio/process#15. Other sources come later.
 
@@ -11,7 +11,7 @@ See also: [process overview](README.md) · [Google Cloud setup](setup/google-clo
 |---|---|
 | **Trigger** | Task Scheduler task `MFYN Event Calendar`, daily |
 | **Input** | New posts in one saved collection on MFYN's Instagram |
-| **Output** | Events on the **MFYN Events from Instagram** calendar, owned by mfyn@ |
+| **Output** | Events on the **Event Calendar** calendar, owned by mfyn@ |
 | **Runs on** | The MFYN PC, while signed in (Chrome, Instagram signed in as MFYN) |
 | **Code** | [`intake/events.py`](../intake/events.py), with [`instagram.py`](../intake/instagram.py), [`flyer.py`](../intake/flyer.py) and [`event_calendar.py`](../intake/event_calendar.py), started by [`scripts/run_events.cmd`](../scripts/run_events.cmd) |
 | **Log** | `%APPDATA%\mfyn-intake\events.log` |
@@ -31,7 +31,7 @@ See also: [process overview](README.md) · [Google Cloud setup](setup/google-clo
    each event: title, acts, date, times, venue, city and tickets. A tour
    poster can give several. Flyers often leave out the year, so it's worked
    out from the posting date. A post that isn't an event gives none.
-4. **Adds them to MFYN Events from Instagram**, laid out like this:
+4. **Adds them to Event Calendar**, laid out like this:
    ```
    Calls From The Hull IV
    V11, Rotterdam
@@ -76,7 +76,7 @@ When a newly added event has an artist from the library on the bill (anyone
 on the Artists tab of the MFYN Artists sheet), you're told
 (mfyn-radio/process#39):
 
-- **The event is red** (Google Calendar's Tomato) on MFYN Events from Instagram. The title
+- **The event is red** (Google Calendar's Tomato) on Event Calendar. The title
   and description stay as usual.
 - **An email from mfyn@** goes to mfyn@ at the end of the run, one per run
   and only if there's a match, listing each event with the artist, date,
@@ -107,7 +107,7 @@ row failed), run:
 python -m intake.events --fill-sheet
 ```
 
-It reads MFYN Events from Instagram, not Instagram. Events added before 13 November 2026
+It reads Event Calendar, not Instagram. Events added before 13 November 2026
 get what the calendar has: date, times, title, venue and city, post and
 link. Acts, country, tags and location tag stay empty for those.
 
@@ -159,7 +159,7 @@ to your Claude subscription. Nothing new to buy.
    ```
    python -m intake.events --dry-run
    ```
-   Then run it for real. The first real run creates the **MFYN Events from Instagram**
+   Then run it for real. The first real run creates the **Event Calendar**
    calendar and logs its ID (`c_…@group.calendar.google.com`; it's also
    `calendar_id` in `%APPDATA%\mfyn-intake\events.json`).
    It appears in mfyn@'s Google Calendar under **My calendars**. If it
@@ -172,8 +172,9 @@ to your Claude subscription. Nothing new to buy.
 
 Until 21 Nov 2026 this was called the show calendar, its task `MFYN Show
 Calendar`, and its Google calendar **MFYN Shows**. "Show" now means only the
-radio show. The next run renames the existing calendar to MFYN Events from
-Instagram, keeping its events and ID.
+radio show. The Google calendar the automation made as **MFYN Shows** is
+now called **Event Calendar** (you renamed it in Google Calendar); the
+automation keeps that name, and puts it back if it ever changes.
 
 ## Running it by hand
 
@@ -181,7 +182,7 @@ Instagram, keeping its events and ID.
 python -m intake.events [--dry-run] [--backlog] [--post SHORTCODE] [--fill-sheet]
 ```
 
-- `--fill-sheet` gives every event already on MFYN Events from Instagram a row on the
+- `--fill-sheet` gives every event already on Event Calendar a row on the
   [Events tab](#the-events-tab), then stops.
 - `--backlog` also reads older unread posts below ones already read, 15 a
   run. Repeat it until it says "0 new post(s) to read". Use it once, to add

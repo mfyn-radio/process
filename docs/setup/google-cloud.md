@@ -26,7 +26,7 @@ Permissions requested at sign-in:
   creates itself, the MFYN Artists sheet. It can't see the rest of the Drive.
   The library itself is synced by Drive for desktop.
 - `https://www.googleapis.com/auth/calendar.app.created`: only the calendars
-  the automation creates itself, MFYN Events from Instagram. It can't see mfyn@'s other
+  the automation creates itself, Event Calendar. It can't see mfyn@'s other
   calendars. Added for the [Event Calendar](../event-calendar.md); a sign-in
   from before it still works for everything else.
 

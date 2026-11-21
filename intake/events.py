@@ -1,4 +1,4 @@
-"""Event Calendar: events from saved Instagram posts go on the MFYN Events from Instagram calendar.
+"""Event Calendar: events from saved Instagram posts go on the Event Calendar calendar.
 
 Runs on the MFYN PC (daily, from Task Scheduler). See docs/event-calendar.md.
 

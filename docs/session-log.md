@@ -45,7 +45,7 @@ session is first.
 
 ## 2026-11-13
 
-- **Show calendar built** ([doc](event-calendar.md); renamed **Event Calendar** on 21 Nov, and its calendar **MFYN Events from Instagram**), mfyn-radio/process#36,
+- **Show calendar built** ([doc](event-calendar.md); renamed **Event Calendar** on 21 Nov, the same name as its Google calendar), mfyn-radio/process#36,
   the Instagram half of mfyn-radio/process#15. Every day it opens posts saved to a **Shows**
   collection on MFYN's Instagram, Claude Code on the PC reads
   each flyer (on the subscription, no API key), and the shows go

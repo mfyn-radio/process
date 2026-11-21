@@ -492,6 +492,6 @@ def test_old_calendar_name_is_renamed_once():
     from intake import config, event_calendar
     cal = FakeCalendars("MFYN Shows")
     assert event_calendar.ensure_name(cal, "cal", config.EVENT_CALENDAR) is True
-    assert cal.summary == "MFYN Events from Instagram"
+    assert cal.summary == "Event Calendar"
     assert event_calendar.ensure_name(cal, "cal", config.EVENT_CALENDAR) is False
     assert len(cal.patched) == 1

@@ -76,7 +76,7 @@ INSTAGRAM_COLLECTION_URL = os.environ.get("MFYN_INSTAGRAM_COLLECTION", "")
 INSTAGRAM_PROFILE_DIR = Path.home() / "mfyn-chrome-instagram"
 # Posts already read, and the calendar's id.
 EVENTS_STATE_FILE = APP_DIR / "events.json"
-EVENT_CALENDAR = "MFYN Events from Instagram"
+EVENT_CALENDAR = "Event Calendar"
 # "Your artist is playing": events with a library artist on the bill get this
 # Google Calendar colour (11 is Tomato, red) and an email to this address.
 ALERT_COLOR = "11"

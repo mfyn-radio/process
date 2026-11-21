@@ -106,7 +106,7 @@ or filter this tab to see, say, every *ambient* artist, or add a pivot table
 to count the library by tag. Bandcamp tags mix genres with places like
 *Brooklyn*; they're kept as Bandcamp has them.
 
-**Events** has one row per event on the MFYN Events from Instagram calendar, written by the
+**Events** has one row per event on the Event Calendar Google calendar, written by the
 [Event Calendar](event-calendar.md#the-events-tab), not by Acquire.
 
 #### Status
