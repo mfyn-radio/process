@@ -12,6 +12,8 @@ SHOW_ARCHIVE_DIR = Path(os.environ.get("MFYN_SHOW_ARCHIVE", r"H:\My Drive\MFYN_S
 # (MFYN_Reels is an archive for now; nothing writes to it.)
 POSTS_DIR = Path(os.environ.get("MFYN_POSTS", r"H:\My Drive\MFYN_Posts"))
 POST_SECONDS = 30
+# The /research skill keeps one file per artist here, so research is never redone.
+RESEARCH_DIR = Path(os.environ.get("MFYN_RESEARCH", r"H:\My Drive\MFYN_Research"))
 
 # The ON AIR video post sketch, in this repo. Processing's command-line runner is found
 # automatically; set MFYN_PROCESSING to its full path if it isn't.

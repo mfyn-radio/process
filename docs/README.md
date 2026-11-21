@@ -13,11 +13,12 @@ starts after that.
 | 2 | [Create the show](02-create-show.md) | **The parent.** Pick tracks, make the episode, archive it in `MFYN_Show_Archive`, then start the sub-automations below | Manual today |
 | 2a | [Make Reels](02a-make-reels.md) | The episode's tracks become 30-second 1080×1920 video posts in `MFYN_Posts` | Built, being tested |
 | 2b | [Instagram copy](02b-instagram-copy.md) | A caption for each video post, from its details and the MFYN Artists sheet | Built, runs at the end of Make Reels |
+| 2c | [Show notes](02c-show-notes.md) | Notes on each artist, album and track, researched, in the episode folder | Built, untested on the PC |
 | — | **Manual stop** | You review everything made for a post, then trigger Publishing | Not built yet |
 | → | *Publishing Process* | Starts after your review: scheduling the posts on Instagram, among other things | Separate process, not built yet |
 
-Steps 2a and 2b are sub-automations of step 2: when a show is ready, step 2
-runs and triggers them. Each is its own step, with its own doc. Together they
+Steps 2a, 2b and 2c are sub-automations of step 2: when a show is ready, step 2
+runs and triggers them. Show notes (2c) are for the show itself, not the post. Each is its own step, with its own doc. Together they
 produce all the content for a post, so they belong to production. What they
 leave in `MFYN_Posts` is what you review at the manual stop.
 
@@ -34,6 +35,8 @@ misbehaves.
 | Acquire (`intake.acquire`) | Task Scheduler task `MFYN Acquire`, hourly, via `scripts\run_acquire.cmd` | MFYN PC, while signed in | `%APPDATA%\mfyn-intake\acquire.log` | [Step 1](01-acquire.md), [troubleshooting](01-acquire-troubleshooting.md) |
 | Make Reels (`intake.reels`), with the archive cover (`intake.archive_cover`) and Instagram copy (`intake.captions`) | You, double-clicking **MFYN – Make Reels** (`scripts\make_reels.cmd`), until step 2 starts it itself | MFYN PC | `%APPDATA%\mfyn-intake\reels.log` | [Step 2a](02a-make-reels.md), [step 2b](02b-instagram-copy.md), [archive cover](archive-cover.md) |
 | Make Album Story (`intake.stories`) | You, double-clicking **MFYN – Make Album Story** (`scripts\make_story.cmd`), to feature an album | MFYN PC | `%APPDATA%\mfyn-intake\stories.log` | [Make Album Story](featured-album-story.md) |
+| Show notes (`/show-prep` skill, `intake.show_notes`) | You, in Claude Code | MFYN PC | Claude Code's own output | [Step 2c](02c-show-notes.md) |
+| Research (`/research` skill, `intake.research`) | You, in Claude Code, or `/show-prep` | MFYN PC | Claude Code's own output | [Research](research.md) |
 | Tests | GitHub Actions, on pull requests and pushes to `main` (`.github/workflows/tests.yml`) | GitHub | the Actions tab | `python -m pytest` locally |
 | Labels | GitHub Actions, when `.github/workflows/labels.yml` changes on `main`, or run by hand (`workflow_dispatch`) | GitHub | the Actions tab | [Issues](#issues) |
 
@@ -51,6 +54,7 @@ The logs keep four files of up to 1 MB each, and Make Reels and Make Album Story
 | `MFYN_Show_Archive` | mfyn@'s My Drive, `H:\My Drive\MFYN_Show_Archive` | Finished episodes, `D_M_YYYY- Episode Name\Tracks` |
 | `MFYN_Posts` | mfyn@'s My Drive, `H:\My Drive\MFYN_Posts` | Each episode's video posts, their details and captions, for your review and then Publishing |
 | `MFYN_Stories` | mfyn@'s My Drive, `H:\My Drive\MFYN_Stories` | Featured-album Stories and their details, one folder per episode like `MFYN_Posts`, for your review and then Publishing |
+| `MFYN_Research` | mfyn@'s My Drive, `H:\My Drive\MFYN_Research` | What's been researched about each artist and album, one file per artist, kept for good |
 | Processing sketches | this repo, `processing\` | `MFYN_VideoPost_OnAir` makes the video posts; `MFYN_Story_Album` makes the featured-album Stories; `MFYN_Archive` makes the archive episode covers ([automated](archive-cover.md), or by hand: [README](../processing/MFYN_Archive/README.md)) |
 | `MFYN_Library` | mfyn@'s My Drive, synced to `H:\My Drive\MFYN_Library` on the MFYN PC | The music library, one folder per album |
 | MFYN PC | Windows, signed in, running Google Drive for desktop and Chrome | Runs the automation (Task Scheduler) |
@@ -85,6 +89,7 @@ list of open work. There are two kinds:
   its archive cover, `MFYN_archive_NN.png`, numbered from No. 3 (5 November 2026).
 - **Video posts:** `MFYN_Posts\<episode folder>\Artist - Title.mp4`, plus `.json`
   details and the `.txt` caption.
+- **Research:** `MFYN_Research\Artist.md`, one per artist, only ever added to.
 - **Secrets:** never in the repo. Google sign-in tokens live on the PC in
   `%APPDATA%\mfyn-intake\`.
 - **Changing the code:** changes go through pull requests on GitHub. On the
@@ -104,5 +109,7 @@ list of open work. There are two kinds:
   - Step 2a: [Make Reels](02a-make-reels.md)
   - Step 2b: [Instagram copy](02b-instagram-copy.md)
   - [Archive cover](archive-cover.md)
+  - Step 2c: [Show notes](02c-show-notes.md)
+- [Research](research.md): kept research on artists and albums
 - Featured albums: [Make Album Story](featured-album-story.md)
 - Setup: [Google Cloud](setup/google-cloud.md)

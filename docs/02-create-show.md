@@ -9,6 +9,7 @@ the one sub-automation that exists by hand.
 | [2a. Make Reels](02a-make-reels.md) | The episode's tracks become video posts | Built |
 | [2b. Instagram copy](02b-instagram-copy.md) | A caption for each video post | Built, runs at the end of 2a |
 | [Archive cover](archive-cover.md) | The orange `MFYN_archive_NN.png` in the episode folder | Built, runs at the start of 2a |
+| [2c. Show notes](02c-show-notes.md) | Researched notes on each artist, album and track, for the show | Built, run by hand with `/show-prep` |
 
 When these have run, the production work is done and you reach the manual
 stop: you review everything made for the post. Triggering the Publishing
@@ -30,6 +31,8 @@ Process (separate, not built yet) is up to you after that.
 4. Put the episode's tracks (the FLACs, copied from the library) in its
    `Tracks` folder. Step 2a also reads MP3, WAV, M4A, AIFF and OGG files.
 5. **Last action:** double-click **MFYN – Make Reels** on the desktop.
+   For the show notes, run `/show-prep` in Claude Code
+   ([step 2c](02c-show-notes.md)), before or after the Reels.
 
 ## The episode folder
 
