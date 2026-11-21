@@ -56,6 +56,9 @@ def setup(tmp_path, monkeypatch):
                         ("APP_DIR", tmp_path / "app"), ("CONTENT_LOG_FILE", tmp_path / "app" / "content.log"),
                         ("TOKEN_FILE", tmp_path / "app" / "missing-token.json")]:
         monkeypatch.setattr(config, name, value)
+    # The YouTube playlist needs Google and YouTube; it has its own tests (test_playlist.py).
+    from intake import playlist
+    monkeypatch.setattr(playlist, "for_episode", lambda ep, ask=input: (True, "playlist stub"))
     return archive / "5_11_2026- Official Unofficial"
 
 
@@ -113,18 +116,19 @@ def test_in_library_matches_album_and_title(tmp_path, monkeypatch):
 
 def test_only_the_archive_cover_when_you_say_no_to_the_rest(tmp_path, monkeypatch):
     ep = setup(tmp_path, monkeypatch)
-    answers = iter(["y", "n", "n", "y"])     # tracks; posts, Stories; keep the cover
+    answers = iter(["y", "n", "n", "n", "y"])     # tracks; posts, Stories, playlist; keep the cover
     asked = []
     assert content.main([], ask=lambda p: asked.append(p) or next(answers), say=lambda *_: None) == 0
-    assert asked[1:3] == ["Do you want ON AIR posts? [Y/n] ", "Album Story videos? [Y/n] "]
-    assert asked[3].startswith("Keep this cover and tracklist image?")
+    assert asked[1:4] == ["Do you want ON AIR posts? [Y/n] ", "Album Story videos? [Y/n] ",
+                          "Do you want a YouTube playlist? [Y/n] "]
+    assert asked[4].startswith("Keep this cover and tracklist image?")
     assert (ep / "MFYN_archive_03.png").exists() and (ep / "MFYN_tracklist_03.png").exists()
     assert not (tmp_path / "posts").exists() and not (tmp_path / "stories").exists()
 
 
 def test_stories_without_posts(tmp_path, monkeypatch):
     ep = setup(tmp_path, monkeypatch)
-    answers = iter(["", "n", "", ""])
+    answers = iter(["", "n", "", "n", ""])   # tracks; no posts, Stories, no playlist; keep the cover
     assert content.main([], ask=lambda p: next(answers), say=lambda *_: None, rng=random.Random(3)) == 0
     assert (ep / "MFYN_tracklist_03.png").exists()
     assert not (tmp_path / "posts").exists()
@@ -161,4 +165,4 @@ def test_a_new_sub_script_is_one_line_in_steps_and_a_crash_doesnt_stop_the_rest(
 
 def test_steps_not_built_yet_are_left_out():
     names = [m.__name__ for m, _, _ in content.available_steps()]
-    assert names[:3] == ["intake.archive_cover", "intake.reels", "intake.stories"]
+    assert names == ["intake.archive_cover", "intake.reels", "intake.stories", "intake.playlist"]
