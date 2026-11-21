@@ -31,6 +31,17 @@ final float  SMALL_SIZE = 38, SMALL_TRACK = 4;
 final float  LINE1_BASELINE = 937;                 // NO. 02          ink y 909-937
 final float  LINE2_BASELINE = 997;                 // date and label  ink y 969-997
 
+// ---------- tracklist image (the YouTube playlist image) ----------
+// The cover inverted: INK is the paper, and the type is printed in the
+// cover's paper colour. The YouTube Music app puts its buttons over the top
+// of the image and fades the bottom into the playlist title, so everything
+// sits further in than on the cover: content between about y 240 and 860.
+final String TRACKLIST_LABEL = "TRACKLIST";
+final float  TL_WORDMARK_BASELINE = 500;           // ink box y 260-500
+final float  TL_LINE1_BASELINE = 790;              // NO. 03
+final float  TL_LINE2_BASELINE = 850;              // date and TRACKLIST
+final float  TL_INK_LEVEL = 0.97;                  // the light ink, a touch under the cover's paper colour
+
 final int SUPERSAMPLE = 4;                         // text is drawn this much larger, then averaged down
 
 // ---------- paper ----------

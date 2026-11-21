@@ -41,8 +41,9 @@ ffmpeg, and the fonts are in `data/`. Keep this folder named `MFYN_Archive`
    read (day, month spelled out, four-digit year) and is upper-cased on the
    cover. The number is zero padded: `2` becomes `NO. 02`.
 2. Open `MFYN_Archive.pde` and press **Run**.
-3. Each cover appears in `output/` as `MFYN_archive_02.png`. The window shows
-   each one when it is done and closes itself at the end.
+3. Each cover appears in `output/` as `MFYN_archive_02.png`, with its
+   YouTube playlist image `MFYN_tracklist_02.png` (below) next to it. The
+   window shows each cover when it is done and closes itself at the end.
 
 Episodes that already have a cover in `output/` are skipped, so you can keep
 adding lines and re-run. To remake a cover, delete its PNG.
@@ -56,6 +57,7 @@ travels with it.
 |---|---|---|
 | `SIZE` | 2160 | the cover's width and height in pixels: a multiple of 1080, at least 1800 (so 2160 or 3240) |
 | `SEED` | 7 | the paper's random seed. Leave it, so every episode prints on the same paper |
+| `TRACKLIST_SEED` | 8 | the same for the tracklist image |
 | `LABEL` | `RADIO ARCHIVE` | the bottom-right label |
 | `RANDOM_COLOUR` | true | a new random paper colour on every cover; false = orange `#F07C0E` on every cover |
 | `PREVIEW` | true | show each cover in the window |
@@ -76,10 +78,26 @@ The design itself (colours, type, positions, paper and ink) is in `Spec.pde`.
 ```
 
 `input=<folder>`, `output=<folder>` and `size=<px>` override the settings.
+`colour=#RRGGBB` uses that paper colour instead of a random one, for example
+to make the tracklist image for a cover that already exists.
+
+## The tracklist image
+
+The square image for the episode's YouTube playlist, written in the same run
+as the cover and in the same colour: the cover inverted. The paper is the
+cover's ink colour, `#141210`, and the type is printed flat in the cover's
+paper colour (at `TL_INK_LEVEL`, a touch under it). It uses the same paper
+texture, ink treatment and fonts, with its own seed, and `TRACKLIST` in place
+of `RADIO ARCHIVE`.
+
+Its positions are in `Spec.pde` (`TL_WORDMARK_BASELINE`, `TL_LINE1_BASELINE`,
+`TL_LINE2_BASELINE`): `MFYN` is moved down and the two small lines up, so the
+type sits between about y 260 and y 850, clear of the YouTube Music app's
+buttons at the top and its title fade at the bottom.
 
 ## Files
 
-- `MFYN_Archive.pde`: settings, the episode list, rendering a cover, the preview window
+- `MFYN_Archive.pde`: settings, the episode list, rendering a cover and its tracklist image, the preview window
 - `Spec.pde`: every design constant
 - `Paper.pde`: the orange card (tooth, grain, mottling, fibres, light falloff, vignette)
 - `Colour.pde`: the random paper colour and its contrast check
@@ -98,7 +116,9 @@ Against the approved episode 2 cover from the design handoff
   in the middle, (225, 116, 14) top left and (204, 106, 12) bottom right.
 - The grain has the same strength at 1080 and at 2160 as the handoff's
   references, so a print-size cover has the same grain, not finer grain.
-- With `RANDOM_COLOUR` off, re-rendering gives an identical file.
+- With `RANDOM_COLOUR` off, re-rendering gives an identical file, and the
+  cover is byte-identical to the one made before the tracklist image was
+  added.
 - A 2160 cover renders within 256 MB of memory (the text is drawn in slices).
 - The longest date, `28 SEPTEMBER 2026`, ends at x 535, about 120 px before
   `RADIO ARCHIVE`. `NO. 100` ends at x 248.

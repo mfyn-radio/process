@@ -82,7 +82,7 @@ list of open work. There are two kinds:
   - `Suggested` or `Not found`: set by step 1.
   - `Confirmed` or `No Instagram`: set by you in step 2a.
 - **Episode folders:** `D_M_YYYY- Episode Name`, using the air date. Each gets
-  its archive cover, `MFYN_archive_NN.png`, numbered from No. 3 (5 November 2026).
+  its archive cover, `MFYN_archive_NN.png`, and the YouTube playlist image `MFYN_tracklist_NN.png` in the same colour, numbered from No. 3 (5 November 2026).
 - **Video posts:** `MFYN_Posts\<episode folder>\Artist - Title.mp4`, plus `.json`
   details and the `.txt` caption.
 - **Secrets:** never in the repo. Google sign-in tokens live on the PC in
