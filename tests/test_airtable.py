@@ -158,6 +158,94 @@ def test_upsert_many_batches_new_rows():
     db = FakeAirtable()
     cat = catalog.Catalog(client=db)
     calls = db.calls
-    cat.artists.upsert_many([{"Artist": f"A{i}"} for i in range(12)] + [{"Artist": "a0", "Location": "X"}])
-    assert db.calls - calls == 2 and len(db.fields("Artists")) == 12
-    assert db.fields("Artists")[0] == {"Artist": "A0", "Location": "X"}
+    cat.artists.upsert_many([{"Artist": f"A{i}"} for i in range(12)] + [{"Artist": "a0", "Location": "Ghent, Belgium"}])
+    # 2 writes for the artists, plus reading Locations and making Ghent there
+    assert db.calls - calls == 4 and len(db.fields("Artists")) == 12
+    ghent = db.tables["Locations"][0]
+    assert ghent["fields"] == {"Name": "Ghent, Belgium", "City": "Ghent", "Country": "Belgium"}
+    assert db.fields("Artists")[0] == {"Artist": "A0", "Location": "Ghent, Belgium", "Linked location": [ghent["id"]]}
+
+
+# --- venues and locations ---
+
+def test_places_read_like_bandcamp_writes_them():
+    assert catalog.place_of("Austin, Texas") == {"Name": "Austin, United States", "City": "Austin",
+                                                 "Country": "United States"}
+    assert catalog.place_of("Washington, D.C.")["Name"] == "Washington, D.C., United States"
+    assert catalog.place_of("Belgium") == {"Name": "Belgium", "City": "", "Country": "Belgium"}
+    assert catalog.place_of("Rotterdam")["Name"] == "Rotterdam"
+    assert catalog.place_of("") is None
+
+
+def test_an_artist_links_to_the_location_already_there():
+    db = FakeAirtable({"Locations": [{"Name": "Rotterdam, Netherlands", "City": "Rotterdam",
+                                      "Country": "Netherlands"}]})
+    cat = catalog.Catalog(client=db)
+    cat.artists.upsert({"Artist": "Fellatio", "Location": "rotterdam, netherlands"})
+    cat.labels.upsert({"Label": "Hidden Behind", "Location": "Rotterdam"})   # city only: matched on City
+    rotterdam = db.tables["Locations"][0]["id"]
+    assert db.fields("Artists")[0]["Linked location"] == [rotterdam]
+    assert db.fields("Labels")[0]["Linked location"] == [rotterdam]
+    assert len(db.fields("Locations")) == 1
+
+
+def test_an_event_links_its_venue_and_location_and_makes_new_ones():
+    db = FakeAirtable({"Locations": [{"Name": "Li\u00e8ge, Belgium", "City": "Li\u00e8ge", "Country": "Belgium"}],
+                       "Venues": [{"Name": "La Zone", "Linked location": ["recLoc0"]}]})
+    cat = catalog.Catalog(client=db)
+    cat.events.upsert({"Event id": "e1", "Title": "Chain Cult", "Venue": "la zone", "City": "Liege",
+                       "Country": "Belgium"})
+    cat.events.upsert({"Event id": "e2", "Title": "Gig", "Venue": "Antwerp Music City", "City": "Antwerp",
+                       "Country": "Belgium"})
+    cat.events.upsert({"Event id": "e3", "Title": "Fest", "City": "Nijmegen"})   # no venue
+    e1, e2, e3 = db.fields("Events")
+    assert e1["Linked venue"] == [db.tables["Venues"][0]["id"]] and e1["Linked location"] == ["recLoc0"]
+    antwerp = db.tables["Locations"][1]
+    assert antwerp["fields"] == {"Name": "Antwerp, Belgium", "City": "Antwerp", "Country": "Belgium"}
+    amc = db.tables["Venues"][1]
+    assert amc["fields"] == {"Name": "Antwerp Music City", "Linked location": [antwerp["id"]]}
+    assert e2["Linked venue"] == [amc["id"]] and e2["Linked location"] == [antwerp["id"]]
+    assert "Linked venue" not in e3 and db.by_id("Locations", e3["Linked location"][0])["Name"] == "Nijmegen"
+
+    calls = db.calls   # the nightly run writes the same event again: nothing new, no call
+    cat.events.upsert({"Event id": "e2", "Title": "Gig", "Venue": "Antwerp Music City", "City": "Antwerp",
+                       "Country": "Belgium"})
+    assert db.calls == calls
+
+
+# --- fields renamed in Airtable ---
+
+class RenamedBase(FakeAirtable):
+    """A base where "Venue" became the link to Venues and the text moved to
+    "Venue- text", as Bryant renamed them on 21 Nov 2026."""
+
+    def request(self, method, path, params=None, body=None):
+        self.calls += 1
+        text = {"type": "singleLineText"}
+        link = lambda table: {"type": "multipleRecordLinks", "options": {"linkedTableId": table}}
+        events = [dict(text, name=c) for c in catalog.EVENTS if c != "Venue"] + [
+            dict(text, name="Venue- text"), dict(link("tblVen"), name="Venue"),
+            dict(link("tblLoc"), name="Linked location"), dict(link("tblArt"), name="Linked artists")]
+        return {"tables": [{"id": "tblEve", "name": "Events", "fields": events},
+                           {"id": "tblVen", "name": "Venues", "fields": [dict(text, name="Name")]},
+                           {"id": "tblLoc", "name": "Locations", "fields": [dict(text, name=n) for n in catalog.LOCATIONS]},
+                           {"id": "tblArt", "name": "Artists", "fields": [dict(text, name=n) for n in catalog.ARTISTS]}]}
+
+
+def test_renamed_fields_are_followed():
+    db = RenamedBase({"Events": [{"Event id": "e1", "Title": "Old", "Venue- text": "WORM", "Venue": ["recX"]}]})
+    cat = catalog.Catalog(client=db)
+    assert cat.events.rows[0]["Venue"] == "WORM" and cat.events.linked[0]["Linked venue"] == ["recX"]
+    cat.events.upsert({"Event id": "e2", "Title": "Gig", "Venue": "OCCII", "City": "Amsterdam",
+                       "Country": "Netherlands"})
+    new = db.fields("Events")[1]
+    occii = db.tables["Venues"][0]
+    assert new["Venue- text"] == "OCCII" and new["Venue"] == [occii["id"]] and "Linked venue" not in new
+
+
+def test_a_field_with_nowhere_to_go_is_left_out():
+    fields = [{"name": "Title", "type": "singleLineText"},
+              {"name": "Venue", "type": "multipleRecordLinks", "options": {"linkedTableId": "tblV"}}]
+    names = airtable.field_names(["Title", "Venue", "City"], {"Linked artists": ("Artists", None)},
+                                 fields, {"Artists": "tblA"})
+    assert names == {"Venue": None, "City": None, "Linked artists": None}

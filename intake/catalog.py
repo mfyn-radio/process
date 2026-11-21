@@ -11,6 +11,9 @@ Tables:
 - Episodes: one record per episode with a YouTube playlist.
 - Playlist entries: one record per track of an episode's YouTube playlist proposal,
   for review, written by the YouTube playlist step (docs/youtube-playlist.md).
+- Locations: one record per place ("Antwerp, Belgium"), with City and Country,
+  linked to the artists, labels, venues and events there.
+- Venues: one record per venue, linked to its location and its events.
 
 Tags are a multi-select field on Artists, Releases and Events, so the
 sheet's Tags tab (one row per tag) isn't needed.
@@ -42,23 +45,93 @@ PLAYLISTS = ["Episode", "#", "Artist", "Track", "Album", "Tier", "Use", "Link", 
              "Bandcamp", "Playlist", "Added"]
 EVENTS = ["Date", "Start", "End", "Title", "Venue", "City", "Country", "Acts", "Tags", "Link", "Post",
           "Location tag", "Event id", "Added"]
+LOCATIONS = ["Name", "City", "Country", "Notes"]
+VENUES = ["Name", "Notes"]
+
+US_STATES = {
+    "alabama", "alaska", "arizona", "arkansas", "california", "colorado", "connecticut", "delaware",
+    "florida", "georgia", "hawaii", "idaho", "illinois", "indiana", "iowa", "kansas", "kentucky",
+    "louisiana", "maine", "maryland", "massachusetts", "michigan", "minnesota", "mississippi", "missouri",
+    "montana", "nebraska", "nevada", "new hampshire", "new jersey", "new mexico", "new york",
+    "north carolina", "north dakota", "ohio", "oklahoma", "oregon", "pennsylvania", "rhode island",
+    "south carolina", "south dakota", "tennessee", "texas", "utah", "vermont", "virginia", "washington",
+    "west virginia", "wisconsin", "wyoming"}
+DC = {"d.c.", "dc", "district of columbia"}
+COUNTRIES = {
+    "netherlands", "belgium", "luxembourg", "germany", "france", "united kingdom", "uk", "ireland",
+    "spain", "portugal", "italy", "switzerland", "austria", "denmark", "norway", "sweden", "finland",
+    "iceland", "poland", "czechia", "czech republic", "slovakia", "hungary", "slovenia", "croatia",
+    "serbia", "romania", "bulgaria", "greece", "estonia", "latvia", "lithuania", "ukraine", "turkey",
+    "united states", "usa", "us", "canada", "mexico", "brazil", "argentina", "chile", "australia",
+    "new zealand", "japan", "china", "south korea", "indonesia", "south africa"}
+
+
+def place(city="", country=""):
+    """A Locations record for a city and country, as {"Name", "City", "Country"}:
+    "Antwerp, Belgium". A US state stands for the United States, and a country
+    on its own is a location too. None if there's nothing to go on."""
+    city, country = (city or "").strip(), (country or "").strip()
+    if country.casefold() in US_STATES:
+        country = "United States"
+    elif country.casefold() in DC:
+        city, country = f"{city}, D.C." if city else "Washington, D.C.", "United States"
+    if not country and city.casefold() in COUNTRIES:
+        city, country = "", city
+    if not (city or country):
+        return None
+    return {"Name": ", ".join(p for p in (city, country) if p), "City": city, "Country": country}
+
+
+def place_of(location):
+    """The Locations record for a location as Bandcamp writes it:
+    "Ghent, Belgium", "Austin, Texas", "Washington, D.C.", "Belgium"."""
+    city, _, country = (location or "").strip().rpartition(",")
+    if not city:
+        city, country = country, ""
+    return place(city, country)
+
+
+def located(row):
+    found = place_of(row.get("Location"))
+    return [found] if found else []
+
+
+def event_place(row):
+    found = place(row.get("City"), row.get("Country"))
+    return [found] if found else []
+
+
+def event_venue(row):
+    venue = (row.get("Venue") or "").strip()
+    if not venue:
+        return []
+    return [{"Name": venue, "Linked location": event_place(row)}]
 
 
 # Catalog attribute: (Airtable table, columns, key, multi-select fields, links, primary field).
 # The primary field is the one Airtable shows for a record and links match on.
 TABLES = {
-    "artists": ("Artists", ARTISTS, "Artist", ("Tags",), {}, "Artist"),
-    "labels": ("Labels", LABELS, "Label", (), {"Linked artists": Link("artists")}, "Label"),
+    "artists": ("Artists", ARTISTS, "Artist", ("Tags",),
+                {"Linked location": Link("locations", create=True, build=located)}, "Artist"),
+    "labels": ("Labels", LABELS, "Label", (),
+               {"Linked artists": Link("artists"),
+                "Linked location": Link("locations", create=True, build=located)}, "Label"),
     "releases": ("Releases", RELEASES, ("Album", "Artist"), ("Tags",),
                  {"Linked artists": Link("artists"), "Linked label": Link("labels")}, "Album"),
     "events": ("Events", EVENTS, "Event id", ("Tags",),
-               {"Linked artists": Link("artists", source="Acts", split=True)}, "Title"),
+               {"Linked artists": Link("artists", source="Acts", split=True),
+                "Linked venue": Link("venues", create=True, build=event_venue),
+                "Linked location": Link("locations", create=True, build=event_place)}, "Title"),
     "episodes": ("Episodes", EPISODES, "Episode", (), {}, "Episode"),
     "playlists": ("Playlist entries", PLAYLISTS, ("Episode", "#"), (),
                   {"Linked episode": Link("episodes", source="Episode", create=True),
                    "Linked artist": Link("artists", source="Artist"),
                    "Linked release": Link("releases", source="Album")}, "Track"),
+    "locations": ("Locations", LOCATIONS, "Name", (), {}, "Name"),
+    "venues": ("Venues", VENUES, "Name", (), {"Linked location": Link("locations", create=True)}, "Name"),
 }
+# Another field a link may match on: "Rotterdam" with no country finds "Rotterdam, Netherlands".
+FALLBACK = {"locations": ("City", "Country")}
 # Read when the catalog is opened, as the sheet's tabs were; the rest are read
 # on first use, to save API calls.
 EAGER = ("artists", "releases", "labels")
@@ -66,11 +139,12 @@ EAGER = ("artists", "releases", "labels")
 
 class Catalog:
     """The base's tables as attributes: catalog.artists, .releases, .labels,
-    .events, .episodes, .playlists. `creds` (the Google sign-in) isn't needed
+    .events, .episodes, .playlists, .locations, .venues. `creds` (the Google sign-in) isn't needed
     any more and is ignored."""
 
     def __init__(self, creds=None, client=None):
         self.client = client or airtable.connect()
+        self._schema = airtable.read_schema(self.client)   # 1 call; fields may have been renamed
         self._tables = {}
         for name in EAGER:
             self.table(name)
@@ -78,8 +152,17 @@ class Catalog:
     def table(self, name):
         if name not in self._tables:
             title, columns, key, lists, links, primary = TABLES[name]
+            names = None
+            if self._schema and title in self._schema[0]:
+                names = airtable.field_names(
+                    columns, {f: (TABLES[spec.target][0], spec) for f, spec in links.items()},
+                    self._schema[0][title], self._schema[1])
+                for code, real in names.items():
+                    if real != code:
+                        airtable.log.info("%s: %s is %s", title, code, f'"{real}"' if real else "left out")
             self._tables[name] = airtable.AirtableTable(
-                self.client, title, columns, key, lists, links, resolve=self.table, primary=primary)
+                self.client, title, columns, key, lists, links, resolve=self.table, primary=primary,
+                fallback=FALLBACK.get(name), names=names)
         return self._tables[name]
 
     def __getattr__(self, name):

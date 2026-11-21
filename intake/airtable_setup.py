@@ -19,7 +19,7 @@ import sys
 from . import airtable, catalog, config
 
 TEXT, LONG = "singleLineText", "multilineText"
-LONG_FIELDS = {"Bio", "Credits", "Other links", "Note"}
+LONG_FIELDS = {"Bio", "Credits", "Other links", "Note", "Notes"}
 # The setup and the copy use about 30 calls; this leaves room for a retry.
 SETUP_CALLS = 300
 
@@ -82,7 +82,7 @@ def ensure_schema(client, workspace=None, extra=None, tags=()):
             continue
         have = {f["name"] for f in tables[title]["fields"]}
         for spec in fields:
-            if spec["name"] not in have:
+            if spec["name"] not in have and not any(spec["name"] + x in have for x in airtable.TEXT_SUFFIXES):
                 made = client.request("POST", f"meta/bases/{base}/tables/{tables[title]['id']}/fields", body=spec)
                 tables[title]["fields"].append(made)
                 log.info("Added %s to %s", spec["name"], title)
@@ -93,9 +93,11 @@ def ensure_schema(client, workspace=None, extra=None, tags=()):
     for attr, (title, _, _, _, links, _) in catalog.TABLES.items():
         have = {f["name"] for f in tables[title]["fields"]}
         for name, link in links.items():
-            if name in have:
-                continue
             target = tables[catalog.TABLES[link.target][0]]["id"]
+            if name in have or any(f["type"] == airtable.LINK and
+                                   (f.get("options") or {}).get("linkedTableId") == target
+                                   for f in tables[title]["fields"]):
+                continue   # there, or renamed (the code finds it by the table it links to)
             client.request("POST", f"meta/bases/{base}/tables/{tables[title]['id']}/fields", body={
                 "name": name, "type": "multipleRecordLinks", "options": {"linkedTableId": target}})
             log.info("Added %s to %s", name, title)
@@ -157,7 +159,8 @@ def copy(cat, rows, extra):
     if rows["playlists"]:
         cat.playlists.upsert_many(rows["playlists"])
     return {catalog.TABLES[a][0]: len(cat.table(a).rows) for a in ("artists", "labels", "releases", "events",
-                                                                   "episodes", "playlists")}
+                                                                   "episodes", "playlists", "locations",
+                                                                   "venues")}
 
 
 def main(argv=None):

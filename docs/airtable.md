@@ -17,18 +17,28 @@ page reads it there, and it grows every day.
 - Rows read as plain text, as in the sheet. A multi-select such as Tags reads
   as `a, b, c`.
 - Linked-record fields (`Linked artists`, `Linked label`, `Linked episode`,
-  `Linked artist`, `Linked release`) are filled by name. A name is matched
+  `Linked artist`, `Linked release`, `Linked venue`, `Linked location`) are
+  filled by name. A name is matched
   ignoring case and accents. Links only ever gain records, like tags, so
   links you make by hand stay. An event or playlist entry only links to an
-  artist or release already in the base; it never makes one up.
+  artist or release already in the base; it never makes one up. Venues and
+  Locations are the exception: a new venue or place is added, so every
+  event and artist can link to one ([Locations and Venues](01-acquire.md#locations-and-venues)).
 - The same rule as the sheet: only empty fields are filled.
+- **Renaming fields is safe.** Each run first reads the base's field list
+  (1 call) and follows your renames: a field you turn into a link keeps its
+  text in `<name>- text` (Venue became the link to Venues, with the text in
+  "Venue- text"), and a link the code fills is found by the table it links
+  to, whatever it's called. A date field with the old name (Added, Purchased,
+  Release date, Date) takes the dates, written `2026-11-21`. A field that's
+  gone, with no `- text` copy, is skipped and the run says so in its log.
 
 ## Free plan limits
 
 | Limit | Free plan | What the code does |
 |---|---|---|
-| Records per base, all tables together | 1,000 | About 60 today. See [when the base fills up](#when-the-base-fills-up) |
-| API calls per workspace per month | 1,000 | Reads only the tables a run uses (Artists, Releases and Labels when opened; Events, Episodes and Playlist entries when first used), 100 records a call, and writes 10 records a call. Expected use: about 300 a month |
+| Records per base, all tables together | 1,000 | About 100 today. See [when the base fills up](#when-the-base-fills-up) |
+| API calls per workspace per month | 1,000 | Reads only the tables a run uses (Artists, Releases and Labels when opened; the rest, such as Events, Venues and Locations, when first used), 100 records a call, and writes 10 records a call. Each run also reads the field list once. Expected use: about 350 a month |
 | Calls in one run | (ours) 150, `MFYN_AIRTABLE_MAX_CALLS` | A run that reaches it stops using the base and carries on without it, as when the sheet couldn't be reached |
 | Requests per second | 5 per base | The code waits a quarter of a second between calls, and 30 seconds if Airtable says it's too many |
 | Revision history | 2 weeks | Export a table to CSV now and then if you want older history |
@@ -79,7 +89,7 @@ built yet, is an **archive** base beside the active one:
 
 - **Archive:** events whose date has passed, and episodes older than about
   six months with their playlist entries.
-- **Keep active:** Artists, Labels and Releases. The automations look these
+- **Keep active:** Artists, Labels, Releases, Venues and Locations. The automations look these
   up on every run, and they grow slowly.
 - Links can't cross bases, so archived records keep their names as text.
   Both bases share the 1,000 API calls a month.
@@ -93,6 +103,6 @@ Details: [#58](https://github.com/mfyn-radio/process/issues/58#issuecomment-7061
 | `No Airtable token` | Save the token as in setup step 1. |
 | `Airtable isn't set up on this PC yet` | Run `python -m intake.airtable_setup`. |
 | `HTTP 401` or `HTTP 403` | The token is wrong, has expired, or lacks a scope or the workspace. Make a new one. |
-| `HTTP 422 … UNKNOWN_FIELD_NAME` | A built-in field was renamed or deleted. Rename it back, or run `python -m intake.airtable_setup` to add it again. |
+| `HTTP 422 … UNKNOWN_FIELD_NAME` | A field was renamed while a run was going, or the token can't read the schema (`schema.bases:read`). Run again, or check the token's scopes. |
 | `stopped after … Airtable calls` | The run used its budget. It carries on without the base; the next run fills in what was missed (`--artists`, `--fill-sheet`). |
 | `HTTP 429` again and again | Over the monthly 1,000 calls. It resets on the 1st. |

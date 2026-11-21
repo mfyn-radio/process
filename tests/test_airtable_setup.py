@@ -52,9 +52,10 @@ def test_without_a_base_or_workspace_it_says_what_to_do():
 def test_makes_the_base_with_every_table_and_link_and_saves_its_id():
     client = FakeMeta()
     assert airtable_setup.ensure_schema(client, workspace="wspX", tags=["punk"]) == "appNEW"
-    assert set(client.schema) == {"Artists", "Labels", "Releases", "Events", "Episodes", "Playlist entries"}
+    assert set(client.schema) == {"Artists", "Labels", "Releases", "Events", "Episodes", "Playlist entries",
+                                 "Locations", "Venues"}
     events = [f["name"] for f in client.schema["Events"]["fields"]]
-    assert events[0] == "Title" and "Linked artists" in events
+    assert events[0] == "Title" and {"Linked artists", "Linked venue", "Linked location"} <= set(events)
     releases = {f["name"]: f for f in client.schema["Releases"]["fields"]}
     assert releases["Linked label"]["options"]["linkedTableId"] == client.schema["Labels"]["id"]
     assert releases["Tags"]["options"]["choices"] == [{"name": "punk"}]
@@ -95,7 +96,8 @@ def test_copy_links_releases_labels_and_events():
     db = FakeAirtable()
     cat = catalog.Catalog(client=db)
     counts = airtable_setup.copy(cat, rows, extra)
-    assert counts == {"Artists": 2, "Labels": 1, "Releases": 2, "Events": 1, "Episodes": 0, "Playlist entries": 0}
+    assert counts == {"Artists": 2, "Labels": 1, "Releases": 2, "Events": 1, "Episodes": 0, "Playlist entries": 0,
+                      "Locations": 0, "Venues": 0}
 
     ids = {f["Artist"]: r["id"] for r, f in zip(db.tables["Artists"], db.fields("Artists"))}
     noverte = db.fields("Artists")[0]
@@ -109,4 +111,4 @@ def test_copy_links_releases_labels_and_events():
 
     calls = db.calls   # copying again changes nothing
     airtable_setup.copy(catalog.Catalog(client=db), rows, extra)
-    assert db.calls - calls == 6   # the six tables are read; nothing is written
+    assert db.calls - calls == 8   # the eight tables are read; nothing is written

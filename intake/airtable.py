@@ -129,11 +129,16 @@ class Link:
     """A linked-record field. `target` names the Catalog table it links to.
     With `source`, it's filled from that text column when nothing is given
     for it (split on commas if `split`). `create` makes a record in the target
-    for a name it doesn't have; otherwise unknown names are skipped."""
+    for a name it doesn't have; otherwise unknown names are skipped.
+
+    With `build`, the link is worked out from the whole row once it's
+    written: build(row) gives the target records it should link to, each as
+    a name or as a dict of fields (made with those fields if `create`)."""
     target: str
     source: str = None
     split: bool = False
     create: bool = False
+    build: object = None
 
 
 def text(value):
@@ -146,10 +151,59 @@ def text(value):
     return str(value)
 
 
+LINK = "multipleRecordLinks"
+TEXT_SUFFIXES = ("- text", " - text", " -text", "-text")
+
+
+def field_names(columns, links, fields, table_ids):
+    """Where each of the code's columns and links lives in a table whose
+    fields someone may have renamed: {code name: field name, or None to
+    leave it out}. Only names that differ are given.
+
+    - A column whose field became a link (or another kind the code can't
+      write text to) goes to "<name>- text" if there is one. "Venue" turned
+      into a link to Venues, with the text kept as "Venue- text".
+    - A link whose field isn't there goes to the one link field pointing at
+      the same table, whatever it's called ("Linked venue" is now "Venue").
+    - Anything with nowhere to go is left out, so a run carries on.
+    `fields` is the table's schema, `table_ids` {table name: id}."""
+    by_name = {f["name"]: f for f in fields}
+    names = {}
+    for column in columns:
+        field = by_name.get(column)
+        if field and field["type"] != LINK:
+            continue
+        alt = next((column + s for s in TEXT_SUFFIXES
+                    if column + s in by_name and by_name[column + s]["type"] != LINK), None)
+        names[column] = alt
+    claimed = {f for f in links if f in by_name and by_name[f]["type"] == LINK}
+    for name, (target, _) in links.items():
+        if name in claimed:
+            continue
+        options = [f["name"] for f in fields if f["type"] == LINK and f["name"] not in claimed
+                   and (f.get("options") or {}).get("linkedTableId") == table_ids.get(target)]
+        names[name] = options[0] if len(options) == 1 else None
+        if names[name]:
+            claimed.add(names[name])
+    return names
+
+
+def read_schema(client):
+    """{table name: [fields]} and {table name: id}, or None if the token
+    can't read the schema (then fields are used by their built-in names)."""
+    try:
+        tables = client.request("GET", f"meta/bases/{client.base}/tables")["tables"]
+    except (AttributeError, AirtableError) as e:
+        log.info("Using the built-in field names (%s)", e)
+        return None
+    return {t["name"]: t["fields"] for t in tables}, {t["name"]: t["id"] for t in tables}
+
+
 class AirtableTable:
     """One table of the base, loaded whole when it's made."""
 
-    def __init__(self, client, name, columns, key, list_fields=(), links=None, resolve=None, primary=None):
+    def __init__(self, client, name, columns, key, list_fields=(), links=None, resolve=None, primary=None,
+                 fallback=None, names=None):
         self.client = client
         self.tab = self.name = name
         self.columns = list(columns)
@@ -158,14 +212,33 @@ class AirtableTable:
         self.list_fields = tuple(list_fields)
         self.links = dict(links or {})
         self.primary = primary or self.columns[0]
+        # (field, unless): a second field id_for matches on when the primary
+        # doesn't, if the record has nothing in `unless`. Locations use
+        # ("City", "Country"): "Rotterdam" alone finds "Rotterdam, Netherlands".
+        self.fallback = fallback
         self._resolve = resolve    # name of a Catalog table -> that AirtableTable
+        # {code name: field name or None} where the base's fields were renamed (field_names)
+        self.names = dict(names or {})
         self.rows, self.ids, self.linked, self._loaded = [], [], [], []
         for rec in client.list_records(name):
-            fields = rec.get("fields", {})
+            fields = self._in(rec.get("fields", {}))
             self.rows.append({c: text(fields.get(c)) for c in self.columns})
             self.ids.append(rec["id"])
             self.linked.append({f: list(fields.get(f) or []) for f in self.links})
             self._loaded.append(fields)
+
+    def _in(self, fields):
+        """A record's fields under the code's names."""
+        if not self.names:
+            return fields
+        renamed = set(self.names.values())
+        out = {k: v for k, v in fields.items() if k not in renamed and k not in self.names}
+        out.update({code: fields.get(real) for code, real in self.names.items() if real})
+        return out
+
+    def _out(self, fields):
+        """Fields to send, under the base's names; left-out ones dropped."""
+        return {self.names.get(k, k): v for k, v in fields.items() if self.names.get(k, k)}
 
     def add_columns(self, names):
         """Also read and write these fields (columns someone added by hand)."""
@@ -193,15 +266,24 @@ class AirtableTable:
 
     def id_for(self, name, create=False):
         """The record whose primary field is `name`, matched ignoring case and
-        accents; made if `create`. None if there isn't one."""
-        wanted = match_key(name)
+        accents; made if `create`. `name` can also be a dict of fields, which
+        a new record is made with. None if there isn't one."""
+        fields = dict(name) if isinstance(name, dict) else {self.primary: name}
+        wanted = match_key(fields.get(self.primary, ""))
         if not wanted:
             return None
         for i, row in enumerate(self.rows):
             if match_key(row.get(self.primary, "")) == wanted:
                 return self.ids[i]
+        if self.fallback:
+            field, unless = self.fallback
+            other = match_key(fields.get(field, ""))
+            if other and not fields.get(unless):
+                for i, row in enumerate(self.rows):
+                    if match_key(row.get(field, "")) == other:
+                        return self.ids[i]
         if create:
-            self.upsert({self.primary: name})
+            self.upsert(fields)
             return self.ids[-1]
         return None
 
@@ -220,12 +302,23 @@ class AirtableTable:
         wanted = {}
         for field, spec in self.links.items():
             names = record.pop(field, None)
+            if names is None and spec.build:
+                continue   # worked out from the row, in _built
             if names is None and spec.source and record.get(spec.source):
                 value = record[spec.source]
                 names = split_list(value) if spec.split and isinstance(value, str) else value
             if names:
                 wanted[field] = [names] if isinstance(names, str) else list(names)
         return wanted
+
+    def _built(self, row, links):
+        """Add the links that `build` works out from the written row."""
+        for field, spec in self.links.items():
+            if spec.build and field not in links:
+                names = [n for n in spec.build(row) if n]
+                if names:
+                    links[field] = names
+        return links
 
     def _fields(self, values, clear=False):
         """Row values as Airtable fields: lists for multi-selects. Empty values
@@ -269,7 +362,7 @@ class AirtableTable:
                 continue
             changes = merge(row, record, self.list_fields)
             fields = self._fields(changes)
-            for field, names in links.items():
+            for field, names in self._built(dict(row, **changes), links).items():
                 have = self.linked[index][field]
                 added = [i for i in self._link_ids(field, names) if i not in have]
                 if added:
@@ -280,15 +373,16 @@ class AirtableTable:
                 row.update(changes)
             result.append(row)
         if updates:
-            self.client.update(self.name, [(self.ids[i], f) for i, f in updates.items()])
+            self.client.update(self.name, [(self.ids[i], self._out(f)) for i, f in updates.items()])
         if new:
             bodies = []
             for values, links in new:
+                links = self._built(values, links)
                 fields = self._fields(values)
                 link_ids = {f: self._link_ids(f, names) for f, names in links.items()}
                 fields.update({f: ids for f, ids in link_ids.items() if ids})
                 bodies.append((values, fields, link_ids))
-            made = self.client.create(self.name, [b[1] for b in bodies])
+            made = self.client.create(self.name, [self._out(b[1]) for b in bodies])
             for (values, _, link_ids), rec in zip(bodies, made):
                 self.rows.append(values)
                 self.ids.append(rec["id"])
@@ -299,5 +393,5 @@ class AirtableTable:
         """Write fields of an existing row (index into self.rows)."""
         fields = self._fields(changes, clear=True)
         if fields:
-            self.client.update(self.name, [(self.ids[index], fields)])
+            self.client.update(self.name, [(self.ids[index], self._out(fields))])
         self.rows[index].update(changes)
