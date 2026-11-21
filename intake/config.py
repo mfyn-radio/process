@@ -112,3 +112,14 @@ REAPER_VOICE_TRACK = "voice"
 PLAYLIST_SEARCH_RESULTS = 10
 # The playlists are made public, so the Instagram Story link works for everyone.
 PLAYLIST_PRIVACY = os.environ.get("MFYN_PLAYLIST_PRIVACY", "public")
+
+# Wishlist (docs/wishlist.md): your public Bandcamp wishlist, with each release's
+# tags and location, in a Google Sheet you can filter on your phone.
+# The fan page, as https://bandcamp.com/<username>.
+BANDCAMP_FAN_PAGE = os.environ.get("MFYN_BANDCAMP_FAN", "https://bandcamp.com/music_for_your_neighbors")
+WISHLIST_SHEET = "MFYN Wishlist"
+# Album pages already read, so each one is opened only once.
+WISHLIST_STATE_FILE = APP_DIR / "wishlist.json"
+WISHLIST_LOG_FILE = APP_DIR / "wishlist.log"
+# Each run opens at most this many new album pages, a few seconds apart.
+WISHLIST_PAGES_PER_RUN = 100

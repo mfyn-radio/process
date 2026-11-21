@@ -36,6 +36,7 @@ misbehaves.
 | Make Episode Content (`intake.content`): the archive cover (`intake.archive_cover`), video posts (`intake.reels`), Instagram copy (`intake.captions`) and Album Stories (`intake.stories`) | You, double-clicking **MFYN – Make Episode Content** (`scripts\make_content.cmd`), until step 2 starts it itself | MFYN PC | `%APPDATA%\mfyn-intake\content.log` | [Step 2a](02a-make-episode-content.md), [step 2b](02b-instagram-copy.md), [archive cover](archive-cover.md), [Album Stories](featured-album-story.md) |
 | YouTube playlist (`intake.playlist`) | Make Episode Content's playlist question, or `python -m intake.playlist` | MFYN PC | `%APPDATA%\mfyn-intake\playlist.log` | [YouTube playlist](youtube-playlist.md) |
 | Event Calendar (`intake.events`) | Task Scheduler task `MFYN Event Calendar`, daily at 20:00, via `scripts\run_events.cmd` | MFYN PC, while signed in | `%APPDATA%\mfyn-intake\events.log` | [Event Calendar](event-calendar.md) |
+| Wishlist (`intake.wishlist`) | Task Scheduler task `MFYN Wishlist`, daily at 20:00, via `scripts\run_wishlist.cmd` | MFYN PC, while signed in | `%APPDATA%\mfyn-intake\wishlist.log` | [Wishlist](wishlist.md) |
 | Tests | GitHub Actions, on pull requests and pushes to `main` (`.github/workflows/tests.yml`) | GitHub | the Actions tab | `python -m pytest` locally |
 | Labels | GitHub Actions, when `.github/workflows/labels.yml` changes on `main`, or run by hand (`workflow_dispatch`) | GitHub | the Actions tab | [Issues](#issues) |
 
@@ -54,6 +55,7 @@ their own) also write what they did to the **MFYN Run Log** sheet, for the statu
 | admin@nothingflatdigital.com | Google Workspace | Workspace and Google Cloud administration |
 | MFYN Catalog | Airtable base on the free plan, in mfyn@'s Airtable account, kept by the automation ([Airtable](airtable.md)) | The artist library (Instagram handles, tags, links), releases, labels, every event on Event Calendar, and the YouTube playlist proposals, linked to each other |
 | MFYN Artists | Google Sheet in mfyn@'s Drive | Where the catalog was kept until 21 Nov 2026. A backup now; nothing writes to it |
+| MFYN Wishlist | Google Sheet in mfyn@'s Drive, kept by the automation | Your Bandcamp wishlist with tags and locations, to filter on your phone ([Wishlist](wishlist.md)) |
 | MFYN Run Log | Google Sheet in mfyn@'s Drive, kept by the automation | What the automations did, for the status page ([run log](run-log.md)) |
 | `MFYN_Show_Archive` | mfyn@'s My Drive, `H:\My Drive\MFYN_Show_Archive` | Finished episodes, `D_M_YYYY- Episode Name\Tracks` |
 | `MFYN_Posts` | mfyn@'s My Drive, `H:\My Drive\MFYN_Posts` | Each episode's video posts, their details and captions, for your review and then Publishing |
