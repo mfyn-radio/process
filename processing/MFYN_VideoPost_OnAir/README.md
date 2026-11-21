@@ -23,7 +23,7 @@ grid, so no seam shows.
 
 ## One-time setup (Windows)
 
-Runs on the MFYN PC. The [Make Reels doc](../../docs/02a-make-reels.md)
+Runs on the MFYN PC. The [Make Episode Content doc](../../docs/02a-make-episode-content.md)
 covers how the automation uses it.
 
 1. Install **Processing 4** from processing.org.
@@ -77,20 +77,20 @@ Look settings live in their own tabs:
 
 ## Running it without opening the editor
 
-Normally the Make Reels automation does this for you. To do it by hand, use
+Normally the Make Episode Content automation does this for you. To do it by hand, use
 `processing-java.exe` from the Processing install folder (newer versions of
 Processing use `Processing.exe cli` instead). This renders everything in
 `input/`:
 
 ```
-"C:\Program Files\Processing\processing-java.exe" --sketch="C:\path\to\MFYN_VideoPost_OnAir" --run
+"C:\Program Files\Processing\Processing.exe" cli --sketch="C:\Users\admin\mfyn-process\processing\MFYN_VideoPost_OnAir" --run
 ```
 
 A window opens briefly while it renders, so the PC needs to be signed in.
 
 ## Command-line options
 
-The Make Reels automation (`intake/reels.py`, step 2a of the intake and production process)
+Make Episode Content (`intake/reels.py`, step 2a of the intake and production process)
 runs the sketch with options that override the settings:
 
 ```

@@ -17,7 +17,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-from . import bandcamp, catalog, config, gmail, google_auth, library, purchase_email
+from . import bandcamp, catalog, config, gmail, google_auth, library, purchase_email, runlog
 
 log = logging.getLogger("acquire")
 
@@ -38,9 +38,14 @@ def pending_message_ids(service, backlog):
             return list(reversed(ids))  # oldest first
 
 
-def handle(service, browser, sheet, message_id, today, dry_run):
+def handle(service, browser, sheet, message_id, today, dry_run, run=None):
     """Process one purchase email. Returns the label to add once it's finished
-    (DONE_LABEL or EXCLUDED_LABEL), or None to leave it for a later run."""
+    (DONE_LABEL or EXCLUDED_LABEL), or None to leave it for a later run.
+
+    What happened goes in the run log, except for purchases that will be
+    retried (pre-orders, not downloadable yet): those would add a row every
+    hour, so they're only counted in Last run."""
+    run = run or runlog.RunLog("Acquire")
     msg = service.users().messages().get(userId="me", id=message_id, format="full").execute()
     purchase = purchase_email.parse(message_id, purchase_email.body_text(msg["payload"]))
     if purchase is None:
@@ -49,6 +54,7 @@ def handle(service, browser, sheet, message_id, today, dry_run):
     excluded = {s.casefold() for s in config.EXCLUDED_SELLERS}
     if purchase.seller and purchase.seller.casefold() in excluded:
         log.info("%s: from %s, which is excluded", message_id, purchase.seller)
+        run.add(f"Purchase from {purchase.seller}", runlog.EXCLUDED, "excluded seller; not added to the library")
         return config.EXCLUDED_LABEL
     if not purchase.is_released(today):
         log.info("%s: pre-order, releases %s; will retry then", message_id, purchase.release_date)
@@ -66,11 +72,13 @@ def handle(service, browser, sheet, message_id, today, dry_run):
     name = library.clean(downloaded.stem)
     if (config.LIBRARY_DIR / name).exists():
         log.info("%s: '%s' is already in the library", message_id, name)
+        run.add(name, runlog.OK, "already in MFYN_Library")
         downloaded.unlink()
         return config.DONE_LABEL
     files = library.add(config.LIBRARY_DIR, name, downloaded)
     log.info("%s: added '%s' (%d files)", message_id, name, len(files))
     purchased = datetime.datetime.fromtimestamp(int(msg["internalDate"]) / 1000).date().isoformat()
+    run.add(name, runlog.OK, f"added to MFYN_Library, {len(files)} files, purchased {purchased}")
     record_artists(sheet, browser, config.LIBRARY_DIR / name, purchased, browser.last_album_url)
     return config.DONE_LABEL
 
@@ -114,6 +122,10 @@ def setup_logging():
 
 
 def main(argv=None):
+    return runlog.track("Acquire", lambda run: _main(argv, run))
+
+
+def _main(argv, run):
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--setup", metavar="CLIENT_JSON", help="sign in to Google as mfyn@ using this OAuth client file")
     parser.add_argument("--backlog", action="store_true", help=f"include purchases before {config.START_DATE}")
@@ -122,6 +134,8 @@ def main(argv=None):
     parser.add_argument("--artists", action="store_true", help=f"fill the {config.ARTISTS_SHEET} sheet from the whole library, then stop")
     args = parser.parse_args(argv)
     setup_logging()
+    if args.dry_run or args.setup:
+        run.runs = run.last_run = None  # nothing to log
 
     if args.setup:
         account = google_auth.setup(args.setup)
@@ -144,7 +158,7 @@ def main(argv=None):
     if not args.artists:
         log.info("%d purchase email(s) to check", len(message_ids))
 
-    failures = 0
+    failures = waiting = 0
     with tempfile.TemporaryDirectory(prefix="mfyn-") as tmp:
         browser = bandcamp.Browser(Path(tmp))
         try:
@@ -152,11 +166,14 @@ def main(argv=None):
                 backfill_artists(sheet, browser)
             for message_id in message_ids:
                 try:
-                    label = handle(service, browser, sheet, message_id, today, args.dry_run)
-                except Exception:
+                    label = handle(service, browser, sheet, message_id, today, args.dry_run, run)
+                except Exception as e:
                     log.exception("%s: failed; will retry next run", message_id)
+                    run.add(f"Purchase email {message_id}", runlog.FAILED, f"{type(e).__name__}: {e}")
                     failures += 1
                     continue
+                if label is None:
+                    waiting += 1
                 if label and not args.dry_run:
                     service.users().messages().modify(
                         userId="me", id=message_id, body={"addLabelIds": [label_ids[label]]}
@@ -164,6 +181,9 @@ def main(argv=None):
         finally:
             browser.close()
 
+    run.summary = "filled in the Artists sheet from the library" if args.artists else (
+        f"{len(message_ids)} purchase email(s) checked") + (
+        f", {waiting} waiting (pre-order or not downloadable yet)" if waiting else "")
     if failures:
         log.error("%d purchase(s) failed", failures)
         return 1

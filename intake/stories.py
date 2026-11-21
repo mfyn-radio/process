@@ -1,13 +1,14 @@
-"""Make Album Story: a featured-album Instagram Story from an album in MFYN_Library.
+"""Album Stories: featured-album Instagram Stories from albums in MFYN_Library.
 
-Double-click scripts\\make_story.cmd (or its desktop shortcut), or run:
+Make Episode Content (intake.content) makes one for every artist in an
+episode. To make a one-off Story for any album in the library, run:
 
     python -m intake.stories                          # asks for the album and the featured track
     python -m intake.stories --album NAME --track N   # the album whose folder name contains NAME, track N
     python -m intake.stories --skip-handles           # don't stop to confirm Instagram handles
 
-You pick the album and the featured track; the rest is automatic. See
-docs/featured-album-story.md.
+For a one-off you pick the album and the featured track; the rest is
+automatic. See docs/featured-album-story.md.
 """
 import argparse
 import datetime
@@ -19,7 +20,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-from . import catalog, config, episode, google_auth, handles, library, reels
+from . import catalog, config, episode, google_auth, handles, library, reels, runlog
 
 log = logging.getLogger("stories")
 
@@ -157,7 +158,102 @@ def details(folder, tracks, featured, cat, seconds, ep):
     }
 
 
+def story_path(ep, featured):
+    """Where the Story featuring this track goes: MFYN_Stories\\<episode>\\Artist - Title.mp4."""
+    return config.STORIES_DIR / ep.folder.name / f"{library.clean(f'{featured.artist} - {featured.title}')}.mp4"
+
+
+def make(folder, tracks, index, ep, cat, episode_artist=""):
+    """Render the Story for album `folder` featuring tracks[index] and file it
+    under the episode. `episode_artist` is the artist as the episode's tracks
+    name them, so a re-run knows they have their Story. Returns the .mp4, or
+    None if it couldn't be made."""
+    featured = tracks[index]
+    target = story_path(ep, featured)
+    if target.exists():     # finished output is final: never overwrite it
+        log.info("%s is already in %s; leaving it as it is.", target.name, target.parent)
+        return target
+    tmp, mp4, png = render(folder, tracks, index, config.STORY_SECONDS)
+    try:
+        if not mp4.exists():
+            log.error("No Story was made for %s. Scroll up for the sketch's own messages.", folder.name)
+            return None
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.move(mp4, target)
+        if png.exists():
+            shutil.move(png, target.with_suffix(".png"))
+        info = details(folder, tracks, featured, cat, config.STORY_SECONDS, ep)
+        if episode_artist:
+            info["episode_artist"] = episode_artist
+        target.with_suffix(".json").write_text(json.dumps(info, indent=2, ensure_ascii=False), encoding="utf-8")
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    log.info("Made the Album Story %s", target.name)
+    return target
+
+
+# ---------- an episode's Stories (Make Episode Content) ----------
+def in_library(track, folders):
+    """The library album an episode track comes from, and the track's index
+    in it: (folder, album tracks, index), or None if it can't be found.
+    Bandcamp names album folders "Artist - Album", so only folders whose name
+    holds the album's name are read."""
+    if not track.album:
+        return None
+    album = library.clean(track.album).casefold()
+    for folder in (f for f in folders if album in f.name.casefold()):
+        tracks = album_tracks(folder)
+        for i, t in enumerate(tracks):
+            if t.album.casefold() == track.album.casefold() and t.title.casefold() == track.title.casefold():
+                return folder, tracks, i
+    return None
+
+
+def for_episode(ep_tracks, folders, rng, done=()):
+    """One Album Story per artist in the episode: for each artist, the album
+    of a track you played (one of them at random, if you played several), and
+    a random track from that album to feature. Returns a list of
+    (folder, album tracks, featured index, the artist as the episode names
+    them). Artists in `done` (casefolded) already have a Story and are left
+    out; so are tracks whose album isn't in the library."""
+    by_artist = {}
+    for track in ep_tracks:
+        by_artist.setdefault(track.artist.casefold(), []).append(track)
+    picks = []
+    for artist, played in by_artist.items():
+        if artist in done:
+            log.info("%s already has an Album Story for this episode.", played[0].artist)
+            continue
+        for track in rng.sample(played, len(played)):
+            found = in_library(track, folders)
+            if found:
+                folder, tracks, _ = found
+                picks.append((folder, tracks, rng.randrange(len(tracks)), track.artist))
+                break
+        else:
+            log.warning("%s: no album of theirs from this episode is in %s, so they get no Album Story.",
+                        played[0].artist, config.LIBRARY_DIR)
+    return picks
+
+
+def done_artists(ep):
+    """The artists (casefolded) of the episode's tracks that already have an
+    Album Story in MFYN_Stories, from the Stories' details files."""
+    folder = config.STORIES_DIR / ep.folder.name
+    done = set()
+    for info in (folder.glob("*.json") if folder.is_dir() else []):
+        try:
+            done.add(json.loads(info.read_text(encoding="utf-8")).get("episode_artist", "").casefold())
+        except (OSError, ValueError):
+            continue
+    return done - {""}
+
+
 def main(argv=None, ask=input, say=print):
+    return runlog.track("Album Story", lambda run: _main(argv, ask, say, run))
+
+
+def _main(argv, ask, say, run):
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--album", help="the album whose library folder name contains this")
     parser.add_argument("--episode", help="file the Story under the episode whose folder name contains this "
@@ -197,10 +293,10 @@ def main(argv=None, ask=input, say=print):
             return 0
     featured = tracks[index]
 
-    out_dir = config.STORIES_DIR / ep.folder.name
-    name = library.clean(f"{featured.artist} - {featured.title}")
-    if (out_dir / f"{name}.mp4").exists():
-        log.info("%s.mp4 already exists in %s. Delete it to make it again.", name, out_dir)
+    if story_path(ep, featured).exists():
+        log.info("%s.mp4 already exists in %s. Delete it to make it again.", story_path(ep, featured).stem,
+                 story_path(ep, featured).parent)
+        run.summary = f"{story_path(ep, featured).name} was already made"
         return 0
 
     try:
@@ -216,23 +312,14 @@ def main(argv=None, ask=input, say=print):
         if who["label"] and who["label"] != "Self-released":
             handles.confirm(cat.labels, [who["label"]], "label", ask=ask)
 
-    tmp, mp4, png = render(folder, tracks, index, config.STORY_SECONDS)
-    try:
-        if not mp4.exists():
-            log.error("No Story was made for %s. Scroll up for the sketch's own messages.", folder.name)
-            return 1
-        out_dir.mkdir(parents=True, exist_ok=True)
-        shutil.move(mp4, out_dir / f"{name}.mp4")
-        if png.exists():
-            shutil.move(png, out_dir / f"{name}.png")
-        (out_dir / f"{name}.json").write_text(
-            json.dumps(details(folder, tracks, featured, cat, config.STORY_SECONDS, ep), indent=2, ensure_ascii=False),
-            encoding="utf-8")
-    finally:
-        shutil.rmtree(tmp, ignore_errors=True)
-    log.info("\nDone: %s.mp4 (and .png, .json) in %s", name, out_dir)
+    made = make(folder, tracks, index, ep, cat)
+    if made is None:
+        run.add(f"{folder.name} ({ep.folder.name})", runlog.FAILED, "Processing made no video")
+        return 1
+    log.info("\nDone: %s (and .png, .json) in %s", made.name, made.parent)
+    run.summary = f"made {made.name} for {ep.folder.name}"
+    run.add(f"{folder.name} ({ep.folder.name})", runlog.OK, run.summary)
     return 0
-
 
 if __name__ == "__main__":
     sys.exit(main())

@@ -24,6 +24,7 @@ def test_date_and_file_name():
     assert archive_cover.cover_date(datetime.date(2026, 11, 5)) == "5 November 2026"
     assert archive_cover.cover_name(3) == "MFYN_archive_03.png"
     assert archive_cover.cover_name(100) == "MFYN_archive_100.png"
+    assert archive_cover.tracklist_name(3) == "MFYN_tracklist_03.png"
 
 
 def test_make_saves_in_the_episode_folder_once(tmp_path, monkeypatch):
@@ -38,7 +39,9 @@ def test_make_saves_in_the_episode_folder_once(tmp_path, monkeypatch):
     made = archive_cover.make(eps[1], eps, ask=lambda p: next(answers), show=shown.append)
     assert made == archive / "12_11_2026- Next" / "MFYN_archive_04.png"
     assert made.read_text() == "12 November 2026"
-    assert len(shown) == 3                       # two turned down, the third kept
+    assert (made.parent / "MFYN_tracklist_04.png").read_text() == "tracklist 12 November 2026"
+    assert len(shown) == 6                       # two pairs turned down, the third kept
+    assert [p.name for p in shown[-2:]] == ["MFYN_archive_04.png", "MFYN_tracklist_04.png"]
 
     monkeypatch.setattr(config, "PROCESSING", str(tmp_path / "missing"))   # would fail if it ran again
     assert archive_cover.make(eps[1], eps, ask=None, show=None) == made

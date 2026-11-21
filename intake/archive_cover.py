@@ -1,6 +1,6 @@
 """The archive cover for an episode in MFYN_Show_Archive.
 
-Make Reels runs this first, so it normally needs no double-click of its own.
+Make Episode Content runs this first, so it normally needs no double-click of its own.
 To run it by hand:
 
     python -m intake.archive_cover                  # the newest episode
@@ -9,12 +9,13 @@ To run it by hand:
 The date comes from the episode folder's name (5_11_2026-... is 5 November
 2026). The number counts up from config.ARCHIVE_FIRST_NUMBER (No. 3, the
 5 November 2026 episode), one per episode folder, in air-date order. The
-cover is saved in the episode folder as MFYN_archive_03.png; an episode that
-already has its cover is skipped.
+cover is saved in the episode folder as MFYN_archive_03.png, with the
+YouTube playlist image, MFYN_tracklist_03.png, in the same colour next to
+it; an episode that already has its cover is skipped.
 
-Each new cover gets a random paper colour. It opens so you can look at it,
-and you're asked whether to keep it; say no and another one is made. See
-docs/archive-cover.md.
+Each new cover gets a random paper colour. Both images open so you can look
+at them, and you're asked whether to keep them; say no and another pair is
+made in a new colour. See docs/archive-cover.md.
 """
 import argparse
 import logging
@@ -25,7 +26,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-from . import config, episode, reels
+from . import config, episode, reels, runlog
 
 log = logging.getLogger("archive_cover")
 
@@ -49,27 +50,38 @@ def cover_name(number):
     return f"MFYN_archive_{number:02d}.png"
 
 
+def tracklist_name(number):
+    """The YouTube playlist image, made in the same render as the cover."""
+    return f"MFYN_tracklist_{number:02d}.png"
+
+
 def open_image(path):
-    """Show the cover in the PC's image viewer."""
+    """Show an image in the PC's image viewer."""
     if hasattr(os, "startfile"):
         os.startfile(path)
     else:
         log.info("Have a look at %s", path)
 
 
-def make(ep, episodes, ask=input, show=open_image):
-    """Render the episode's cover, show it, and save it into the episode
-    folder once you keep it; a new colour each time you don't. Returns the
-    path, or None if the episode gets no cover or it couldn't be made."""
+def make(ep, episodes, ask=input, show=open_image, tracklist_image=True):
+    """Render the episode's cover and tracklist image, show them, and save
+    both into the episode folder once you keep them; a new colour each time
+    you don't. With tracklist_image=False only the cover is shown and kept.
+    Returns the cover's path, or None if the episode gets no cover or it
+    couldn't be made."""
     number = number_for(ep, episodes)
     if number is None:
         log.info("%s is before %s, so it gets no archive cover.", ep.folder.name, cover_date(config.ARCHIVE_FIRST_DATE))
         return None
     target = ep.folder / cover_name(number)
+    tracklist = ep.folder / tracklist_name(number)
     if target.exists():
         log.info("Archive cover %s is already there.", target.name)
+        if tracklist_image and not tracklist.exists():
+            log.warning("%s has no %s. It can't be made to match a cover that is already there; "
+                        "see docs/archive-cover.md.", ep.folder.name, tracklist.name)
         return target
-    # The image viewer may still have a shown cover open, which Windows won't
+    # The image viewer may still have a shown image open, which Windows won't
     # let us move or delete: copy the kept one, and tidy up what we can.
     tmp = tempfile.mkdtemp(prefix="mfyn-archive-")
     try:
@@ -84,23 +96,34 @@ def make(ep, episodes, ask=input, show=open_image):
             ]
             log.info("Making archive cover No. %02d (%s).", number, cover_date(ep.air_date))
             result = subprocess.run(cmd)
-            made = out / cover_name(number)
-            if result.returncode != 0 or not made.exists():
+            made, made_tracklist = out / cover_name(number), out / tracklist_name(number)
+            if result.returncode != 0 or not made.exists() or not made_tracklist.exists():
                 log.error("No archive cover was made for %s (Processing exited with code %d).",
                           ep.folder.name, result.returncode)
                 return None
             show(made)
-            answer = ask("Keep this cover? [Y = keep, n = make another with a new colour] ").strip().lower()
+            if tracklist_image:
+                show(made_tracklist)
+                answer = ask("Keep this cover and tracklist image? [Y = keep, n = make another pair with a new colour] ")
+            else:
+                answer = ask("Keep this cover? [Y = keep, n = make another with a new colour] ")
+            answer = answer.strip().lower()
             if answer in ("", "y", "yes"):
                 break
         shutil.copyfile(made, target)
+        if tracklist_image:
+            shutil.copyfile(made_tracklist, tracklist)
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
-    log.info("Made %s in %s", target.name, ep.folder)
+    log.info("Made %s in %s", f"{target.name} and {tracklist.name}" if tracklist_image else target.name, ep.folder)
     return target
 
 
 def main(argv=None):
+    return runlog.track("Archive cover", lambda run: _main(argv, run))
+
+
+def _main(argv, run):
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--episode", help="the episode whose folder name contains this")
     args = parser.parse_args(argv)
@@ -113,6 +136,9 @@ def main(argv=None):
         log.error("No episode folder (named like 5_11_2026- Episode Name) found in %s", config.SHOW_ARCHIVE_DIR)
         return 1
     made = make(ep, episode.all_in(config.SHOW_ARCHIVE_DIR))
+    if made:
+        run.summary = f"{made.name} for {ep.folder.name}"
+        run.add(ep.folder.name, runlog.OK, run.summary)
     return 0 if made or number_for(ep, episode.all_in(config.SHOW_ARCHIVE_DIR)) is None else 1
 
 

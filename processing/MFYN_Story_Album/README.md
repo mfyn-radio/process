@@ -7,9 +7,9 @@ glows and pulses with the featured track. The video has the featured
 track's audio. A still PNG of the first frame is saved next to it for posting
 as a static story.
 
-Normally the [Make Album Story](../../docs/featured-album-story.md)
-automation runs this for you: you pick an album from `MFYN_Library` and the
-featured track, and it does the rest. The steps below are for running the
+Normally [Make Episode Content](../../docs/featured-album-story.md) runs this
+for you: one Story per artist in the episode, from the album of the track
+you played, with a random track from it featured. The steps below are for running the
 sketch by hand.
 
 ## One-time setup (Windows)
@@ -80,12 +80,12 @@ Like the ON AIR video post sketch (newer versions of Processing use `Processing.
 instead of `processing-java.exe`):
 
 ```
-"C:\Program Files\Processing\processing-java.exe" --sketch="C:\path\to\MFYN_Story_Album" --run
+"C:\Program Files\Processing\Processing.exe" cli --sketch="C:\Users\admin\mfyn-process\processing\MFYN_Story_Album" --run
 ```
 
 ## Command-line options
 
-Make Album Story (`intake/stories.py`) runs the sketch with options that
+Make Episode Content (`intake/stories.py`) runs the sketch with options that
 override the settings:
 
 ```

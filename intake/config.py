@@ -8,7 +8,7 @@ LIBRARY_DIR = Path(os.environ.get("MFYN_LIBRARY", r"H:\My Drive\MFYN_Library"))
 
 # Step 2 ends with the finished episode here, as "D_M_YYYY- Episode Name\Tracks".
 SHOW_ARCHIVE_DIR = Path(os.environ.get("MFYN_SHOW_ARCHIVE", r"H:\My Drive\MFYN_Show_Archive"))
-# Step 2a writes each episode's video posts here, for review, then Publishing.
+# Make Episode Content (step 2a) writes each episode's video posts here, for review, then Publishing.
 # (MFYN_Reels is an archive for now; nothing writes to it.)
 POSTS_DIR = Path(os.environ.get("MFYN_POSTS", r"H:\My Drive\MFYN_Posts"))
 POST_SECONDS = 30
@@ -17,7 +17,7 @@ POST_SECONDS = 30
 # automatically; set MFYN_PROCESSING to its full path if it isn't.
 POST_SKETCH = Path(__file__).resolve().parent.parent / "processing" / "MFYN_VideoPost_OnAir"
 
-# Make Album Story writes each featured-album Story here, for review, then Publishing.
+# Make Episode Content writes each episode's Album Stories here, for review, then Publishing.
 STORIES_DIR = Path(os.environ.get("MFYN_STORIES", r"H:\My Drive\MFYN_Stories"))
 STORY_SECONDS = 30
 STORY_SKETCH = Path(__file__).resolve().parent.parent / "processing" / "MFYN_Story_Album"
@@ -38,10 +38,13 @@ LOG_FILE = APP_DIR / "acquire.log"
 REELS_LOG_FILE = APP_DIR / "reels.log"
 STORIES_LOG_FILE = APP_DIR / "stories.log"
 EVENTS_LOG_FILE = APP_DIR / "events.log"
+CONTENT_LOG_FILE = APP_DIR / "content.log"
 
 # Google Sheet of artists and their Instagram handles, in mfyn@'s Drive.
 # Created by the automation on first use.
 ARTISTS_SHEET = "MFYN Artists"
+# What the automations have done, for the status page. Also made on first use.
+RUN_LOG_SHEET = "MFYN Run Log"
 
 # Added to a purchase email once it has been handled.
 DONE_LABEL = "MFYN/Downloaded"
