@@ -5,7 +5,7 @@ run during [step 2a, Make Episode Content](02a-make-episode-content.md), straigh
 
 | | |
 |---|---|
-| **Trigger** | Every **MFYN – Make Episode Content** run, after the video posts. No double-click of its own |
+| **Trigger** | Every **MFYN – Make Episode Content** run that makes ON AIR posts, after the posts. No double-click of its own |
 | **Input** | Each video post's `.json` in `MFYN_Posts\<episode>`, plus fresh handles from the [MFYN Artists sheet](01-acquire.md#the-mfyn-artists-sheet) |
 | **Output** | `Artist - Title.txt` next to each video post, ready to paste into Instagram |
 | **Runs on** | The MFYN PC |

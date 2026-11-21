@@ -2,7 +2,7 @@
 
 A featured-album Instagram Story: the album of an artist in the episode, as a
 media player with one of its tracks playing. [Make Episode Content](02a-make-episode-content.md)
-makes one for every artist in the episode. Posting it, with the Bandcamp link
+makes one for every artist in the episode, when you ask it to. Posting it, with the Bandcamp link
 sticker, is part of the Publishing Process.
 
 See also: [process overview](README.md) ·
@@ -10,7 +10,7 @@ See also: [process overview](README.md) ·
 
 | | |
 |---|---|
-| **Trigger** | Every **MFYN – Make Episode Content** run, after the video posts. A one-off Story for any album can be made from Command Prompt |
+| **Trigger** | **MFYN – Make Episode Content**, when you answer yes to `Album Story videos?`. A one-off Story for any album can be made from Command Prompt |
 | **Input** | For each artist in the episode, the album in `MFYN_Library` of the track you played |
 | **Output** | `Artist - Title.mp4` (named after the featured track), a still `.png` and a `.json` of its details, in `MFYN_Stories\<episode folder>`, the same layout as `MFYN_Posts` |
 | **Runs on** | The MFYN PC (Processing 4 and ffmpeg) |

@@ -1,8 +1,8 @@
 # Step 2a: Make Episode Content
 
-One run that makes an episode's baseline content: the archive cover and
-YouTube playlist image, an ON AIR video post and caption for every track, and
-an Album Story for every artist. A sub-automation of
+One run that makes an episode's baseline content: always the archive cover,
+and, if you want them for this episode, the YouTube playlist image, an ON AIR
+video post and caption for every track, and an Album Story for every artist. A sub-automation of
 [step 2, Create the show](02-create-show.md). (It replaces the separate
 Make Reels and Make Album Story double-clicks.)
 
@@ -25,17 +25,26 @@ See also: [process overview](README.md) ·
 1. **Find the episode:** the newest one in `MFYN_Show_Archive`, going by the
    air date in its folder name. It lists the tracks and asks
    `Make the content for these N track(s)? [Y/n]`.
-2. **Archive cover and YouTube playlist image:** made in the episode folder,
-   if they aren't there yet. Both open in the image viewer and you keep them
-   or ask for a new colour; see [archive cover](archive-cover.md).
-3. **Pick each artist's Album Story:** for every artist in the episode, the
+2. **Choose what to make.** The archive cover is always made. Then it asks,
+   since not every item fits every episode (Enter means yes):
+   ```
+   Do you want ON AIR posts? [Y/n]
+   A YouTube tracklist cover? [Y/n]
+   Album Story videos? [Y/n]
+   ```
+   The captions come with the ON AIR posts. The steps below only run for
+   what you said yes to.
+3. **Archive cover, and the YouTube playlist image:** made in the episode
+   folder, if they aren't there yet. They open in the image viewer and you
+   keep them or ask for a new colour; see [archive cover](archive-cover.md).
+4. **Pick each artist's Album Story:** for every artist in the episode, the
    album of the track you played (one of them at random, if you played
    several of theirs), found in `MFYN_Library`, and a **random track from that
    album** to feature. Artists who already have a Story for this episode are
    skipped. An artist whose album isn't in the library gets no Story; the
    run says so and carries on.
-4. **Confirm Instagram handles** in the [MFYN Artists sheet](01-acquire.md#the-mfyn-artists-sheet),
-   once for everyone in the posts and the Stories.
+5. **Confirm Instagram handles** in the [MFYN Artists sheet](01-acquire.md#the-mfyn-artists-sheet),
+   once for everyone in the posts and the Stories you're making.
    It goes through each artist, then each label of their releases, and asks
    only about those not settled yet. It shows the suggested handle and their
    links (website, SoundCloud…) to help check.
@@ -49,7 +58,7 @@ See also: [process overview](README.md) ·
 
    Once confirmed (or marked `No Instagram`), an artist or label isn't asked
    about again in later episodes.
-5. **Render the video posts:** the ON AIR sketch runs on the tracks that don't have a video post yet.
+6. **Render the video posts:** the ON AIR sketch runs on the tracks that don't have a video post yet.
    - Each video is **30 seconds** long, 1080×1920, from the loudest stretch of the track.
    - The player is in the exact centre of the frame, so it fits the full-screen Reel, the profile grid (middle 3:4) and a feed crop (middle 4:5).
    - It shows the title and artist from the tags, the embedded cover, the
@@ -63,13 +72,13 @@ See also: [process overview](README.md) ·
    applied communications - donna deegan.mp4
    applied communications - donna deegan.json
    ```
-6. **Captions:** [step 2b](02b-instagram-copy.md) writes a `.txt` caption
+7. **Captions:** [step 2b](02b-instagram-copy.md) writes a `.txt` caption
    next to every video post that doesn't have one yet.
-7. **Render the Album Stories:** the Album sketch runs once per artist picked
-   in step 3, with the featured track highlighted as playing; see
+8. **Render the Album Stories:** the Album sketch runs once per artist picked
+   in step 4, with the featured track highlighted as playing; see
    [Album Stories](featured-album-story.md). They're filed in
    `H:\My Drive\MFYN_Stories\<episode folder>\`, named after the featured track.
-8. **Summary:** what was made and what failed, for each part.
+9. **Summary:** what was made and what failed, for each part.
 
 ## The video post details file (for captions and Publishing)
 

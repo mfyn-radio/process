@@ -109,3 +109,24 @@ def test_in_library_matches_album_and_title(tmp_path, monkeypatch):
     folder, tracks, index = stories.in_library(umbrella, folders)
     assert folder.name == "CADY - Limitations of the Human Form" and tracks[index].title == "Umbrella"
     assert stories.in_library(reels.Track(tmp_path / "y.flac", "CADY", "Umbrella", ""), folders) is None
+
+
+def test_only_the_archive_cover_when_you_say_no_to_the_rest(tmp_path, monkeypatch):
+    ep = setup(tmp_path, monkeypatch)
+    answers = iter(["y", "n", "n", "n", "y"])     # tracks; posts, tracklist, Stories; keep the cover
+    asked = []
+    assert content.main([], ask=lambda p: asked.append(p) or next(answers), say=lambda *_: None) == 0
+    assert asked[1:4] == ["Do you want ON AIR posts? [Y/n] ", "A YouTube tracklist cover? [Y/n] ",
+                          "Album Story videos? [Y/n] "]
+    assert asked[4].startswith("Keep this cover?")
+    assert (ep / "MFYN_archive_03.png").exists() and not (ep / "MFYN_tracklist_03.png").exists()
+    assert not (tmp_path / "posts").exists() and not (tmp_path / "stories").exists()
+
+
+def test_stories_without_posts(tmp_path, monkeypatch):
+    ep = setup(tmp_path, monkeypatch)
+    answers = iter(["", "n", "", "", ""])
+    assert content.main([], ask=lambda p: next(answers), say=lambda *_: None, rng=random.Random(3)) == 0
+    assert (ep / "MFYN_tracklist_03.png").exists()
+    assert not (tmp_path / "posts").exists()
+    assert len(list((tmp_path / "stories" / ep.name).glob("*.mp4"))) == 2
