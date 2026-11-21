@@ -20,7 +20,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-from . import catalog, config, episode, google_auth, handles, library, reels
+from . import catalog, config, episode, google_auth, handles, library, reels, runlog
 
 log = logging.getLogger("stories")
 
@@ -250,6 +250,10 @@ def done_artists(ep):
 
 
 def main(argv=None, ask=input, say=print):
+    return runlog.track("Album Story", lambda run: _main(argv, ask, say, run))
+
+
+def _main(argv, ask, say, run):
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--album", help="the album whose library folder name contains this")
     parser.add_argument("--episode", help="file the Story under the episode whose folder name contains this "
@@ -292,6 +296,7 @@ def main(argv=None, ask=input, say=print):
     if story_path(ep, featured).exists():
         log.info("%s.mp4 already exists in %s. Delete it to make it again.", story_path(ep, featured).stem,
                  story_path(ep, featured).parent)
+        run.summary = f"{story_path(ep, featured).name} was already made"
         return 0
 
     try:
@@ -309,8 +314,11 @@ def main(argv=None, ask=input, say=print):
 
     made = make(folder, tracks, index, ep, cat)
     if made is None:
+        run.add(f"{folder.name} ({ep.folder.name})", runlog.FAILED, "Processing made no video")
         return 1
     log.info("\nDone: %s (and .png, .json) in %s", made.name, made.parent)
+    run.summary = f"made {made.name} for {ep.folder.name}"
+    run.add(f"{folder.name} ({ep.folder.name})", runlog.OK, run.summary)
     return 0
 
 if __name__ == "__main__":

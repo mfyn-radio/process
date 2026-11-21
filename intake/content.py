@@ -19,7 +19,7 @@ import logging
 import random
 import sys
 
-from . import archive_cover, catalog, config, episode, google_auth, handles, reels, stories
+from . import archive_cover, catalog, config, episode, google_auth, handles, reels, runlog, stories
 
 log = logging.getLogger("content")
 
@@ -36,6 +36,10 @@ def choose_items(ask):
 
 
 def main(argv=None, ask=input, say=print, rng=None):
+    return runlog.track("Make Episode Content", lambda run: _main(argv, ask, say, rng, run))
+
+
+def _main(argv, ask, say, rng, run):
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--episode", help="the episode whose folder name contains this")
     parser.add_argument("--skip-handles", action="store_true", help="don't stop to confirm Instagram handles")
@@ -59,6 +63,7 @@ def main(argv=None, ask=input, say=print, rng=None):
     for t in tracks:
         say(f"  {t.artist} - {t.title}")
     if ask(f"\nMake the content for these {len(tracks)} track(s)? [Y/n] ").strip().lower() not in ("", "y", "yes"):
+        run.summary = f"stopped before making anything for {ep.folder.name}"
         return 0
     say("\nThe archive cover is always made.")
     want = choose_items(ask)
@@ -120,7 +125,19 @@ def main(argv=None, ask=input, say=print, rng=None):
     elif want["stories"]:
         log.info("  %d Album Story(ies) made, %d failed, in %s", stories_made, stories_failed,
                  config.STORIES_DIR / ep.folder.name)
-    return 1 if cover_failed or failed or stories_failed or library_missing else 0
+    parts = ["archive cover not made" if cover_failed else "archive cover ok"]
+    if want["tracklist"]:
+        parts.append("tracklist cover asked for")
+    if want["posts"]:
+        parts.append(f"{made} video post(s) made, {failed} failed, {written} caption(s)")
+    if library_missing:
+        parts.append("no Album Stories: library not found")
+    elif want["stories"]:
+        parts.append(f"{stories_made} Album Story(ies) made, {stories_failed} failed")
+    run.summary = "; ".join(parts)
+    bad = cover_failed or failed or stories_failed or library_missing
+    run.add(ep.folder.name, runlog.FAILED if bad else runlog.OK, run.summary)
+    return 1 if bad else 0
 
 
 if __name__ == "__main__":

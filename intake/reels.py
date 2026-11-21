@@ -24,7 +24,7 @@ from pathlib import Path
 
 import mutagen
 
-from . import archive_cover, captions, catalog, config, episode, google_auth, handles, library
+from . import archive_cover, captions, catalog, config, episode, google_auth, handles, library, runlog
 
 log = logging.getLogger("reels")
 
@@ -203,6 +203,10 @@ def setup_logging(log_file=None):
 
 
 def main(argv=None, ask=input):
+    return runlog.track("ON AIR posts", lambda run: _main(argv, ask, run))
+
+
+def _main(argv, ask, run):
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--episode", help="make Reels for the episode whose folder name contains this")
     parser.add_argument("--skip-handles", action="store_true", help="don't stop to confirm Instagram handles")
@@ -225,6 +229,7 @@ def main(argv=None, ask=input):
     for t in tracks:
         print(f"  {t.artist} - {t.title}")
     if ask(f"\nMake video posts for these {len(tracks)} track(s)? [Y/n] ").strip().lower() not in ("", "y", "yes"):
+        run.summary = f"stopped before making anything for {ep.folder.name}"
         return 0
 
     # The episode's archive cover, saved in its folder in MFYN_Show_Archive.
@@ -248,6 +253,10 @@ def main(argv=None, ask=input):
              made, failed, written, out_dir)
     if cover_failed:
         log.error("The archive cover wasn't made. Scroll up for Processing's messages.")
+    summary = (f"{made} video post(s) made, {failed} failed, {written} caption(s) written"
+               + (", archive cover not made" if cover_failed else ""))
+    run.add(ep.folder.name, runlog.FAILED if failed or cover_failed else runlog.OK, summary)
+    run.summary = summary
     return 1 if failed or cover_failed else 0
 
 

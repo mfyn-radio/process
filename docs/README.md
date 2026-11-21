@@ -39,6 +39,9 @@ misbehaves.
 Not automated: the parent [step 2](02-create-show.md), which you still do by
 hand. Not built: the manual stop's hand-off and the Publishing Process.
 The logs keep four files of up to 1 MB each, and Make Episode Content also prints to its window.
+Acquire and Make Episode Content (and the ON AIR posts, Album Story and archive cover when run on
+their own) also write what they did to the **MFYN Run Log** sheet, for the status page: see
+[run log](run-log.md).
 
 ## Systems and accounts
 
@@ -47,6 +50,7 @@ The logs keep four files of up to 1 MB each, and Make Episode Content also print
 | mfyn@nothingflatdigital.com | Google Workspace | Bandcamp purchases, receipts, owns the library |
 | admin@nothingflatdigital.com | Google Workspace | Workspace and Google Cloud administration |
 | MFYN Artists | Google Sheet in mfyn@'s Drive, kept by the automation | The artist library (Instagram handles, tags, links), releases and labels |
+| MFYN Run Log | Google Sheet in mfyn@'s Drive, kept by the automation | What the automations did, for the status page ([run log](run-log.md)) |
 | `MFYN_Show_Archive` | mfyn@'s My Drive, `H:\My Drive\MFYN_Show_Archive` | Finished episodes, `D_M_YYYY- Episode Name\Tracks` |
 | `MFYN_Posts` | mfyn@'s My Drive, `H:\My Drive\MFYN_Posts` | Each episode's video posts, their details and captions, for your review and then Publishing |
 | `MFYN_Stories` | mfyn@'s My Drive, `H:\My Drive\MFYN_Stories` | Featured-album Stories and their details, one folder per episode like `MFYN_Posts`, for your review and then Publishing |
