@@ -207,8 +207,11 @@ installed.
    ```
 4. **Schedule it daily:**
    ```
-   schtasks /Create /TN "MFYN Acquire" /SC DAILY /ST 18:37 /TR "\"%USERPROFILE%\mfyn-process\scripts\run_acquire.cmd\""
+   schtasks /Create /TN "MFYN Acquire" /SC DAILY /ST 20:00 /TR "\"%USERPROFILE%\mfyn-process\scripts\run_acquire.cmd\""
    ```
+   Then let it catch up when the PC was off or you weren't signed in at
+   20:00, so the missed run starts at your next sign-in (PowerShell):
+   `$t = Get-ScheduledTask -TaskName "MFYN Acquire"; $t.Settings.StartWhenAvailable = $true; Set-ScheduledTask -InputObject $t`
    It runs while you're signed in to Windows. To run it straight away:
    `schtasks /Run /TN "MFYN Acquire"`.
 
