@@ -20,6 +20,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import unicodedata
 from pathlib import Path
 
 from . import catalog, config, episode, google_auth, handles, library, reels, runlog
@@ -195,19 +196,40 @@ def make(folder, tracks, index, ep, cat, episode_artist=""):
 
 
 # ---------- an episode's Stories (Make Episode Content) ----------
+def _key(text):
+    """Names compared loosely: case and anything that isn't a letter or digit
+    ignored, so "A / B", "A - B" and "a_b" are the same."""
+    return "".join(c for c in unicodedata.normalize("NFC", text).casefold() if c.isalnum())
+
+
 def in_library(track, folders):
     """The library album an episode track comes from, and the track's index
     in it: (folder, album tracks, index), or None if it can't be found.
-    Bandcamp names album folders "Artist - Album", so only folders whose name
-    holds the album's name are read."""
-    if not track.album:
-        return None
-    album = library.clean(track.album).casefold()
-    for folder in (f for f in folders if album in f.name.casefold()):
+
+    A folder is the track's album when one of its tracks has the same album
+    tag (or, for a single with no album tag, the same artist and title). The
+    played track doesn't have to be in the folder itself: the Story features
+    a random track anyway, so index is the played track's place if it's
+    there, otherwise 0. Only folders whose name holds the album or the
+    artist (Bandcamp names them "Artist - Album") are read, so the whole
+    library isn't scanned. Long artist names can be cut short in the folder
+    name, so a folder whose artist part starts the artist's name counts too."""
+    album, artist, title = _key(track.album), _key(track.artist), _key(track.title)
+    names = [n for n in (album, artist) if n]
+
+    def maybe(folder):
+        name, folder_artist = _key(folder.name), _key(folder.name.split(" - ")[0])
+        return any(n in name for n in names) or (len(folder_artist) >= 5 and artist.startswith(folder_artist))
+
+    for folder in filter(maybe, folders):
         tracks = album_tracks(folder)
-        for i, t in enumerate(tracks):
-            if t.album.casefold() == track.album.casefold() and t.title.casefold() == track.title.casefold():
-                return folder, tracks, i
+        if album:
+            same = [t for t in tracks if _key(t.album) == album]
+        else:
+            same = [t for t in tracks if _key(t.artist) == artist and _key(t.title) == title]
+        if same:
+            played = next((t for t in same if _key(t.title) == title), None)
+            return folder, tracks, tracks.index(played) if played else 0
     return None
 
 
