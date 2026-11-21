@@ -20,6 +20,7 @@
 // ---------- settings ----------
 int     SIZE    = 2160;              // pixels; a multiple of 1080. The cover must be at least 1800
 int     SEED    = 7;                 // fixed, so every episode prints on the same paper
+int     TRACKLIST_SEED = 8;          // the same for the tracklist image
 String  LABEL   = "RADIO ARCHIVE";
 boolean RANDOM_COLOUR = true;       // a new random paper colour on every cover; false = the orange
 boolean PREVIEW = true;              // show each cover in the window when it's done
@@ -101,19 +102,20 @@ File tracklistFor(Episode ep) {
 
 // The whole cover: paper in `colour`, then the wordmark in ink, then the small text in ink.
 PImage render(int number, String date, float[] colour) {
-  return compose(number, date, colour, INK, LABEL, WORDMARK_BASELINE, LINE1_BASELINE, LINE2_BASELINE);
+  return compose(SEED, number, date, colour, INK, LABEL, WORDMARK_BASELINE, LINE1_BASELINE, LINE2_BASELINE);
 }
 
 // The YouTube playlist image: the cover inverted (INK paper, type in the
-// cover's colour), with the type further in from the top and bottom.
+// cover's colour), with the type further in from the top and bottom. It has
+// its own fixed seed, so its paper is not a copy of the cover's.
 PImage renderTracklist(int number, String date, float[] colour) {
-  return compose(number, date, INK, colour, TRACKLIST_LABEL, TL_WORDMARK_BASELINE, TL_LINE1_BASELINE, TL_LINE2_BASELINE);
+  return compose(TRACKLIST_SEED, number, date, INK, colour, TRACKLIST_LABEL, TL_WORDMARK_BASELINE, TL_LINE1_BASELINE, TL_LINE2_BASELINE);
 }
 
-PImage compose(int number, String date, float[] paper, float[] ink, String labelText,
+PImage compose(int seed, int number, String date, float[] paper, float[] ink, String labelText,
                float wordmarkBaseline, float line1Baseline, float line2Baseline) {
   int S = SIZE;
-  java.util.Random rng = new java.util.Random(SEED);
+  java.util.Random rng = new java.util.Random(seed);
   float[][] img = makePaper(rng, S, paper);
 
   Line[] big = { new Line(WORDMARK, wordmarkFont, WORDMARK_SIZE, WORDMARK_TRACK, WORDMARK_X, wordmarkBaseline) };
@@ -138,7 +140,7 @@ PImage compose(int number, String date, float[] paper, float[] ink, String label
   return out;
 }
 
-// command-line overrides: number=<n> date=<text> input=<folder> output=<folder> size=<px>
+// command-line overrides: number=<n> date=<text> input=<folder> output=<folder> size=<px> colour=#RRGGBB
 void readArgs() {
   if (args == null) return;
   for (String a : args) {

@@ -37,7 +37,7 @@ final float  LINE2_BASELINE = 997;                 // date and label  ink y 969-
 // of the image and fades the bottom into the playlist title, so everything
 // sits further in than on the cover: content between about y 240 and 860.
 final String TRACKLIST_LABEL = "TRACKLIST";
-final float  TL_WORDMARK_BASELINE = 500;           // ink box y about 260-500
+final float  TL_WORDMARK_BASELINE = 500;           // ink box y 260-500
 final float  TL_LINE1_BASELINE = 790;              // NO. 03
 final float  TL_LINE2_BASELINE = 850;              // date and TRACKLIST
 final float  TL_INK_LEVEL = 0.97;                  // the light ink, a touch under the cover's paper colour
