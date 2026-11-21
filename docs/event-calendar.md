@@ -60,11 +60,20 @@ See also: [process overview](README.md) · [Google Cloud setup](setup/google-clo
      and the log says to check it.
    - Without a start time it's an all-day event; without an end time it's
      3 hours long. Events that are already over are skipped.
+   - **One event per night and venue.** When a second saved post gives the
+     same date and venue as an event from another post, it doesn't add a new
+     event. It merges into that one. The event keeps the details of whichever
+     post says more (a start time, then the most acts). "Save & Share on
+     Instagram" links the band's own post rather than the venue's or
+     promoter's, so that's the one you repost. The other post is listed under
+     it as "Also posted". An account counts as the band's when its name is an
+     act's name, like `sick__pack` for Sick Pack.
 5. **Remembers the post** in `%APPDATA%\mfyn-intake\events.json`, so it's
    never read again. A post that fails is retried next run.
 
 **Your edits are safe.** Once an event is on the calendar the automation never
-changes it. Fix an event by hand and it stays fixed. Delete one and
+changes it, except to merge a second post for the same night into it. Fix an
+event by hand and it stays fixed. Delete one and
 it stays deleted.
 
 **What it can only touch:** the calendars it creates itself (the
