@@ -14,7 +14,7 @@ It ends at a manual stop, where you review everything. The separate
 - `intake/` — the automation code.
 - `processing/` — the Processing sketches that make the video posts, the Album
   Stories and the archive covers.
-- `scripts/` — launchers: the Acquire task, and the Make Episode Content
+- `scripts/` — launchers: the Acquire and Event Calendar tasks, and the Make Episode Content
   double-click.
 - `tests/` — run with `python -m pytest`; GitHub runs them on pull requests
   and on pushes to `main`.
@@ -22,7 +22,7 @@ It ends at a manual stop, where you review everything. The separate
 ## Steps
 
 1. [Acquire](docs/01-acquire.md) — download new Bandcamp purchases into
-   `MFYN_Library` on Google Drive. Runs hourly on the MFYN PC. *(live since
+   `MFYN_Library` on Google Drive. Runs daily on the MFYN PC. *(live since
    2026-10-23)*
 2. [Create the show](docs/02-create-show.md) — pick tracks, make the episode,
    archive it. *(manual)*

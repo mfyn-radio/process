@@ -37,6 +37,7 @@ TOKEN_FILE = APP_DIR / "token.json"
 LOG_FILE = APP_DIR / "acquire.log"
 REELS_LOG_FILE = APP_DIR / "reels.log"
 STORIES_LOG_FILE = APP_DIR / "stories.log"
+EVENTS_LOG_FILE = APP_DIR / "events.log"
 CONTENT_LOG_FILE = APP_DIR / "content.log"
 
 # Google Sheet of artists and their Instagram handles, in mfyn@'s Drive.
@@ -63,3 +64,31 @@ START_DATE = datetime.date(2026, 10, 23)
 PURCHASE_QUERY = 'from:noreply@bandcamp.com subject:"Thank you!" "Thanks for purchasing"'
 
 AUDIO_FORMAT = "flac"
+
+# Event Calendar: events from the posts saved to one Instagram collection go on
+# a Google calendar of their own. See docs/event-calendar.md.
+# The collection's address, as Chrome events it when you open it, e.g.
+# https://www.instagram.com/<account>/saved/events/17900000000000000/
+INSTAGRAM_COLLECTION_URL = os.environ.get("MFYN_INSTAGRAM_COLLECTION", "")
+# Chrome keeps the Instagram sign-in in this profile, separate from Acquire's.
+# It's outside AppData because the Microsoft Store Python redirects what it
+# writes there, so Chrome wouldn't find the same folder.
+INSTAGRAM_PROFILE_DIR = Path.home() / "mfyn-chrome-instagram"
+# Posts already read, and the calendar's id.
+EVENTS_STATE_FILE = APP_DIR / "events.json"
+EVENT_CALENDAR = "Event Calendar"
+# "Your artist is playing": events with a library artist on the bill get this
+# Google Calendar colour (11 is Tomato, red) and an email to this address.
+ALERT_COLOR = "11"
+ALERT_EMAIL = os.environ.get("MFYN_ALERT_EMAIL", "mfyn@nothingflatdigital.com")
+# Only events in these countries go on the calendar.
+EVENT_COUNTRIES = ("Netherlands", "Belgium")
+# Times on flyers are local times here (an IANA name, e.g. Europe/Amsterdam).
+EVENT_TIMEZONE = os.environ.get("MFYN_TIMEZONE", "Europe/Amsterdam")
+# Each run opens at most this many new posts, slowly, so Instagram doesn't
+# take Chrome for a bot.
+EVENTS_POSTS_PER_RUN = 15
+# Flyers are read by Claude Code on the PC (`claude -p`), on MFYN's Claude
+# subscription. Empty means Claude Code's own default model; set
+# MFYN_CLAUDE_MODEL (e.g. "opus") to choose one.
+EVENTS_MODEL = os.environ.get("MFYN_CLAUDE_MODEL", "")

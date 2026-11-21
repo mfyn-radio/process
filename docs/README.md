@@ -1,7 +1,7 @@
 # MFYN intake and production process
 
 How a song or artist goes from being *discovered* to having all the content
-for a post ready, and a show ready to play on Music for Your Neighbors (MFYN).
+for a post ready, and an event ready to play on Music for Your Neighbors (MFYN).
 It ends at a manual stop, where you review everything. The Publishing Process
 starts after that.
 
@@ -16,7 +16,7 @@ starts after that.
 | — | **Manual stop** | You review everything made for a post, then trigger Publishing | Not built yet |
 | → | *Publishing Process* | Starts after your review: scheduling the posts on Instagram, among other things | Separate process, not built yet |
 
-Steps 2a and 2b are sub-automations of step 2: when a show is ready, step 2
+Steps 2a and 2b are sub-automations of step 2: when an event is ready, step 2
 runs and triggers them. Each is its own step, with its own doc. Together they
 produce the baseline content for an episode, so they belong to production. What they
 leave in the episode folder, `MFYN_Posts` and `MFYN_Stories` is what you review at the manual stop.
@@ -31,8 +31,9 @@ misbehaves.
 
 | Automation | Started by | Runs on | Log | Docs |
 |---|---|---|---|---|
-| Acquire (`intake.acquire`) | Task Scheduler task `MFYN Acquire`, hourly, via `scripts\run_acquire.cmd` | MFYN PC, while signed in | `%APPDATA%\mfyn-intake\acquire.log` | [Step 1](01-acquire.md), [troubleshooting](01-acquire-troubleshooting.md) |
+| Acquire (`intake.acquire`) | Task Scheduler task `MFYN Acquire`, daily at 18:37, via `scripts\run_acquire.cmd` | MFYN PC, while signed in | `%APPDATA%\mfyn-intake\acquire.log` | [Step 1](01-acquire.md), [troubleshooting](01-acquire-troubleshooting.md) |
 | Make Episode Content (`intake.content`): the archive cover (`intake.archive_cover`), video posts (`intake.reels`), Instagram copy (`intake.captions`) and Album Stories (`intake.stories`) | You, double-clicking **MFYN – Make Episode Content** (`scripts\make_content.cmd`), until step 2 starts it itself | MFYN PC | `%APPDATA%\mfyn-intake\content.log` | [Step 2a](02a-make-episode-content.md), [step 2b](02b-instagram-copy.md), [archive cover](archive-cover.md), [Album Stories](featured-album-story.md) |
+| Event Calendar (`intake.events`) | Task Scheduler task `MFYN Event Calendar`, daily at 10:17, via `scripts\run_events.cmd` | MFYN PC, while signed in | `%APPDATA%\mfyn-intake\events.log` | [Event Calendar](event-calendar.md) |
 | Tests | GitHub Actions, on pull requests and pushes to `main` (`.github/workflows/tests.yml`) | GitHub | the Actions tab | `python -m pytest` locally |
 | Labels | GitHub Actions, when `.github/workflows/labels.yml` changes on `main`, or run by hand (`workflow_dispatch`) | GitHub | the Actions tab | [Issues](#issues) |
 
@@ -49,15 +50,17 @@ their own) also write what they did to the **MFYN Run Log** sheet, for the statu
 |---|---|---|
 | mfyn@nothingflatdigital.com | Google Workspace | Bandcamp purchases, receipts, owns the library |
 | admin@nothingflatdigital.com | Google Workspace | Workspace and Google Cloud administration |
-| MFYN Artists | Google Sheet in mfyn@'s Drive, kept by the automation | The artist library (Instagram handles, tags, links), releases and labels |
+| MFYN Artists | Google Sheet in mfyn@'s Drive, kept by the automation | The artist library (Instagram handles, tags, links), releases, labels, and every event on Event Calendar (Events tab) |
 | MFYN Run Log | Google Sheet in mfyn@'s Drive, kept by the automation | What the automations did, for the status page ([run log](run-log.md)) |
 | `MFYN_Show_Archive` | mfyn@'s My Drive, `H:\My Drive\MFYN_Show_Archive` | Finished episodes, `D_M_YYYY- Episode Name\Tracks` |
 | `MFYN_Posts` | mfyn@'s My Drive, `H:\My Drive\MFYN_Posts` | Each episode's video posts, their details and captions, for your review and then Publishing |
 | `MFYN_Stories` | mfyn@'s My Drive, `H:\My Drive\MFYN_Stories` | Featured-album Stories and their details, one folder per episode like `MFYN_Posts`, for your review and then Publishing |
 | Processing sketches | this repo, `processing\` (master); a copy in `H:\My Drive\MFYN_Processing` ([working on the PC](working-on-the-pc.md)) | `MFYN_VideoPost_OnAir` makes the video posts; `MFYN_Story_Album` makes the featured-album Stories; `MFYN_Archive` makes the archive episode covers ([automated](archive-cover.md), or by hand: [README](../processing/MFYN_Archive/README.md)) |
+| Event Calendar | Google Calendar, made by the automation in mfyn@'s account | Upcoming events, from posts saved to the **events** collection on Instagram |
 | `MFYN_Library` | mfyn@'s My Drive, synced to `H:\My Drive\MFYN_Library` on the MFYN PC | The music library, one folder per album |
 | MFYN PC | Windows, signed in, running Google Drive for desktop and Chrome | Runs the automation (Task Scheduler) |
-| `mfyn-library-agent` | Google Cloud project, Internal audience | Lets the automation read and label mail ([setup](setup/google-cloud.md)) |
+| `mfyn-library-agent` | Google Cloud project, Internal audience | Lets the automation read and label mail, and keep its sheet and calendar ([setup](setup/google-cloud.md)) |
+| Claude Code | installed on the MFYN PC, signed in to the Claude subscription | Reads event flyers for the [Event Calendar](event-calendar.md) (`claude -p`) |
 | `mfyn-radio/process` | GitHub, this repo | Code and docs; GitHub only runs the tests |
 
 ## Issues
@@ -112,4 +115,5 @@ list of open work. There are two kinds:
   - Step 2b: [Instagram copy](02b-instagram-copy.md)
   - [Archive cover](archive-cover.md)
   - [Album Stories](featured-album-story.md)
+- [Event Calendar](event-calendar.md): events from saved Instagram posts
 - Setup: [Google Cloud](setup/google-cloud.md)

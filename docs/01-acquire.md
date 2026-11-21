@@ -8,10 +8,10 @@ See also: [decisions and how we got here](01-acquire-decisions.md) ·
 
 | | |
 |---|---|
-| **Trigger** | The hourly run finds a new Bandcamp purchase email in the mfyn@nothingflatdigital.com inbox |
+| **Trigger** | The daily run finds a new Bandcamp purchase email in the mfyn@nothingflatdigital.com inbox |
 | **Input** | An album bought on Bandcamp. MFYN only uses music it owns. |
 | **Output** | One folder per album in `MFYN_Library`, with FLAC tracks and cover art |
-| **Runs on** | The MFYN Windows PC, hourly, from Task Scheduler |
+| **Runs on** | The MFYN Windows PC, daily, from Task Scheduler |
 | **Status** | Live on the MFYN PC since 2026-10-23 (Task Scheduler task `MFYN Acquire`) |
 | **Code** | [`intake/acquire.py`](../intake/acquire.py), started by [`scripts/run_acquire.cmd`](../scripts/run_acquire.cmd) |
 
@@ -31,7 +31,7 @@ Purchases from [excluded pages](#excluded-purchases) are skipped and labelled
 
 ## Why it runs on the PC, in Chrome
 
-Bandcamp shows a "Client Challenge" (bot protection) instead of the download
+Bandcamp events a "Client Challenge" (bot protection) instead of the download
 page to anything that isn't a real browser. That rules out plain scripts and
 GitHub Actions. A normal Chrome window on the MFYN PC gets the real page.
 The approach is based on [bcdl](https://github.com/corbin-zip/bcdl). The
@@ -106,6 +106,9 @@ or filter this tab to see, say, every *ambient* artist, or add a pivot table
 to count the library by tag. Bandcamp tags mix genres with places like
 *Brooklyn*; they're kept as Bandcamp has them.
 
+**Events** has one row per event on the Event Calendar Google calendar, written by the
+[Event Calendar](event-calendar.md#the-events-tab), not by Acquire.
+
 #### Status
 
 | Status | Meaning |
@@ -168,7 +171,7 @@ The email is left unlabelled and retried after the release date.
   complete.
 - Everything is logged to `%APPDATA%\mfyn-intake\acquire.log` (it rolls
   over at 1 MB and keeps three older files).
-- The run exits with an error if any album failed, which shows in Task
+- The run exits with an error if any album failed, which events in Task
   Scheduler's last result.
 
 ### Scope
@@ -202,9 +205,9 @@ installed.
    python -m intake.acquire --dry-run --backlog
    python -m intake.acquire --message-id <id>
    ```
-4. **Schedule it hourly:**
+4. **Schedule it daily:**
    ```
-   schtasks /Create /TN "MFYN Acquire" /SC HOURLY /TR "\"%USERPROFILE%\mfyn-process\scripts\run_acquire.cmd\""
+   schtasks /Create /TN "MFYN Acquire" /SC DAILY /ST 18:37 /TR "\"%USERPROFILE%\mfyn-process\scripts\run_acquire.cmd\""
    ```
    It runs while you're signed in to Windows. To run it straight away:
    `schtasks /Run /TN "MFYN Acquire"`.
