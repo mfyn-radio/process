@@ -14,6 +14,8 @@ the PC, as part of [setting up step 1](../01-acquire.md#setting-it-up-on-the-pc)
   - **Google Drive API**
   - **Google Sheets API** (needed for the MFYN Artists sheet)
   - **Google Calendar API** (needed for the [Event Calendar](../event-calendar.md))
+  - **YouTube Data API v3** (needed for the [YouTube playlist](../youtube-playlist.md);
+    not turned on yet, see [its setup](../youtube-playlist.md#setting-it-up))
 - consent screen **Audience: Internal**. Only nothingflatdigital.com accounts
   can use it, Google doesn't review it, and its login doesn't expire after
   7 days.
@@ -29,9 +31,13 @@ Permissions requested at sign-in:
   the automation creates itself, Event Calendar. It can't see mfyn@'s other
   calendars. Added for the [Event Calendar](../event-calendar.md); a sign-in
   from before it still works for everything else.
+- `https://www.googleapis.com/auth/youtube`: search YouTube and make the
+  episode playlists on MFYN's channel. Added for the
+  [YouTube playlist](../youtube-playlist.md); a sign-in from before it still
+  works for everything else.
 
 If you ever need to rebuild this from scratch: create the project under the
-nothingflatdigital.com organization, enable the Gmail, Drive, Sheets and Calendar APIs, then configure
+nothingflatdigital.com organization, enable the Gmail, Drive, Sheets, Calendar and YouTube Data APIs, then configure
 **Google Auth Platform** (or **APIs & Services → OAuth consent screen**) with
 Audience **Internal**.
 

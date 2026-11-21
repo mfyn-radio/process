@@ -109,6 +109,10 @@ to count the library by tag. Bandcamp tags mix genres with places like
 **Events** has one row per event on the Event Calendar Google calendar, written by the
 [Event Calendar](event-calendar.md#the-events-tab), not by Acquire.
 
+**Playlists** has one row per track of each episode's proposed YouTube playlist,
+written by the [YouTube playlist](youtube-playlist.md#run-1-the-proposal) step,
+for you to review. Not by Acquire either.
+
 #### Status
 
 | Status | Meaning |

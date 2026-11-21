@@ -12,6 +12,7 @@ starts after that.
 | 1 | [Acquire](01-acquire.md) | A Bandcamp purchase is downloaded as FLAC into `MFYN_Library` | Live (2026-10-23) |
 | 2 | [Create the show](02-create-show.md) | **The parent.** Pick tracks, make the episode, archive it in `MFYN_Show_Archive`, then start the sub-automations below | Manual today |
 | 2a | [Make Episode Content](02a-make-episode-content.md) | The episode's baseline content in one run: archive cover and YouTube playlist image, a 30-second 1080×1920 video post per track in `MFYN_Posts`, and an Album Story per artist in `MFYN_Stories` | Built, being tested |
+| — | [YouTube playlist](youtube-playlist.md) | After the show airs: a proposed playlist of the bands' own videos, from the Reaper running order, reviewed in the MFYN Artists sheet, then made on MFYN's YouTube channel | Built, not set up yet |
 | 2b | [Instagram copy](02b-instagram-copy.md) | A caption for each video post, from its details and the MFYN Artists sheet | Built, runs during Make Episode Content |
 | — | **Manual stop** | You review everything made for a post, then trigger Publishing | Not built yet |
 | → | *Publishing Process* | Starts after your review: scheduling the posts on Instagram, among other things | Separate process, not built yet |
@@ -33,6 +34,7 @@ misbehaves.
 |---|---|---|---|---|
 | Acquire (`intake.acquire`) | Task Scheduler task `MFYN Acquire`, daily at 20:00, via `scripts\run_acquire.cmd` | MFYN PC, while signed in | `%APPDATA%\mfyn-intake\acquire.log` | [Step 1](01-acquire.md), [troubleshooting](01-acquire-troubleshooting.md) |
 | Make Episode Content (`intake.content`): the archive cover (`intake.archive_cover`), video posts (`intake.reels`), Instagram copy (`intake.captions`) and Album Stories (`intake.stories`) | You, double-clicking **MFYN – Make Episode Content** (`scripts\make_content.cmd`), until step 2 starts it itself | MFYN PC | `%APPDATA%\mfyn-intake\content.log` | [Step 2a](02a-make-episode-content.md), [step 2b](02b-instagram-copy.md), [archive cover](archive-cover.md), [Album Stories](featured-album-story.md) |
+| YouTube playlist (`intake.playlist`) | Make Episode Content's playlist question, or `python -m intake.playlist` | MFYN PC | `%APPDATA%\mfyn-intake\playlist.log` | [YouTube playlist](youtube-playlist.md) |
 | Event Calendar (`intake.events`) | Task Scheduler task `MFYN Event Calendar`, daily at 20:00, via `scripts\run_events.cmd` | MFYN PC, while signed in | `%APPDATA%\mfyn-intake\events.log` | [Event Calendar](event-calendar.md) |
 | Tests | GitHub Actions, on pull requests and pushes to `main` (`.github/workflows/tests.yml`) | GitHub | the Actions tab | `python -m pytest` locally |
 | Labels | GitHub Actions, when `.github/workflows/labels.yml` changes on `main`, or run by hand (`workflow_dispatch`) | GitHub | the Actions tab | [Issues](#issues) |
@@ -50,7 +52,7 @@ their own) also write what they did to the **MFYN Run Log** sheet, for the statu
 |---|---|---|
 | mfyn@nothingflatdigital.com | Google Workspace | Bandcamp purchases, receipts, owns the library |
 | admin@nothingflatdigital.com | Google Workspace | Workspace and Google Cloud administration |
-| MFYN Artists | Google Sheet in mfyn@'s Drive, kept by the automation | The artist library (Instagram handles, tags, links), releases, labels, and every event on Event Calendar (Events tab) |
+| MFYN Artists | Google Sheet in mfyn@'s Drive, kept by the automation | The artist library (Instagram handles, tags, links), releases, labels, every event on Event Calendar (Events tab), and the YouTube playlist proposals (Playlists tab) |
 | MFYN Run Log | Google Sheet in mfyn@'s Drive, kept by the automation | What the automations did, for the status page ([run log](run-log.md)) |
 | `MFYN_Show_Archive` | mfyn@'s My Drive, `H:\My Drive\MFYN_Show_Archive` | Finished episodes, `D_M_YYYY- Episode Name\Tracks` |
 | `MFYN_Posts` | mfyn@'s My Drive, `H:\My Drive\MFYN_Posts` | Each episode's video posts, their details and captions, for your review and then Publishing |
@@ -115,5 +117,6 @@ list of open work. There are two kinds:
   - Step 2b: [Instagram copy](02b-instagram-copy.md)
   - [Archive cover](archive-cover.md)
   - [Album Stories](featured-album-story.md)
+  - [YouTube playlist](youtube-playlist.md)
 - [Event Calendar](event-calendar.md): events from saved Instagram posts
 - Setup: [Google Cloud](setup/google-cloud.md)
