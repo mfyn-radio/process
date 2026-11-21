@@ -144,6 +144,7 @@ class Catalog:
 
     def __init__(self, creds=None, client=None):
         self.client = client or airtable.connect()
+        self._schema = airtable.read_schema(self.client)   # 1 call; fields may have been renamed
         self._tables = {}
         for name in EAGER:
             self.table(name)
@@ -151,9 +152,17 @@ class Catalog:
     def table(self, name):
         if name not in self._tables:
             title, columns, key, lists, links, primary = TABLES[name]
+            names = None
+            if self._schema and title in self._schema[0]:
+                names = airtable.field_names(
+                    columns, {f: (TABLES[spec.target][0], spec) for f, spec in links.items()},
+                    self._schema[0][title], self._schema[1])
+                for code, real in names.items():
+                    if real != code:
+                        airtable.log.info("%s: %s is %s", title, code, f'"{real}"' if real else "left out")
             self._tables[name] = airtable.AirtableTable(
                 self.client, title, columns, key, lists, links, resolve=self.table, primary=primary,
-                fallback=FALLBACK.get(name))
+                fallback=FALLBACK.get(name), names=names)
         return self._tables[name]
 
     def __getattr__(self, name):

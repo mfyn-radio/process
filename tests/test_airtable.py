@@ -211,3 +211,41 @@ def test_an_event_links_its_venue_and_location_and_makes_new_ones():
     cat.events.upsert({"Event id": "e2", "Title": "Gig", "Venue": "Antwerp Music City", "City": "Antwerp",
                        "Country": "Belgium"})
     assert db.calls == calls
+
+
+# --- fields renamed in Airtable ---
+
+class RenamedBase(FakeAirtable):
+    """A base where "Venue" became the link to Venues and the text moved to
+    "Venue- text", as Bryant renamed them on 21 Nov 2026."""
+
+    def request(self, method, path, params=None, body=None):
+        self.calls += 1
+        text = {"type": "singleLineText"}
+        link = lambda table: {"type": "multipleRecordLinks", "options": {"linkedTableId": table}}
+        events = [dict(text, name=c) for c in catalog.EVENTS if c != "Venue"] + [
+            dict(text, name="Venue- text"), dict(link("tblVen"), name="Venue"),
+            dict(link("tblLoc"), name="Linked location"), dict(link("tblArt"), name="Linked artists")]
+        return {"tables": [{"id": "tblEve", "name": "Events", "fields": events},
+                           {"id": "tblVen", "name": "Venues", "fields": [dict(text, name="Name")]},
+                           {"id": "tblLoc", "name": "Locations", "fields": [dict(text, name=n) for n in catalog.LOCATIONS]},
+                           {"id": "tblArt", "name": "Artists", "fields": [dict(text, name=n) for n in catalog.ARTISTS]}]}
+
+
+def test_renamed_fields_are_followed():
+    db = RenamedBase({"Events": [{"Event id": "e1", "Title": "Old", "Venue- text": "WORM", "Venue": ["recX"]}]})
+    cat = catalog.Catalog(client=db)
+    assert cat.events.rows[0]["Venue"] == "WORM" and cat.events.linked[0]["Linked venue"] == ["recX"]
+    cat.events.upsert({"Event id": "e2", "Title": "Gig", "Venue": "OCCII", "City": "Amsterdam",
+                       "Country": "Netherlands"})
+    new = db.fields("Events")[1]
+    occii = db.tables["Venues"][0]
+    assert new["Venue- text"] == "OCCII" and new["Venue"] == [occii["id"]] and "Linked venue" not in new
+
+
+def test_a_field_with_nowhere_to_go_is_left_out():
+    fields = [{"name": "Title", "type": "singleLineText"},
+              {"name": "Venue", "type": "multipleRecordLinks", "options": {"linkedTableId": "tblV"}}]
+    names = airtable.field_names(["Title", "Venue", "City"], {"Linked artists": ("Artists", None)},
+                                 fields, {"Artists": "tblA"})
+    assert names == {"Venue": None, "City": None, "Linked artists": None}
