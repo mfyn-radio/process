@@ -5,6 +5,8 @@ Tabs:
 - Releases: one row per album in the library.
 - Labels: one row per label, with its Instagram handle.
 - Tags: one row per Bandcamp tag per release, for sorting and filtering.
+- Playlists: one row per track of an episode's YouTube playlist proposal, for review,
+  written by the YouTube playlist step (docs/youtube-playlist.md).
 - Events: one row per event on the Event Calendar Google calendar, written by the Event
   Calendar automation (docs/event-calendar.md).
 
@@ -29,6 +31,8 @@ RELEASES = ["Album", "Artist", "Label", "Release date", "Tags", "Album link", "C
             "Purchased", "Library folder", "Added"]
 LABELS = ["Label", "Instagram", "Status", "Location", "Website", "Other links", "Bandcamp page", "Added"]
 TAGS = ["Tag", "Artist", "Album"]
+PLAYLISTS = ["Episode", "#", "Artist", "Track", "Album", "Tier", "Use", "Link", "Video", "Uploader", "Note",
+             "Bandcamp", "Playlist", "Added"]
 EVENTS = ["Date", "Start", "End", "Title", "Venue", "City", "Country", "Acts", "Tags", "Link", "Post",
           "Location tag", "Event id", "Added"]
 
@@ -43,6 +47,7 @@ class Catalog:
         self.labels = Table(sheets, sheet_id, "Labels", LABELS, key="Label")
         self.tags = Table(sheets, sheet_id, "Tags", TAGS, key=("Tag", "Artist", "Album"))
         self.events = Table(sheets, sheet_id, "Events", EVENTS, key="Event id", list_fields=("Tags",))
+        self.playlists = Table(sheets, sheet_id, "Playlists", PLAYLISTS, key=("Episode", "#"))
 
 
 

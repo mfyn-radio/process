@@ -39,6 +39,7 @@ REELS_LOG_FILE = APP_DIR / "reels.log"
 STORIES_LOG_FILE = APP_DIR / "stories.log"
 EVENTS_LOG_FILE = APP_DIR / "events.log"
 CONTENT_LOG_FILE = APP_DIR / "content.log"
+PLAYLIST_LOG_FILE = APP_DIR / "playlist.log"
 
 # Google Sheet of artists and their Instagram handles, in mfyn@'s Drive.
 # Created by the automation on first use.
@@ -92,3 +93,11 @@ EVENTS_POSTS_PER_RUN = 15
 # subscription. Empty means Claude Code's own default model; set
 # MFYN_CLAUDE_MODEL (e.g. "opus") to choose one.
 EVENTS_MODEL = os.environ.get("MFYN_CLAUDE_MODEL", "")
+
+# YouTube playlist (docs/youtube-playlist.md): an episode's running order comes
+# from its Reaper project; this Reaper track is the host's voice and is skipped.
+REAPER_VOICE_TRACK = "voice"
+# Search results per YouTube search (each search costs 100 of the 10,000 daily quota units).
+PLAYLIST_SEARCH_RESULTS = 10
+# The playlists are made public, so the Instagram Story link works for everyone.
+PLAYLIST_PRIVACY = os.environ.get("MFYN_PLAYLIST_PRIVACY", "public")

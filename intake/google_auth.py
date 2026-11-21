@@ -14,11 +14,12 @@ ACCOUNT = "mfyn@nothingflatdigital.com"
 GMAIL = "https://www.googleapis.com/auth/gmail.modify"  # read purchase emails and label them
 DRIVE = "https://www.googleapis.com/auth/drive.file"    # only files this app creates: the MFYN Artists sheet
 CALENDAR = "https://www.googleapis.com/auth/calendar.app.created"  # only calendars this app creates: Event Calendar
+YOUTUBE = "https://www.googleapis.com/auth/youtube"  # search YouTube and make the episode playlists
 
 # What Acquire, Make Reels and Make Album Story need.
 BASE_SCOPES = [GMAIL, DRIVE]
 # What --setup asks for: everything, so one sign-in covers every automation.
-SCOPES = BASE_SCOPES + [CALENDAR]
+SCOPES = BASE_SCOPES + [CALENDAR, YOUTUBE]
 
 
 def setup(client_file):

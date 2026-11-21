@@ -30,7 +30,7 @@ first (Enter means yes), since not every item fits every episode.
 | *(always)* | [`archive_cover.py`](../intake/archive_cover.py): [archive cover](archive-cover.md) | `MFYN_Archive` | `MFYN_archive_NN.png` and the YouTube playlist cover `MFYN_tracklist_NN.png`, in the episode folder. One sketch, because the two depend on each other |
 | `Do you want ON AIR posts?` | [`reels.py`](../intake/reels.py), then [`captions.py`](../intake/captions.py) ([2b](02b-instagram-copy.md)) | `MFYN_VideoPost_OnAir` | Per track: `Artist - Title.mp4`, `.json` and a `.txt` caption, in `MFYN_Posts\<episode>` |
 | `Album Story videos?` | [`stories.py`](../intake/stories.py): [Album Stories](featured-album-story.md) | `MFYN_Story_Album` | Per artist: an Album Story `.mp4`, `.png` and `.json`, in `MFYN_Stories\<episode>` |
-| `Do you want a YouTube playlist?` | `playlist.py` (being built, [#41](https://github.com/mfyn-radio/process/issues/41)) | | A playlist proposal for your review, then the playlist on YouTube. Runs after the archive cover, whose playlist cover it uses |
+| `Do you want a YouTube playlist?` | [`playlist.py`](../intake/playlist.py): [YouTube playlist](youtube-playlist.md) | | A playlist proposal for your review in the Playlists tab of the MFYN Artists sheet, then the playlist on YouTube. Runs after the archive cover, whose playlist cover it uses |
 
 A sub-script that isn't built yet isn't asked about. One that fails doesn't
 stop the others; the summary at the end lists each one as ok or FAILED.
