@@ -1,10 +1,10 @@
 # Step 2a: Make Episode Content
 
-One run that makes an episode's baseline content: always the archive cover,
-and, if you want them for this episode, the YouTube playlist image, an ON AIR
-video post and caption for every track, and an Album Story for every artist. A sub-automation of
-[step 2, Create the show](02-create-show.md). (It replaces the separate
-Make Reels and Make Album Story double-clicks.)
+One shortcut for an episode's baseline content. It is an **orchestrator**: it
+asks which sub-scripts you want for this episode and runs them in order. Each
+sub-script, and each Processing sketch behind it, stays independent: you can
+edit or run one on its own without touching the others. A sub-automation of
+[step 2, Create the show](02-create-show.md).
 
 See also: [process overview](README.md) ·
 [archive cover](archive-cover.md) · [Instagram copy](02b-instagram-copy.md) ·
@@ -13,72 +13,77 @@ See also: [process overview](README.md) ·
 
 | | |
 |---|---|
-| **Trigger** | Step 2 triggers it once a show is ready. Until step 2 is automated, you double-click **MFYN – Make Episode Content** as step 2's last action |
-| **Input** | The newest episode's `Tracks` folder in `MFYN_Show_Archive`, and the albums those tracks come from in `MFYN_Library` |
-| **Output** | In the episode folder: `MFYN_archive_NN.png` and `MFYN_tracklist_NN.png`. In `MFYN_Posts\<episode>`: per track, `Artist - Title.mp4`, `.json` and `.txt`. In `MFYN_Stories\<episode>`: per artist, an Album Story `.mp4`, `.png` and `.json` |
+| **Trigger** | You, double-clicking **MFYN – Make Episode Content** on the PC, as step 2's last action |
+| **Input** | The newest episode in `MFYN_Show_Archive` (or the one you name) |
+| **Output** | Whatever the sub-scripts you chose make (below) |
 | **Runs on** | The MFYN PC (Processing 4 and ffmpeg) |
-| **Code** | [`intake/content.py`](../intake/content.py), which runs [`archive_cover.py`](../intake/archive_cover.py), [`reels.py`](../intake/reels.py), [`captions.py`](../intake/captions.py) and [`stories.py`](../intake/stories.py); started by [`scripts/make_content.cmd`](../scripts/make_content.cmd) |
+| **Code** | [`intake/content.py`](../intake/content.py), started by [`scripts/make_content.cmd`](../scripts/make_content.cmd) |
 | **Next** | You review it all at the manual stop, before the Publishing Process starts |
+
+## The sub-scripts
+
+They run in this order. The first always runs; for the others you're asked
+first (Enter means yes), since not every item fits every episode.
+
+| Question | Sub-script | Sketch | Makes |
+|---|---|---|---|
+| *(always)* | [`archive_cover.py`](../intake/archive_cover.py): [archive cover](archive-cover.md) | `MFYN_Archive` | `MFYN_archive_NN.png` and the YouTube playlist cover `MFYN_tracklist_NN.png`, in the episode folder. One sketch, because the two depend on each other |
+| `Do you want ON AIR posts?` | [`reels.py`](../intake/reels.py), then [`captions.py`](../intake/captions.py) ([2b](02b-instagram-copy.md)) | `MFYN_VideoPost_OnAir` | Per track: `Artist - Title.mp4`, `.json` and a `.txt` caption, in `MFYN_Posts\<episode>` |
+| `Album Story videos?` | [`stories.py`](../intake/stories.py): [Album Stories](featured-album-story.md) | `MFYN_Story_Album` | Per artist: an Album Story `.mp4`, `.png` and `.json`, in `MFYN_Stories\<episode>` |
+| `Do you want a YouTube playlist?` | `playlist.py` (being built, [#41](https://github.com/mfyn-radio/process/issues/41)) | | A playlist proposal for your review, then the playlist on YouTube. Runs after the archive cover, whose playlist cover it uses |
+
+A sub-script that isn't built yet isn't asked about. One that fails doesn't
+stop the others; the summary at the end lists each one as ok or FAILED.
 
 ## What it does
 
 1. **Find the episode:** the newest one in `MFYN_Show_Archive`, going by the
    air date in its folder name. It lists the tracks and asks
-   `Make the content for these N track(s)? [Y/n]`.
-2. **Choose what to make.** The archive cover is always made. Then it asks,
-   since not every item fits every episode (Enter means yes):
-   ```
-   Do you want ON AIR posts? [Y/n]
-   A YouTube tracklist cover? [Y/n]
-   Album Story videos? [Y/n]
-   ```
-   The captions come with the ON AIR posts. The steps below only run for
-   what you said yes to.
-3. **Archive cover, and the YouTube playlist image:** made in the episode
-   folder, if they aren't there yet. They open in the image viewer and you
-   keep them or ask for a new colour; see [archive cover](archive-cover.md).
-4. **Pick each artist's Album Story:** for every artist in the episode, the
-   album of the track you played (one of them at random, if you played
-   several of theirs), found in `MFYN_Library`, and a **random track from that
-   album** to feature. Artists who already have a Story for this episode are
-   skipped. An artist whose album isn't in the library gets no Story; the
-   run says so and carries on.
-5. **Confirm Instagram handles** in the [MFYN Artists sheet](01-acquire.md#the-mfyn-artists-sheet),
-   once for everyone in the posts and the Stories you're making.
-   It goes through each artist, then each label of their releases, and asks
-   only about those not settled yet. It shows the suggested handle and their
-   links (website, SoundCloud…) to help check.
-   - **Enter:** confirm the suggested handle. Status becomes `Confirmed`.
-     When there's no suggestion (`Not found`), Enter does nothing: type a
-     handle or `-`.
-   - **Type a handle** (with or without `@`): replace it. Status becomes
-     `Confirmed`.
-   - **`-`:** they have no Instagram. Status becomes `No Instagram`, and
-     they're credited by name instead.
+   `Make the content for this episode (N track(s))? [Y/n]`.
+2. **Ask the questions** above.
+3. **Run the sub-scripts** you chose, in order. Each confirms the Instagram
+   handles it needs (see below), then makes its items. Anything already made
+   is skipped.
+4. **Summary:** each sub-script, ok or FAILED, with what it made. It also
+   goes in the [run log](run-log.md).
 
-   Once confirmed (or marked `No Instagram`), an artist or label isn't asked
-   about again in later episodes.
-6. **Render the video posts:** the ON AIR sketch runs on the tracks that don't have a video post yet.
-   - Each video is **30 seconds** long, 1080×1920, from the loudest stretch of the track.
-   - The player is in the exact centre of the frame, so it fits the full-screen Reel, the profile grid (middle 3:4) and a feed crop (middle 4:5).
-   - It shows the title and artist from the tags, the embedded cover, the
-     scope line, a progress bar and the ON AIR pulse.
-   - A preview window shows each video as it renders, and closes when done.
+### Instagram handles
 
-   They're filed in `H:\My Drive\MFYN_Posts\<episode folder>\`, named
-   `Artist - Title` (characters Windows doesn't allow become `_`; two tracks
-   with the same name get ` (2)`, ` (3)`…):
-   ```
-   applied communications - donna deegan.mp4
-   applied communications - donna deegan.json
-   ```
-7. **Captions:** [step 2b](02b-instagram-copy.md) writes a `.txt` caption
-   next to every video post that doesn't have one yet.
-8. **Render the Album Stories:** the Album sketch runs once per artist picked
-   in step 4, with the featured track highlighted as playing; see
-   [Album Stories](featured-album-story.md). They're filed in
-   `H:\My Drive\MFYN_Stories\<episode folder>\`, named after the featured track.
-9. **Summary:** what was made and what failed, for each part.
+The ON AIR posts and the Album Stories each check the
+[MFYN Artists sheet](01-acquire.md#the-mfyn-artists-sheet) for the artists
+and labels they credit, and ask only about those not settled yet. It shows
+the suggested handle and their links (website, SoundCloud…) to help check.
+
+- **Enter:** confirm the suggested handle. Status becomes `Confirmed`. When
+  there's no suggestion (`Not found`), Enter does nothing: type a handle or `-`.
+- **Type a handle** (with or without `@`): replace it. Status becomes `Confirmed`.
+- **`-`:** they have no Instagram. Status becomes `No Instagram`, and they're
+  credited by name instead.
+
+Once confirmed (or marked `No Instagram`), an artist or label isn't asked
+about again, so an artist confirmed for the posts isn't asked about again
+for their Story.
+
+## ON AIR posts
+
+The ON AIR sketch runs on the tracks that don't have a video post yet.
+
+- Each video is **30 seconds** long, 1080×1920, from the loudest stretch of the track.
+- The player is in the exact centre of the frame, so it fits the full-screen Reel, the profile grid (middle 3:4) and a feed crop (middle 4:5).
+- It shows the title and artist from the tags, the embedded cover, the
+  scope line, a progress bar and the ON AIR pulse.
+- A preview window shows each video as it renders, and closes when done.
+
+They're filed in `H:\My Drive\MFYN_Posts\<episode folder>\`, named
+`Artist - Title` (characters Windows doesn't allow become `_`; two tracks
+with the same name get ` (2)`, ` (3)`…), then [step 2b](02b-instagram-copy.md)
+writes a `.txt` caption next to each one that doesn't have one yet:
+
+```
+applied communications - donna deegan.mp4
+applied communications - donna deegan.json
+applied communications - donna deegan.txt
+```
 
 ## The video post details file (for captions and Publishing)
 
@@ -120,9 +125,25 @@ python -m intake.content --episode NAME   # the episode whose folder name contai
 python -m intake.content --skip-handles   # don't stop to confirm handles
 ```
 
-`python -m intake.reels` (same options) still makes only the cover, video
-posts and captions, and `python -m intake.stories` makes a one-off Story for
+Each sub-script also runs on its own, with the same `--episode` option:
+
+```
+python -m intake.archive_cover --episode NAME        # the archive cover and playlist cover
+python -m intake.reels --episode NAME                # the ON AIR posts and captions
+python -m intake.stories --per-artist --episode NAME # the Album Stories
+```
+
+`python -m intake.stories` without `--per-artist` makes a one-off Story for
 any album; see [Album Stories](featured-album-story.md#running-it).
+
+### Adding a sub-script
+
+Write it as a module in `intake/` with one entry point,
+`for_episode(ep, ask=input, ...) -> (ok, summary)`, that does its whole job
+for the episode and skips what already exists. It can also take
+`skip_handles` and `rng`, which the orchestrator passes on to the
+sub-scripts that ask for them. Then add one line to `STEPS` in
+`intake/content.py`: the module, what it makes, and its question.
 
 **Re-running is safe.** Anything already made is skipped: the cover, video
 posts and captions that exist, and artists who already have a Story. To remake
@@ -151,7 +172,7 @@ delete its `.mp4` and `.json` in `MFYN_Stories`; then run again.
 ## Troubleshooting
 
 The log is `%APPDATA%\mfyn-intake\content.log`. The run exits with an error
-if the cover, a video post or a Story failed, or the library wasn't found.
+if any sub-script failed; the summary says which.
 
 | Message | What to do |
 |---|---|

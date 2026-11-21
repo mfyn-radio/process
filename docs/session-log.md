@@ -16,13 +16,15 @@ session is first.
 - Finished output in the `MFYN_` folders on H: is final.
 - **Make Reels and Make Album Story became one run, Make Episode Content**
   ([step 2a](02a-make-episode-content.md), `intake.content`,
-  `scripts\make_content.cmd`), which you start by hand on the PC. It always
-  makes the archive cover, then asks whether you want ON AIR posts (with
-  captions), the YouTube tracklist cover and Album Story videos (an **Album
-  Story per artist**). Each Story is the album of the track that
-  was played, with a random track from that album featured. Handles are asked
-  about once for everything. The old shortcuts and their scripts are gone;
-  `python -m intake.reels` and `python -m intake.stories` still work on their own.
+  `scripts\make_content.cmd`), which you start by hand on the PC. It is an
+  **orchestrator**: `STEPS` in `intake/content.py` lists the sub-scripts, each
+  with one entry point, `for_episode(ep, ask)`, and each also runnable alone.
+  The archive cover and YouTube playlist cover (one sketch) always run. Then it
+  asks about ON AIR posts (with captions), Album Story videos (an **Album
+  Story per artist**: the album of the track that was played, with a random
+  track from it featured) and, once it's built, the YouTube playlist (#41).
+  The shortcut is in `OneDrive\Desktop\MFYN_Automation_Triggers`; the old
+  ones and their scripts are gone.
 
 ## 2026-11-20
 

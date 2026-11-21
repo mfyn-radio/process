@@ -6,6 +6,7 @@ episode. To make a one-off Story for any album in the library, run:
     python -m intake.stories                          # asks for the album and the featured track
     python -m intake.stories --album NAME --track N   # the album whose folder name contains NAME, track N
     python -m intake.stories --skip-handles           # don't stop to confirm Instagram handles
+    python -m intake.stories --per-artist             # a Story for every artist in the episode
 
 For a one-off you pick the album and the featured track; the rest is
 automatic. See docs/featured-album-story.md.
@@ -14,6 +15,7 @@ import argparse
 import datetime
 import json
 import logging
+import random
 import shutil
 import subprocess
 import sys
@@ -209,7 +211,7 @@ def in_library(track, folders):
     return None
 
 
-def for_episode(ep_tracks, folders, rng, done=()):
+def pick_per_artist(ep_tracks, folders, rng, done=()):
     """One Album Story per artist in the episode: for each artist, the album
     of a track you played (one of them at random, if you played several), and
     a random track from that album to feature. Returns a list of
@@ -249,6 +251,37 @@ def done_artists(ep):
     return done - {""}
 
 
+def for_episode(ep, ask=input, skip_handles=False, rng=None):
+    """Make Episode Content's step: an Album Story for every artist in the
+    episode who doesn't have one yet. Returns (ok, summary)."""
+    if not config.LIBRARY_DIR.is_dir():
+        log.error("Library %s not found, so no Album Stories can be made.", config.LIBRARY_DIR)
+        return False, "no Album Stories: library not found"
+    tracks = [reels.read_track(p) for p in ep.tracks()]
+    picks = pick_per_artist(tracks, albums(config.LIBRARY_DIR), rng or random.Random(), done_artists(ep))
+    if not picks:
+        return True, "no new Album Stories to make"
+    cat = reels.open_catalog("Album Stories")
+    if cat and not skip_handles:
+        artists, labels = [], []
+        for folder, album, index, _ in picks:
+            who = details(folder, album, album[index], cat, config.STORY_SECONDS, ep)
+            artists.append(who["artist"])
+            if who["label"] and who["label"] != "Self-released":
+                labels.append(who["label"])
+        print("\nInstagram handles for the Album Stories. Only ones that aren't confirmed yet are asked about.")
+        handles.confirm(cat.artists, list(dict.fromkeys(artists)), "artist", ask=ask)
+        handles.confirm(cat.labels, list(dict.fromkeys(labels)), "label", ask=ask)
+    made = failed = 0
+    for folder, album, index, artist in picks:
+        if make(folder, album, index, ep, cat, episode_artist=artist):
+            made += 1
+        else:
+            failed += 1
+    log.info("%d Album Story(ies) made, %d failed, in %s", made, failed, config.STORIES_DIR / ep.folder.name)
+    return not failed, f"{made} Album Story(ies) made, {failed} failed"
+
+
 def main(argv=None, ask=input, say=print):
     return runlog.track("Album Story", lambda run: _main(argv, ask, say, run))
 
@@ -260,6 +293,8 @@ def _main(argv, ask, say, run):
                                          "(default: the newest)")
     parser.add_argument("--track", type=int, help="the featured track's number in the list")
     parser.add_argument("--skip-handles", action="store_true", help="don't stop to confirm Instagram handles")
+    parser.add_argument("--per-artist", action="store_true",
+                        help="a Story for every artist in the episode, as Make Episode Content makes them")
     args = parser.parse_args(argv)
     reels.setup_logging(config.STORIES_LOG_FILE)
 
@@ -273,6 +308,10 @@ def _main(argv, ask, say, run):
     if ep is None:
         log.error("No episode folder (named like 5_11_2026- Episode Name) found in %s", config.SHOW_ARCHIVE_DIR)
         return 1
+    if args.per_artist:
+        ok, run.summary = for_episode(ep, ask=ask, skip_handles=args.skip_handles)
+        run.add(ep.folder.name, runlog.OK if ok else runlog.FAILED, run.summary)
+        return 0 if ok else 1
     folder = pick_album(albums(config.LIBRARY_DIR), args.album, ask, say)
     if folder is None:
         return 0
