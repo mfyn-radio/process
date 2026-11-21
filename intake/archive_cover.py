@@ -1,6 +1,6 @@
 """The archive cover for an episode in MFYN_Show_Archive.
 
-Make Reels runs this first, so it normally needs no double-click of its own.
+Make Episode Content runs this first, so it normally needs no double-click of its own.
 To run it by hand:
 
     python -m intake.archive_cover                  # the newest episode

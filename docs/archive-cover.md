@@ -7,7 +7,7 @@ See also: [the archive sketch](../processing/MFYN_Archive/README.md)
 
 | | |
 |---|---|
-| **Trigger** | The start of every **MFYN – Make Reels** run, after you confirm the tracks. No double-click of its own |
+| **Trigger** | The start of every **MFYN – Make Episode Content** run, after you confirm the tracks. No double-click of its own |
 | **Input** | The episode folder's name, e.g. `5_11_2026-Normal Show-Skramish` |
 | **Output** | `MFYN_archive_03.png` (2160×2160; the minimum is 1800) and the YouTube playlist image `MFYN_tracklist_03.png`, both in that episode folder |
 | **Runs on** | The MFYN PC (Processing 4) |
@@ -51,7 +51,7 @@ that cover's number, date and `colour=#RRGGBB` (see the
 
 ## Running it
 
-It runs at the start of **MFYN – Make Reels**. The new cover and its
+It runs at the start of **MFYN – Make Episode Content**. The new cover and its
 tracklist image open in the image viewer and you're asked `Keep this cover and
 tracklist image?`. Press Enter (or `y`) to keep them, and both are saved in the
 episode folder. Type `n` and another pair is made with a new colour, until you

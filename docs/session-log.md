@@ -14,6 +14,14 @@ session is first.
   It replaces the earlier plan to delete that folder. Changes made on the PC
   go to a branch and a pull request, not straight to `main`.
 - Finished output in the `MFYN_` folders on H: is final.
+- **Make Reels and Make Album Story became one run, Make Episode Content**
+  ([step 2a](02a-make-episode-content.md), `intake.content`,
+  `scripts\make_content.cmd`). It makes an episode's baseline content: the
+  archive cover and YouTube playlist image, a video post and caption per track,
+  and an **Album Story per artist**. Each Story is the album of the track that
+  was played, with a random track from that album featured. Handles are asked
+  about once for everything. The old shortcuts and their scripts are gone;
+  `python -m intake.reels` and `python -m intake.stories` still work on their own.
 
 ## 2026-11-20
 

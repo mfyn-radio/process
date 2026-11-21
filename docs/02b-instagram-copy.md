@@ -1,11 +1,11 @@
 # Step 2b: Instagram copy
 
 A caption for each video post. A sub-automation of [step 2, Create the show](02-create-show.md),
-run straight after [step 2a, Make Reels](02a-make-reels.md).
+run during [step 2a, Make Episode Content](02a-make-episode-content.md), straight after the video posts.
 
 | | |
 |---|---|
-| **Trigger** | The end of every **MFYN – Make Reels** run. No double-click of its own |
+| **Trigger** | Every **MFYN – Make Episode Content** run, after the video posts. No double-click of its own |
 | **Input** | Each video post's `.json` in `MFYN_Posts\<episode>`, plus fresh handles from the [MFYN Artists sheet](01-acquire.md#the-mfyn-artists-sheet) |
 | **Output** | `Artist - Title.txt` next to each video post, ready to paste into Instagram |
 | **Runs on** | The MFYN PC |
@@ -46,11 +46,10 @@ The `.txt` files are yours to edit before posting. A video post that already has
 caption is left alone, so your edits survive later runs.
 
 To remake a caption, for example after correcting a handle in the sheet,
-delete its `.txt` and double-click **MFYN – Make Reels** again. It skips the
+delete its `.txt` and double-click **MFYN – Make Episode Content** again. It skips the
 video posts that already exist and writes the missing captions.
 
-From Command Prompt, in the repo folder, captions can also be made without
-Make Reels:
+From Command Prompt, in the repo folder, captions can also be made on their own:
 
 ```
 python -m intake.captions                  # the newest episode in MFYN_Posts
