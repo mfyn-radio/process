@@ -11,15 +11,15 @@ starts after that.
 |---|---|---|---|
 | 1 | [Acquire](01-acquire.md) | A Bandcamp purchase is downloaded as FLAC into `MFYN_Library` | Live (2026-10-23) |
 | 2 | [Create the show](02-create-show.md) | **The parent.** Pick tracks, make the episode, archive it in `MFYN_Show_Archive`, then start the sub-automations below | Manual today |
-| 2a | [Make Reels](02a-make-reels.md) | The episode's tracks become 30-second 1080×1920 video posts in `MFYN_Posts` | Built, being tested |
-| 2b | [Instagram copy](02b-instagram-copy.md) | A caption for each video post, from its details and the MFYN Artists sheet | Built, runs at the end of Make Reels |
+| 2a | [Make Episode Content](02a-make-episode-content.md) | The episode's baseline content in one run: archive cover and YouTube playlist image, a 30-second 1080×1920 video post per track in `MFYN_Posts`, and an Album Story per artist in `MFYN_Stories` | Built, being tested |
+| 2b | [Instagram copy](02b-instagram-copy.md) | A caption for each video post, from its details and the MFYN Artists sheet | Built, runs during Make Episode Content |
 | — | **Manual stop** | You review everything made for a post, then trigger Publishing | Not built yet |
 | → | *Publishing Process* | Starts after your review: scheduling the posts on Instagram, among other things | Separate process, not built yet |
 
 Steps 2a and 2b are sub-automations of step 2: when a show is ready, step 2
 runs and triggers them. Each is its own step, with its own doc. Together they
-produce all the content for a post, so they belong to production. What they
-leave in `MFYN_Posts` is what you review at the manual stop.
+produce the baseline content for an episode, so they belong to production. What they
+leave in the episode folder, `MFYN_Posts` and `MFYN_Stories` is what you review at the manual stop.
 
 Ground rule: **MFYN only uses music it owns.** Everything starts with a
 Bandcamp purchase.
@@ -32,16 +32,16 @@ misbehaves.
 | Automation | Started by | Runs on | Log | Docs |
 |---|---|---|---|---|
 | Acquire (`intake.acquire`) | Task Scheduler task `MFYN Acquire`, hourly, via `scripts\run_acquire.cmd` | MFYN PC, while signed in | `%APPDATA%\mfyn-intake\acquire.log` | [Step 1](01-acquire.md), [troubleshooting](01-acquire-troubleshooting.md) |
-| Make Reels (`intake.reels`), with the archive cover (`intake.archive_cover`) and Instagram copy (`intake.captions`) | You, double-clicking **MFYN – Make Reels** (`scripts\make_reels.cmd`), until step 2 starts it itself | MFYN PC | `%APPDATA%\mfyn-intake\reels.log` | [Step 2a](02a-make-reels.md), [step 2b](02b-instagram-copy.md), [archive cover](archive-cover.md) |
-| Make Album Story (`intake.stories`) | You, double-clicking **MFYN – Make Album Story** (`scripts\make_story.cmd`), to feature an album | MFYN PC | `%APPDATA%\mfyn-intake\stories.log` | [Make Album Story](featured-album-story.md) |
+| Make Episode Content (`intake.content`): the archive cover (`intake.archive_cover`), video posts (`intake.reels`), Instagram copy (`intake.captions`) and Album Stories (`intake.stories`) | You, double-clicking **MFYN – Make Episode Content** (`scripts\make_content.cmd`), until step 2 starts it itself | MFYN PC | `%APPDATA%\mfyn-intake\content.log` | [Step 2a](02a-make-episode-content.md), [step 2b](02b-instagram-copy.md), [archive cover](archive-cover.md), [Album Stories](featured-album-story.md) |
 | Tests | GitHub Actions, on pull requests and pushes to `main` (`.github/workflows/tests.yml`) | GitHub | the Actions tab | `python -m pytest` locally |
 | Labels | GitHub Actions, when `.github/workflows/labels.yml` changes on `main`, or run by hand (`workflow_dispatch`) | GitHub | the Actions tab | [Issues](#issues) |
 
 Not automated: the parent [step 2](02-create-show.md), which you still do by
 hand. Not built: the manual stop's hand-off and the Publishing Process.
-The logs keep four files of up to 1 MB each, and Make Reels and Make Album Story also print to their windows.
-Acquire, Make Reels, Make Album Story and the archive cover also write what they did to the
-**MFYN Run Log** sheet, for the status page: see [run log](run-log.md).
+The logs keep four files of up to 1 MB each, and Make Episode Content also prints to its window.
+Acquire and Make Episode Content (and the ON AIR posts, Album Story and archive cover when run on
+their own) also write what they did to the **MFYN Run Log** sheet, for the status page: see
+[run log](run-log.md).
 
 ## Systems and accounts
 
@@ -85,7 +85,7 @@ list of open work. There are two kinds:
   - `Suggested` or `Not found`: set by step 1.
   - `Confirmed` or `No Instagram`: set by you in step 2a.
 - **Episode folders:** `D_M_YYYY- Episode Name`, using the air date. Each gets
-  its archive cover, `MFYN_archive_NN.png`, numbered from No. 3 (5 November 2026).
+  its archive cover, `MFYN_archive_NN.png`, and the YouTube playlist image `MFYN_tracklist_NN.png` in the same colour, numbered from No. 3 (5 November 2026).
 - **Video posts:** `MFYN_Posts\<episode folder>\Artist - Title.mp4`, plus `.json`
   details and the `.txt` caption.
 - **Secrets:** never in the repo. Google sign-in tokens live on the PC in
@@ -108,8 +108,8 @@ list of open work. There are two kinds:
   - [Decisions and how we got here](01-acquire-decisions.md)
   - [Troubleshooting](01-acquire-troubleshooting.md)
 - Step 2: [Create the show](02-create-show.md)
-  - Step 2a: [Make Reels](02a-make-reels.md)
+  - Step 2a: [Make Episode Content](02a-make-episode-content.md)
   - Step 2b: [Instagram copy](02b-instagram-copy.md)
   - [Archive cover](archive-cover.md)
-- Featured albums: [Make Album Story](featured-album-story.md)
+  - [Album Stories](featured-album-story.md)
 - Setup: [Google Cloud](setup/google-cloud.md)

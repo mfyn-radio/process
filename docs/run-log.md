@@ -12,7 +12,7 @@ Background: [#44](https://github.com/mfyn-radio/process/issues/44).
 | Column | What it holds |
 |---|---|
 | Time | When, on the MFYN PC's clock (`2026-11-21 08:05`) |
-| Automation | Acquire, Make Reels, Album Story, Archive cover |
+| Automation | Acquire, Make Episode Content, or ON AIR posts, Album Story and Archive cover when run on their own |
 | About | The album folder, episode folder, or `(the run)` when the run stopped before it got to one |
 | Result | `ok`, `failed` or `excluded` |
 | Details | What it made, or the error |
@@ -26,8 +26,9 @@ than an hour or two old here means the Task Scheduler task isn't running.
 | Automation | A row in Runs when | Last run summary |
 |---|---|---|
 | Acquire | An album is added, was already in the library, a purchase is from an excluded seller, or a purchase fails | How many purchase emails it checked, and how many are waiting (pre-orders, not downloadable yet). Waiting purchases get no row, since they'd add one every hour |
-| Make Reels | It finishes an episode: posts made, failed, captions written, and whether the archive cover was made | The same |
-| Album Story | A Story is made, or Processing made no video | What it made |
+| Make Episode Content | It finishes an episode: whether the archive cover was made, and for the items you asked for, the video posts made and failed, captions written, and Album Stories made and failed | The same |
+| ON AIR posts (`intake.reels` run on its own) | It finishes an episode: posts made, failed, captions, archive cover | The same |
+| Album Story (`intake.stories` run on its own) | A Story is made, or Processing made no video | What it made |
 | Archive cover (run on its own) | A cover is made | What it made |
 
 Any run that ends with an error and hasn't logged a failed row gets one, with

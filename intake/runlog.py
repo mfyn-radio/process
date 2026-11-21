@@ -33,7 +33,7 @@ def now():
 
 
 class RunLog:
-    """Rows for one automation ("Acquire", "Make Reels", ...)."""
+    """Rows for one automation ("Acquire", "Make Episode Content", ...)."""
 
     def __init__(self, automation, runs=None, last_run=None):
         self.automation = automation

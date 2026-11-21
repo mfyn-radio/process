@@ -1,12 +1,13 @@
-"""Step 2a, Make Reels: turn an episode's tracks into 30-second 1080x1920 video posts.
+"""The ON AIR video posts: an episode's tracks as 30-second 1080x1920 videos.
 
-Double-click scripts\\make_reels.cmd (or its desktop shortcut), or run:
+Make Episode Content (intake.content) makes these as part of its run. To make
+only the video posts (with the archive cover and captions), run:
 
     python -m intake.reels                    # the newest episode in MFYN_Show_Archive
     python -m intake.reels --episode NAME     # the episode whose folder name contains NAME
     python -m intake.reels --skip-handles     # don't stop to confirm Instagram handles
 
-See docs/02a-make-reels.md.
+See docs/02a-make-episode-content.md.
 """
 import argparse
 import datetime
@@ -160,6 +161,34 @@ def labels_for(tracks, cat):
     return labels
 
 
+def make_posts(ep, tracks, cat):
+    """The video posts for the tracks that don't have one yet, then a caption
+    for every post without one (step 2b). Returns (made, failed, captions
+    written, the episode's folder in MFYN_Posts)."""
+    out_dir = config.POSTS_DIR / ep.folder.name
+    out_dir.mkdir(parents=True, exist_ok=True)
+    names = dict(zip((t.path for t in tracks), reel_names(tracks)))
+    pending = [t for t in tracks if not (out_dir / f"{names[t.path]}.mp4").exists()]
+    if len(pending) < len(tracks):
+        log.info("%d track(s) already have a video post; skipping them.", len(tracks) - len(pending))
+
+    made = render(pending, out_dir, config.POST_SECONDS) if pending else {}
+    for track in pending:
+        mp4 = made.get(track.path)
+        if mp4 is None:
+            log.error("No video post was made for %s", track.path.name)
+            continue
+        name = names[track.path]
+        mp4.replace(out_dir / f"{name}.mp4")
+        (out_dir / f"{name}.json").write_text(
+            json.dumps(details(track, ep, cat, config.POST_SECONDS), indent=2, ensure_ascii=False), encoding="utf-8")
+        log.info("Made %s.mp4", name)
+
+    # Step 2b: a caption for every video post that doesn't have one yet.
+    written = captions.write_all(out_dir, cat)
+    return len(made), len(pending) - len(made), written, out_dir
+
+
 def setup_logging(log_file=None):
     config.APP_DIR.mkdir(parents=True, exist_ok=True)
     fmt = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
@@ -174,7 +203,7 @@ def setup_logging(log_file=None):
 
 
 def main(argv=None, ask=input):
-    return runlog.track("Make Reels", lambda run: _main(argv, ask, run))
+    return runlog.track("ON AIR posts", lambda run: _main(argv, ask, run))
 
 
 def _main(argv, ask, run):
@@ -199,7 +228,7 @@ def _main(argv, ask, run):
     print(f"\nEpisode: {ep.folder.name}  (airs {ep.air_date:%A %d %B %Y})")
     for t in tracks:
         print(f"  {t.artist} - {t.title}")
-    if ask(f"\nMake Reels for these {len(tracks)} track(s)? [Y/n] ").strip().lower() not in ("", "y", "yes"):
+    if ask(f"\nMake video posts for these {len(tracks)} track(s)? [Y/n] ").strip().lower() not in ("", "y", "yes"):
         run.summary = f"stopped before making anything for {ep.folder.name}"
         return 0
 
@@ -219,34 +248,12 @@ def _main(argv, ask, run):
         handles.confirm(cat.artists, list(dict.fromkeys(t.artist for t in tracks)), "artist", ask=ask)
         handles.confirm(cat.labels, labels_for(tracks, cat), "label", ask=ask)
 
-    out_dir = config.POSTS_DIR / ep.folder.name
-    out_dir.mkdir(parents=True, exist_ok=True)
-    names = dict(zip((t.path for t in tracks), reel_names(tracks)))
-    pending = [t for t in tracks if not (out_dir / f"{names[t.path]}.mp4").exists()]
-    if len(pending) < len(tracks):
-        log.info("%d track(s) already have a video post; skipping them.", len(tracks) - len(pending))
-
-    made = render(pending, out_dir, config.POST_SECONDS) if pending else {}
-    for track in pending:
-        mp4 = made.get(track.path)
-        if mp4 is None:
-            log.error("No video post was made for %s", track.path.name)
-            continue
-        name = names[track.path]
-        mp4.replace(out_dir / f"{name}.mp4")
-        (out_dir / f"{name}.json").write_text(
-            json.dumps(details(track, ep, cat, config.POST_SECONDS), indent=2, ensure_ascii=False), encoding="utf-8")
-        log.info("Made %s.mp4", name)
-
-    # Step 2b: a caption for every Reel that doesn't have one yet.
-    written = captions.write_all(out_dir, cat)
-
-    failed = len(pending) - len(made)
+    made, failed, written, out_dir = make_posts(ep, tracks, cat)
     log.info("\nDone: %d video post(s) made, %d failed, %d caption(s) written. They're in %s",
-             len(made), failed, written, out_dir)
+             made, failed, written, out_dir)
     if cover_failed:
         log.error("The archive cover wasn't made. Scroll up for Processing's messages.")
-    summary = (f"{len(made)} video post(s) made, {failed} failed, {written} caption(s) written"
+    summary = (f"{made} video post(s) made, {failed} failed, {written} caption(s) written"
                + (", archive cover not made" if cover_failed else ""))
     run.add(ep.folder.name, runlog.FAILED if failed or cover_failed else runlog.OK, summary)
     run.summary = summary

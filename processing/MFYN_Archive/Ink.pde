@@ -77,8 +77,13 @@ float[] textMask(Line[] lines, int S, float top, float bottom) {
   return m;
 }
 
-// Lay ink through mask m onto img (in place).
-void applyInk(java.util.Random rng, float[][] img, float[] m, int S) {
+// Lay ink through mask m onto img (in place). The cover's black ink is
+// tinted by the paper under it; the tracklist image's light ink (ink != INK)
+// is laid flat at TL_INK_LEVEL.
+void applyInk(java.util.Random rng, float[][] img, float[] m, int S) { applyInk(rng, img, m, S, INK); }
+
+void applyInk(java.util.Random rng, float[][] img, float[] m, int S, float[] ink) {
+  boolean tint = ink == INK;
   int k = S / B;
   gaussian(m, S, S, INK_SPREAD * k);
   float[] grain = noise(rng, 0.5, 0.5, true);
@@ -93,7 +98,7 @@ void applyInk(java.util.Random rng, float[][] img, float[] m, int S) {
     float cover = constrain(m[i] * (1 - INK_DROPOUT * (g > GRAIN_THRESHOLD ? 1 : 0) * 0.9 - INK_DROPOUT * 0.3 * g), 0, 1);
     float lum = (img[0][i] + img[1][i] + img[2][i]) / 3 / PAPER_REF;
     for (int c = 0; c < 3; c++) {
-      float tinted = INK[c] * (INK_FLOOR + INK_PAPER * lum);
+      float tinted = tint ? ink[c] * (INK_FLOOR + INK_PAPER * lum) : ink[c] * TL_INK_LEVEL;
       img[c][i] = img[c][i] * (1 - cover) + tinted * cover;
     }
   }

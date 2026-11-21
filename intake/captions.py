@@ -1,7 +1,7 @@
 """Step 2b, Instagram copy: a caption for each video post in MFYN_Posts.
 
-Make Reels runs this at its end, so it normally needs no double-click of its
-own. To run it by hand:
+Make Episode Content runs this after the video posts, so it normally needs
+no double-click of its own. To run it by hand:
 
     python -m intake.captions                  # the newest episode in MFYN_Posts
     python -m intake.captions --episode NAME   # the episode whose folder name contains NAME
