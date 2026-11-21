@@ -105,6 +105,11 @@ tracks arrive as one file and get the same treatment.
 
 ### The MFYN Artists sheet
 
+Since 21 Nov 2026 this lives in the MFYN Catalog base on Airtable, which is
+relational and replaces the Tags tab with a multi-select field
+([Airtable](airtable.md), [#58](https://github.com/mfyn-radio/process/issues/58)).
+The decisions below still hold.
+
 FLAC tags don't include Instagram handles, but posts should tag the artist
 (and label) when they have an account. Chrome is already on Bandcamp in step
 1, so the step also collects what's useful for captions and the show.

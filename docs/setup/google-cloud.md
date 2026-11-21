@@ -1,7 +1,7 @@
 # Google Cloud setup
 
 What lets the intake automation on the MFYN PC read and label mail in the
-mfyn@ inbox, and keep the MFYN Artists sheet.
+mfyn@ inbox, and keep the MFYN Run Log sheet. (The catalog is on [Airtable](../airtable.md) since 21 Nov 2026.)
 
 **Status:** done. The project and client exist. The sign-in itself happens on
 the PC, as part of [setting up step 1](../01-acquire.md#setting-it-up-on-the-pc).
@@ -12,7 +12,7 @@ the PC, as part of [setting up step 1](../01-acquire.md#setting-it-up-on-the-pc)
 - APIs enabled:
   - **Gmail API**
   - **Google Drive API**
-  - **Google Sheets API** (needed for the MFYN Artists sheet)
+  - **Google Sheets API** (needed for the MFYN Run Log, and to read the old MFYN Artists sheet)
   - **Google Calendar API** (needed for the [Event Calendar](../event-calendar.md))
   - **YouTube Data API v3** (needed for the [YouTube playlist](../youtube-playlist.md);
     not turned on yet, see [its setup](../youtube-playlist.md#setting-it-up))
@@ -25,7 +25,7 @@ Permissions requested at sign-in:
 - `https://www.googleapis.com/auth/gmail.modify`: read purchase emails and add
   the `MFYN/…` labels. It can't delete mail permanently.
 - `https://www.googleapis.com/auth/drive.file`: only the files the automation
-  creates itself, the MFYN Artists sheet. It can't see the rest of the Drive.
+  creates itself: the MFYN Run Log, and the old MFYN Artists sheet. It can't see the rest of the Drive.
   The library itself is synced by Drive for desktop.
 - `https://www.googleapis.com/auth/calendar.app.created`: only the calendars
   the automation creates itself, Event Calendar. It can't see mfyn@'s other

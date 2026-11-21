@@ -1,7 +1,7 @@
 # Run log
 
 The automations write what they did to a Google Sheet, **MFYN Run Log**, in
-mfyn@'s Drive. It is made on first use, like the MFYN Artists sheet. The status
+mfyn@'s Drive. It is made on first use. The status
 page reads it, so you can see what ran without opening the logs on the MFYN PC.
 Background: [#44](https://github.com/mfyn-radio/process/issues/44).
 

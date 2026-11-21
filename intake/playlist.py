@@ -14,7 +14,7 @@ It works in two runs, so you can check the picks first:
    2. a live video by someone else (a fan, a venue), held for your yes,
    3. the official track on YouTube Music (the "Artist - Topic" upload).
    Claude Code on the PC (`claude -p`) judges the search results. The proposal
-   goes in the Playlists tab of the MFYN Artists sheet, one row per track.
+   goes in the Playlist entries table of the MFYN Catalog base, one record per track.
 2. **Create.** Once every row's Use is yes or no, the next run asks
    "Create the YouTube playlist?" and makes it on MFYN's channel, with each
    band's Bandcamp link in the description and the episode's
@@ -144,7 +144,7 @@ def candidates(youtube, artist, plays):
 # --- Picking ---------------------------------------------------------------
 
 def about(artist, plays, cat):
-    """What the MFYN Artists sheet knows about the artist, to help tell their
+    """What the MFYN Catalog knows about the artist, to help tell their
     channel from someone else's."""
     lines = []
     if cat is not None:
@@ -239,7 +239,7 @@ def rows_for(ep, numbered, picks, found, cat=None):
 
 
 def bandcamp_link(cat, artist, album):
-    """The artist's Bandcamp page, or the album's page, from the MFYN Artists sheet."""
+    """The artist's Bandcamp page, or the album's page, from the MFYN Catalog."""
     if cat is None:
         return ""
     _, row = cat.artists.find({"Artist": artist})
@@ -430,9 +430,12 @@ def for_episode(ep, ask=input, say=print, cat=None, youtube=None, judge=ask_clau
         except SystemExit as e:
             log.error("Can't reach Google: %s", e.code)
             return False, f"not signed in to Google with YouTube: {e.code}"
-    sheet = f"the Playlists tab of {config.ARTISTS_SHEET}"
-    if hasattr(cat.playlists, "_id"):
-        sheet += f" (https://docs.google.com/spreadsheets/d/{cat.playlists._id})"
+        except Exception as e:
+            log.error("Can't open the %s base: %s", config.CATALOG, e)
+            return False, f"couldn't open the {config.CATALOG} base: {e}"
+    sheet = f"the Playlist entries table of {config.CATALOG}"
+    if getattr(cat.playlists, "url", ""):
+        sheet += f" ({cat.playlists.url})"
 
     rows = episode_rows(cat, ep)
     if not rows:

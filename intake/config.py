@@ -41,8 +41,19 @@ EVENTS_LOG_FILE = APP_DIR / "events.log"
 CONTENT_LOG_FILE = APP_DIR / "content.log"
 PLAYLIST_LOG_FILE = APP_DIR / "playlist.log"
 
-# Google Sheet of artists and their Instagram handles, in mfyn@'s Drive.
-# Created by the automation on first use.
+# The catalog: artists and their Instagram handles, releases, labels, events and
+# playlists, in an Airtable base (docs/airtable.md).
+CATALOG = "MFYN Catalog"
+# The Airtable personal access token, in a text file next to this repo's code
+# (never committed: it's in .gitignore). AIRTABLE_TOKEN overrides it.
+AIRTABLE_TOKEN_FILE = Path(os.environ.get(
+    "MFYN_AIRTABLE_TOKEN_FILE", Path(__file__).resolve().parent.parent / "airtable_token.txt"))
+# The base's id, saved by `python -m intake.airtable_setup`.
+AIRTABLE_FILE = APP_DIR / "airtable.json"
+# Airtable's free plan allows 1,000 API calls a month, so one run stops after this many.
+AIRTABLE_MAX_CALLS = int(os.environ.get("MFYN_AIRTABLE_MAX_CALLS", "150"))
+# The Google Sheet the catalog was kept in until 21 Nov 2026, in mfyn@'s Drive. Kept as a
+# backup; only the copy to Airtable reads it.
 ARTISTS_SHEET = "MFYN Artists"
 # What the automations have done, for the status page. Also made on first use.
 RUN_LOG_SHEET = "MFYN Run Log"

@@ -6,7 +6,7 @@ run during [step 2a, Make Episode Content](02a-make-episode-content.md), straigh
 | | |
 |---|---|
 | **Trigger** | Every **MFYN – Make Episode Content** run that makes ON AIR posts, after the posts. No double-click of its own |
-| **Input** | Each video post's `.json` in `MFYN_Posts\<episode>`, plus fresh handles from the [MFYN Artists sheet](01-acquire.md#the-mfyn-artists-sheet) |
+| **Input** | Each video post's `.json` in `MFYN_Posts\<episode>`, plus fresh handles from the [MFYN Catalog](01-acquire.md#the-mfyn-catalog) |
 | **Output** | `Artist - Title.txt` next to each video post, ready to paste into Instagram |
 | **Runs on** | The MFYN PC |
 | **Code** | [`intake/captions.py`](../intake/captions.py) |
@@ -27,7 +27,7 @@ Release Date: 12 September 2026
 Air Date: 5 November 2026
 ```
 
-- **Handles:** looked up again in the MFYN Artists sheet when the caption is
+- **Handles:** looked up again in the MFYN Catalog when the caption is
   made, in case one was corrected after the video post was made. Only `Confirmed` handles are
   tagged. Artists and labels marked `No Instagram`, or not confirmed yet, are
   credited by name.

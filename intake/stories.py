@@ -23,7 +23,7 @@ import tempfile
 import unicodedata
 from pathlib import Path
 
-from . import catalog, config, episode, google_auth, handles, library, reels, runlog
+from . import catalog, config, episode, handles, library, reels, runlog
 
 log = logging.getLogger("stories")
 
@@ -361,10 +361,10 @@ def _main(argv, ask, say, run):
         return 0
 
     try:
-        cat = catalog.Catalog(google_auth.credentials())
+        cat = catalog.Catalog()
     except (Exception, SystemExit) as e:
-        log.warning("Couldn't open the %s sheet (%s). The Story is made without handles or the album link.",
-                    config.ARTISTS_SHEET, e)
+        log.warning("Couldn't open the %s base (%s). The Story is made without handles or the album link.",
+                    config.CATALOG, e)
         cat = None
     if cat and not args.skip_handles:
         who = details(folder, tracks, featured, cat, config.STORY_SECONDS, ep)

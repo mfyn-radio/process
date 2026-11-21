@@ -12,8 +12,8 @@ starts after that.
 | 1 | [Acquire](01-acquire.md) | A Bandcamp purchase is downloaded as FLAC into `MFYN_Library` | Live (2026-10-23) |
 | 2 | [Create the show](02-create-show.md) | **The parent.** Pick tracks, make the episode, archive it in `MFYN_Show_Archive`, then start the sub-automations below | Manual today |
 | 2a | [Make Episode Content](02a-make-episode-content.md) | The episode's baseline content in one run: archive cover and YouTube playlist image, a 30-second 1080×1920 video post per track in `MFYN_Posts`, and an Album Story per artist in `MFYN_Stories` | Built, being tested |
-| — | [YouTube playlist](youtube-playlist.md) | After the show airs: a proposed playlist of the bands' own videos, from the Reaper running order, reviewed in the MFYN Artists sheet, then made on MFYN's YouTube channel | Built, not set up yet |
-| 2b | [Instagram copy](02b-instagram-copy.md) | A caption for each video post, from its details and the MFYN Artists sheet | Built, runs during Make Episode Content |
+| — | [YouTube playlist](youtube-playlist.md) | After the show airs: a proposed playlist of the bands' own videos, from the Reaper running order, reviewed in the MFYN Catalog, then made on MFYN's YouTube channel | Built, not set up yet |
+| 2b | [Instagram copy](02b-instagram-copy.md) | A caption for each video post, from its details and the MFYN Catalog | Built, runs during Make Episode Content |
 | — | **Manual stop** | You review everything made for a post, then trigger Publishing | Not built yet |
 | → | *Publishing Process* | Starts after your review: scheduling the posts on Instagram, among other things | Separate process, not built yet |
 
@@ -52,7 +52,8 @@ their own) also write what they did to the **MFYN Run Log** sheet, for the statu
 |---|---|---|
 | mfyn@nothingflatdigital.com | Google Workspace | Bandcamp purchases, receipts, owns the library |
 | admin@nothingflatdigital.com | Google Workspace | Workspace and Google Cloud administration |
-| MFYN Artists | Google Sheet in mfyn@'s Drive, kept by the automation | The artist library (Instagram handles, tags, links), releases, labels, every event on Event Calendar (Events tab), and the YouTube playlist proposals (Playlists tab) |
+| MFYN Catalog | Airtable base on the free plan, in mfyn@'s Airtable account, kept by the automation ([Airtable](airtable.md)) | The artist library (Instagram handles, tags, links), releases, labels, every event on Event Calendar, and the YouTube playlist proposals, linked to each other |
+| MFYN Artists | Google Sheet in mfyn@'s Drive | Where the catalog was kept until 21 Nov 2026. A backup now; nothing writes to it |
 | MFYN Run Log | Google Sheet in mfyn@'s Drive, kept by the automation | What the automations did, for the status page ([run log](run-log.md)) |
 | `MFYN_Show_Archive` | mfyn@'s My Drive, `H:\My Drive\MFYN_Show_Archive` | Finished episodes, `D_M_YYYY- Episode Name\Tracks` |
 | `MFYN_Posts` | mfyn@'s My Drive, `H:\My Drive\MFYN_Posts` | Each episode's video posts, their details and captions, for your review and then Publishing |
@@ -61,7 +62,7 @@ their own) also write what they did to the **MFYN Run Log** sheet, for the statu
 | Event Calendar | Google Calendar, made by the automation in mfyn@'s account | Upcoming events, from posts saved to the **events** collection on Instagram |
 | `MFYN_Library` | mfyn@'s My Drive, synced to `H:\My Drive\MFYN_Library` on the MFYN PC | The music library, one folder per album |
 | MFYN PC | Windows, signed in, running Google Drive for desktop and Chrome | Runs the automation (Task Scheduler) |
-| `mfyn-library-agent` | Google Cloud project, Internal audience | Lets the automation read and label mail, and keep its sheet and calendar ([setup](setup/google-cloud.md)) |
+| `mfyn-library-agent` | Google Cloud project, Internal audience | Lets the automation read and label mail, and keep its run log sheet and calendar ([setup](setup/google-cloud.md)) |
 | Claude Code | installed on the MFYN PC, signed in to the Claude subscription | Reads event flyers for the [Event Calendar](event-calendar.md) (`claude -p`) |
 | `mfyn-radio/process` | GitHub, this repo | Code and docs; GitHub only runs the tests |
 
@@ -86,7 +87,7 @@ list of open work. There are two kinds:
   - `MFYN/Downloaded`: the album is in the library.
   - `MFYN/Excluded`: deliberately skipped (see
     [excluded purchases](01-acquire.md#excluded-purchases)).
-- **Instagram status** in the MFYN Artists sheet:
+- **Instagram status** in the MFYN Catalog:
   - `Suggested` or `Not found`: set by step 1.
   - `Confirmed` or `No Instagram`: set by you in step 2a.
 - **Episode folders:** `D_M_YYYY- Episode Name`, using the air date. Each gets

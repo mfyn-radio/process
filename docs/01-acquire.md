@@ -23,7 +23,7 @@ See also: [decisions and how we got here](01-acquire-decisions.md) ·
 4. Unzip it into `MFYN_Library\Artist - Album` and delete the zip.
 5. Label the email `MFYN/Downloaded` so it is never processed twice.
 6. Record the release, its artists and its label in the
-   [MFYN Artists sheet](#the-mfyn-artists-sheet), with Instagram handles
+   [MFYN Catalog](#the-mfyn-catalog), with Instagram handles
    suggested from Bandcamp.
 
 Purchases from [excluded pages](#excluded-purchases) are skipped and labelled
@@ -66,52 +66,63 @@ labelled `MFYN/Excluded` instead.
 
 The list is `EXCLUDED_SELLERS` in [`intake/config.py`](../intake/config.py).
 
-### The MFYN Artists sheet
+### The MFYN Catalog
 
-The **MFYN Artists** Google Sheet in mfyn@'s Drive is what the library knows
-about its music: who the artists are, their Instagram handles for tagging,
-and each release's label, date and tags. The automation creates it on first
-use and fills it in after every album. Nobody reviews it at this point.
+The **MFYN Catalog** base on Airtable is what the library knows about its
+music: who the artists are, their Instagram handles for tagging, and each
+release's label, date and tags. It's relational: a release links to its
+artists and its label, and a label lists its artists, so you can open a label
+and see everyone on it. Acquire fills it in after every album. Nobody reviews
+it at this point. Setup, limits and the token: [Airtable](airtable.md).
 
-**Artists** is the artist library: one row per artist.
+Until 21 Nov 2026 this was the **MFYN Artists** Google Sheet. The sheet is
+kept as it was, as a backup, and nothing writes to it any more.
 
-| Column | Comes from |
+**Artists** is the artist library: one record per artist.
+
+| Field | Comes from |
 |---|---|
 | Artist | the FLAC `ARTIST` tag |
 | Instagram | the artist's Bandcamp page, as `@handle` |
 | Status | see below |
 | Location | Bandcamp, e.g. `Brooklyn, New York` |
-| Tags | every Bandcamp tag across their releases |
+| Tags | every Bandcamp tag across their releases (multi-select) |
 | Website | their Bandcamp page's links |
 | Other links | SoundCloud, YouTube, TikTok, X, Bluesky, Facebook… for crediting in captions. Not Spotify or Apple Music. |
 | Bandcamp page | |
 | Bio | their Bandcamp bio. Notes for you and the show; paraphrase it in captions. |
-| Added | the date the row was added |
+| Added | the date the record was added |
 
-**Releases** has one row per album in the library: Album, Artist, Label,
-Release date, Tags, Album link, Credits, Purchased (the receipt date), Library
-folder, Added.
+Airtable adds the links going the other way by itself: each artist shows
+their **Releases**, **Labels**, **Events** and **Playlist entries**.
+
+**Releases** has one record per album in the library: Album, Artist (the
+credit as Bandcamp writes it), Label, Release date, Tags, Album link,
+Credits, Purchased (the receipt date), Library folder, Added, and the links
+**Linked artists** and **Linked label**.
 
 - **Label** is whoever sold the album on Bandcamp, or `Self-released` when
-  the artist sold it.
+  the artist sold it. Only a label release links to a Labels record.
 - **Release date** comes from the album page, written as `2026-10-30` so it
   sorts.
 
-**Labels** has one row per label: Label, Instagram, Status, Location, Website,
-Other links, Bandcamp page, Added. A label's Instagram is suggested and
-confirmed the same way as an artist's, so posts can tag both.
+**Labels** has one record per label: Label, Instagram, Status, Location,
+Website, Other links, Bandcamp page, Added, and **Linked artists** (everyone
+whose album the label sold). A label's Instagram is suggested and confirmed
+the same way as an artist's, so posts can tag both.
 
-**Tags** has one row per Bandcamp tag per release (Tag, Artist, Album). Sort
-or filter this tab to see, say, every *ambient* artist, or add a pivot table
-to count the library by tag. Bandcamp tags mix genres with places like
-*Brooklyn*; they're kept as Bandcamp has them.
+**Tags** are a multi-select field on Artists, Releases and Events, so filter
+any of them by tag to see, say, every *ambient* artist. (The sheet needed a
+Tags tab with one row per tag for that.) Bandcamp tags mix genres with places
+like *Brooklyn*; they're kept as Bandcamp has them.
 
-**Events** has one row per event on the Event Calendar Google calendar, written by the
-[Event Calendar](event-calendar.md#the-events-tab), not by Acquire.
+**Events** has one record per event on the Event Calendar Google calendar, written by the
+[Event Calendar](event-calendar.md#the-events-tab), not by Acquire. Library artists on
+the bill are linked.
 
-**Playlists** has one row per track of each episode's proposed YouTube playlist,
-written by the [YouTube playlist](youtube-playlist.md#run-1-the-proposal) step,
-for you to review. Not by Acquire either.
+**Episodes** and **Playlist entries** hold each episode's proposed YouTube playlist,
+one record per track, written by the [YouTube playlist](youtube-playlist.md#run-1-the-proposal)
+step for you to review. Not by Acquire either.
 
 #### Status
 
@@ -123,10 +134,11 @@ for you to review. Not by Acquire either.
 
 #### How it's filled in
 
-- **The automation only fills empty cells and adds tags.** It never
-  overwrites anything typed in the sheet, so corrections and your own notes
+- **The automation only fills empty fields and adds tags and links.** It never
+  overwrites anything typed in the base, so corrections and your own notes
   are safe. The one exception is `Status`, which follows the Instagram cell
-  while it still says `Suggested` or `Not found`.
+  while it still says `Suggested` or `Not found`. Links only ever gain records, so
+  links you make by hand stay.
 - **Which Bandcamp page:** the album page, linked from the receipt's download
   page. In a backlog or `--artists` run, the album is looked up on the
   seller's page (from the `Visit https://….bandcamp.com` comment in each
@@ -134,16 +146,17 @@ for you to review. Not by Acquire either.
 - **Self-release:** the page's sidebar is the artist's own, so it fills the
   artist's Instagram, location, links and bio.
 - **Label release:** the sidebar is the label's, so it fills the **Labels**
-  row instead. The artist gets their tags, but their Instagram is left
+  record instead, and the label is linked to the artist. The artist gets their tags, but their Instagram is left
   `Not found` for you to fill in.
-- **Compilations (several artists):** each artist gets a row with just their
-  name. Tags and details stay on the release.
+- **Compilations (several artists):** each artist gets a record with just their
+  name, linked to the release. Tags and details stay on the release.
 - **Matching:** names are matched ignoring case. A collaboration like `A + B`
-  is one row.
-- **If the sheet can't be reached:** downloads still go ahead. `--artists`
+  is one record.
+- **If the base can't be reached** (or the run has used its share of
+  Airtable's free API calls): downloads still go ahead. `--artists`
   fills in what was missed.
-- Columns are found by their header, so you can reorder columns or add your
-  own. Don't rename the built-in ones.
+- Fields are found by name, so you can reorder them, add your own, add
+  views, or change a field's type. Don't rename the built-in ones.
 
 ### Library location
 
@@ -235,7 +248,7 @@ python -m intake.acquire [--backlog] [--dry-run] [--message-id ID] [--artists]
 - `--message-id` handles just one purchase email, whatever its date. This is
   the Gmail API ID (16 hex characters, like `1a0dacaede35264f`), not the ID in
   the Gmail web address. Ask Claude to look it up.
-- `--artists` fills in the MFYN Artists sheet from every album already in the
+- `--artists` fills in the MFYN Catalog from every album already in the
   library, then stops. It's safe to repeat. Use it after setup, after a
   backlog run, or after a code update that adds columns.
 
