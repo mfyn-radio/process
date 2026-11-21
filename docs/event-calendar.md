@@ -104,8 +104,9 @@ instead.
 Every event the automation adds also gets a record in the **Events** table of
 the [MFYN Catalog](01-acquire.md#the-mfyn-catalog) (Airtable), so all the events
 are in one list you can sort and filter: Date, Start, End, Title, Venue, City, Country, Acts, Tags, Link,
-Post, Location tag, Event id, Added, and **Linked artists** for the library
-artists on the bill. Dates are written `2026-11-28` so they sort. (The
+Post, Location tag, Event id, Added, **Linked artists** for the library
+artists on the bill, and **Linked venue** and **Linked location** for the
+[venue and its city](01-acquire.md#locations-and-venues). Dates are written `2026-11-28` so they sort. (The
 heading keeps its old name, "tab", so links to it still work.)
 
 Like the rest of the catalog, the automation only fills empty fields, so what

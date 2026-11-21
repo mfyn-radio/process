@@ -19,7 +19,7 @@ import sys
 from . import airtable, catalog, config
 
 TEXT, LONG = "singleLineText", "multilineText"
-LONG_FIELDS = {"Bio", "Credits", "Other links", "Note"}
+LONG_FIELDS = {"Bio", "Credits", "Other links", "Note", "Notes"}
 # The setup and the copy use about 30 calls; this leaves room for a retry.
 SETUP_CALLS = 300
 
@@ -157,7 +157,8 @@ def copy(cat, rows, extra):
     if rows["playlists"]:
         cat.playlists.upsert_many(rows["playlists"])
     return {catalog.TABLES[a][0]: len(cat.table(a).rows) for a in ("artists", "labels", "releases", "events",
-                                                                   "episodes", "playlists")}
+                                                                   "episodes", "playlists", "locations",
+                                                                   "venues")}
 
 
 def main(argv=None):

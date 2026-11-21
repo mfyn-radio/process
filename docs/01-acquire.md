@@ -93,8 +93,10 @@ kept as it was, as a backup, and nothing writes to it any more.
 | Bio | their Bandcamp bio. Notes for you and the show; paraphrase it in captions. |
 | Added | the date the record was added |
 
-Airtable adds the links going the other way by itself: each artist shows
-their **Releases**, **Labels**, **Events** and **Playlist entries**.
+Each artist also gets **Linked location**, the Locations record for their
+Location (see [Locations and Venues](#locations-and-venues)). Airtable adds
+the links going the other way by itself: each artist shows their
+**Releases**, **Labels**, **Events** and **Playlist entries**.
 
 **Releases** has one record per album in the library: Album, Artist (the
 credit as Bandcamp writes it), Label, Release date, Tags, Album link,
@@ -107,8 +109,8 @@ Credits, Purchased (the receipt date), Library folder, Added, and the links
   sorts.
 
 **Labels** has one record per label: Label, Instagram, Status, Location,
-Website, Other links, Bandcamp page, Added, and **Linked artists** (everyone
-whose album the label sold). A label's Instagram is suggested and confirmed
+Website, Other links, Bandcamp page, Added, **Linked artists** (everyone
+whose album the label sold) and **Linked location**. A label's Instagram is suggested and confirmed
 the same way as an artist's, so posts can tag both.
 
 **Tags** are a multi-select field on Artists, Releases and Events, so filter
@@ -118,7 +120,26 @@ like *Brooklyn*; they're kept as Bandcamp has them.
 
 **Events** has one record per event on the Event Calendar Google calendar, written by the
 [Event Calendar](event-calendar.md#the-events-tab), not by Acquire. Library artists on
-the bill are linked.
+the bill are linked, and so are the event's venue and location.
+
+#### Locations and Venues
+
+**Locations** has one record per place, named `City, Country` (`Antwerp,
+Belgium`), with City and Country fields. Open one to see every artist,
+label, venue and event there. A US state counts as the United States
+(`Austin, Texas` is `Austin, United States`; the state stays in the artist's
+own Location), and a country on its own (`Belgium`) is a location too.
+
+**Venues** has one record per venue, linked to its location, and shows its
+events.
+
+The automations link new records as they write them: an artist or label to
+the location for its Location, an event to its venue and location. A place
+or venue that isn't there yet is added. Names match ignoring case and
+accents (`Liege` is `Liège, Belgium`), and a city with no country matches a
+location with that city (`Rotterdam` is `Rotterdam, Netherlands`). To merge
+two records for the same venue, use Airtable's merge; links you make by hand
+stay.
 
 **Episodes** and **Playlist entries** hold each episode's proposed YouTube playlist,
 one record per track, written by the [YouTube playlist](youtube-playlist.md#run-1-the-proposal)
