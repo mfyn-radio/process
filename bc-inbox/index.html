@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <style>
+    body { font-family: sans-serif; margin: 16px; max-width: 480px; }
+    input { width: 100%; box-sizing: border-box; padding: 8px; font-size: 16px; }
+    button { padding: 8px 12px; font-size: 16px; margin-top: 8px; }
+    iframe { border: 0; width: 100%; height: 470px; margin-top: 12px; }
+    #status { color: #555; margin-top: 8px; }
+    .error { color: #b00020; }
+  </style>
+</head>
+<body>
+  <h1>BC Inbox spike</h1>
+  <p>Tap play in the player. If you hear music, milestone 1 passes.</p>
+  <input id="url" value="<?= startUrl ?>" aria-label="Bandcamp release link">
+  <button id="load">Load release</button>
+  <div id="status"></div>
+  <div id="meta"></div>
+  <div id="player"></div>
+  <p><a id="open" href="#" target="_blank" rel="noopener">Open on Bandcamp</a></p>
+
+  <script>
+    var statusEl = document.getElementById('status');
+    function load() {
+      var url = document.getElementById('url').value;
+      statusEl.className = '';
+      statusEl.textContent = 'Fetching the release page…';
+      document.getElementById('player').innerHTML = '';
+      google.script.run
+        .withSuccessHandler(function (info) {
+          document.getElementById('meta').textContent =
+            (info.artist || '?') + ' – ' + (info.title || '?') + ' · ' + (info.location || 'no location');
+          document.getElementById('open').href = info.releaseUrl;
+          if (!info.embedUrl) {
+            statusEl.className = 'error';
+            statusEl.textContent = 'Fetched the page but found no embed ID.';
+            return;
+          }
+          statusEl.textContent = info.itemType + ' ' + info.itemId;
+          var frame = document.createElement('iframe');
+          frame.src = info.embedUrl;
+          frame.allow = 'autoplay; encrypted-media';
+          frame.setAttribute('seamless', '');
+          document.getElementById('player').appendChild(frame);
+        })
+        .withFailureHandler(function (err) {
+          statusEl.className = 'error';
+          statusEl.textContent = 'Failed: ' + err.message;
+        })
+        .loadRelease(url);
+    }
+    document.getElementById('load').addEventListener('click', load);
+    load();
+  </script>
+</body>
+</html>
