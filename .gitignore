@@ -14,3 +14,6 @@ processing/*/output/*
 
 # The Airtable token (docs/airtable.md). Never commit it.
 airtable_token.txt
+
+# clasp project link for BC Inbox (per Google account)
+bc-inbox/.clasp.json
