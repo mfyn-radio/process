@@ -20,7 +20,8 @@ function doGet(e) {
   page.regionScript = ('var REGIONS = ' + JSON.stringify(REGIONS) + ';\n' +
     'var DEFAULT_REGION = ' + JSON.stringify(DEFAULT_REGION) + ';\n' +
     'function countryOf() { return null; }\n' +
-    regionRank.toString() + '\n' + rankItems.toString() + '\n' + queueOrder.toString()).replace(/<\//g, '<\\/');
+    regionRank.toString() + '\n' + rankItems.toString() + '\n' + queueOrder.toString() + '\n' +
+    sectionNames.toString()).replace(/<\//g, '<\\/');
   return page.evaluate()
     .setTitle('BC Inbox')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1');

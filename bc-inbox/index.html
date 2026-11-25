@@ -12,6 +12,8 @@
     ul { list-style: none; padding: 0; margin: 0; }
     li { border-top: 1px solid #ddd; padding: 10px 0; }
     li.divider { border-top: 2px solid #333; padding: 4px 0; font-size: 12px; color: #333; font-weight: bold; }
+    li.block { border-top: 3px solid #000; padding: 14px 0 4px; font-size: 17px; font-weight: bold; }
+    li.block + li.divider { border-top: 0; }
     .row { display: flex; gap: 10px; }
     .row img, .nocover { width: 64px; height: 64px; flex: none; background: #eee; object-fit: cover; }
     .what { font-weight: bold; }
@@ -101,16 +103,22 @@
       var all = merge([top10, items]);
       var ranked = queueOrder(all, region, week);
       var lastGroup = null;
-      var label = REGIONS[region] ? REGIONS[region].label : region;
+      var names = sectionNames(region);
+      var inBlock = false;
       ranked.forEach(function (it) {
         var pinned = it.source === 'top10' && it.top10Week === week;
         var rank = regionRank(it, region);
         var group = pinned ? 'top' : rank;
         var hasRegion = REGIONS[region] && REGIONS[region].countries;
-        if (group !== lastGroup && (pinned || hasRegion || lastGroup === 'top')) {
-          var title = pinned ? 'Top 10 · week of ' + week
-            : !hasRegion ? 'New releases'
-            : rank === 0 ? label : rank === 1 ? label + ' (label only)' : 'Everything else';
+        if (pinned && group !== lastGroup) {
+          list.appendChild(el('li', { 'class': 'block' }, 'Top 10 · week of ' + week));
+        }
+        if (!pinned && !inBlock) {
+          list.appendChild(el('li', { 'class': 'block' }, 'New releases'));
+          inBlock = true;
+        }
+        if (!pinned && hasRegion && group !== lastGroup) {
+          var title = rank === 0 ? names.artists : rank === 1 ? names.labels : 'Everything else';
           list.appendChild(el('li', { 'class': 'divider' }, title));
         }
         lastGroup = group;

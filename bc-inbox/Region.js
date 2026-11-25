@@ -3,15 +3,16 @@
  * the queue by the selected region. Pure functions, tested with node.
  */
 
+// adj names the sections: "<adj> artists", "<adj> labels".
 var REGIONS = {
-  bene: { label: 'BeNe', countries: ['Netherlands', 'Belgium'] },
-  nl: { label: 'Netherlands', countries: ['Netherlands'] },
-  be: { label: 'Belgium', countries: ['Belgium'] },
-  de: { label: 'Germany', countries: ['Germany'] },
-  ukie: { label: 'UK & Ireland', countries: ['United Kingdom', 'Ireland'] },
-  fr: { label: 'France', countries: ['France'] },
-  nordics: { label: 'Nordics', countries: ['Denmark', 'Norway', 'Sweden', 'Finland', 'Iceland'] },
-  europe: { label: 'Europe', countries: [
+  bene: { label: 'BeNe', adj: 'BeNe', countries: ['Netherlands', 'Belgium'] },
+  nl: { label: 'Netherlands', adj: 'Dutch', countries: ['Netherlands'] },
+  be: { label: 'Belgium', adj: 'Belgian', countries: ['Belgium'] },
+  de: { label: 'Germany', adj: 'German', countries: ['Germany'] },
+  ukie: { label: 'UK & Ireland', adj: 'UK & Irish', countries: ['United Kingdom', 'Ireland'] },
+  fr: { label: 'France', adj: 'French', countries: ['France'] },
+  nordics: { label: 'Nordics', adj: 'Nordic', countries: ['Denmark', 'Norway', 'Sweden', 'Finland', 'Iceland'] },
+  europe: { label: 'Europe', adj: 'European', countries: [
     'Netherlands', 'Belgium', 'Luxembourg', 'Germany', 'France', 'United Kingdom', 'Ireland',
     'Denmark', 'Norway', 'Sweden', 'Finland', 'Iceland', 'Spain', 'Portugal', 'Italy',
     'Switzerland', 'Austria', 'Poland', 'Czech Republic', 'Slovakia', 'Hungary', 'Slovenia',
@@ -19,7 +20,7 @@ var REGIONS = {
     'Greece', 'Bulgaria', 'Romania', 'Moldova', 'Ukraine', 'Belarus', 'Lithuania', 'Latvia',
     'Estonia', 'Malta', 'Cyprus', 'Monaco', 'Andorra', 'Liechtenstein', 'San Marino']
   },
-  na: { label: 'North America', countries: ['United States', 'Canada', 'Mexico'] },
+  na: { label: 'North America', adj: 'North American', countries: ['United States', 'Canada', 'Mexico'] },
   anywhere: { label: 'Anywhere (no ranking)', countries: null }
 };
 var DEFAULT_REGION = 'bene';
@@ -75,6 +76,13 @@ Object.keys(REGIONS).forEach(function (k) {
   'Israel', 'Turkey', 'Russia', 'South Africa', 'Egypt', 'Morocco', 'Tunisia', 'Lebanon', 'Iran'
 ].forEach(function (c) { KNOWN_COUNTRIES[c.toLowerCase()] = c; });
 
+/** Section names for a region: "BeNe artists" / "BeNe labels", or "Artists from X". */
+function sectionNames(regionKey) {
+  var r = REGIONS[regionKey] || REGIONS[DEFAULT_REGION];
+  if (r.adj) return { artists: r.adj + ' artists', labels: r.adj + ' labels' };
+  return { artists: 'Artists from ' + r.label, labels: 'Labels from ' + r.label };
+}
+
 /** "Rotterdam, Netherlands" → "Netherlands"; "Brooklyn, New York" → "United States"; null if unknown. */
 function countryOf(location) {
   if (!location) return null;
@@ -124,5 +132,5 @@ function rankItems(items, regionKey) {
 }
 
 if (typeof module !== 'undefined') {
-  module.exports = { REGIONS: REGIONS, DEFAULT_REGION: DEFAULT_REGION, countryOf: countryOf, regionRank: regionRank, rankItems: rankItems, queueOrder: queueOrder };
+  module.exports = { REGIONS: REGIONS, DEFAULT_REGION: DEFAULT_REGION, countryOf: countryOf, regionRank: regionRank, rankItems: rankItems, queueOrder: queueOrder, sectionNames: sectionNames };
 }

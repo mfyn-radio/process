@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert');
-const { countryOf, regionRank, rankItems, REGIONS } = require('../Region.js');
+const { countryOf, regionRank, rankItems, REGIONS, sectionNames } = require('../Region.js');
 
 test('countryOf reads Bandcamp location strings', () => {
   assert.strictEqual(countryOf('Rotterdam, Netherlands'), 'Netherlands');
@@ -42,4 +42,10 @@ test('changing region reorders without dropping anything', () => {
   assert.strictEqual(na.length, items.length);
   assert.deepStrictEqual(rankItems(items, 'anywhere').map(i => i.releaseUrl),
     ['unknown', 'us-new', 'nl-label', 'nl-new', 'be-old']);
+});
+
+test('section names follow the region', () => {
+  assert.deepStrictEqual(sectionNames('bene'), { artists: 'BeNe artists', labels: 'BeNe labels' });
+  assert.deepStrictEqual(sectionNames('nl'), { artists: 'Dutch artists', labels: 'Dutch labels' });
+  assert.deepStrictEqual(sectionNames('fr'), { artists: 'French artists', labels: 'French labels' });
 });
