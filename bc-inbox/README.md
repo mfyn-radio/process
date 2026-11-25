@@ -21,6 +21,16 @@ Only mfyn@ can open it (`"access": "MYSELF"`).
   Merch, messages, receipts and login emails are left out. **Play** fetches
   that release page and shows the player under it (one at a time).
 
+- **Milestone 3, location and region.** Each release's page is looked up
+  once, server-side, for its location, player and tags (cached: 6 hours in
+  `CacheService`, then for good in script properties; at most 8 releases per
+  call, 0.4 s apart). The list is grouped by the region picked at the top
+  (default **BeNe**): the artist's location matches first, then releases where
+  only the label's location matches, then everything else, each newest first.
+  Nothing is filtered out. Changing the region reorders at once, with no
+  fetching. A location marked "(label)" came from a label's page, not the
+  artist's.
+
 The first load reads the last 30 days. After that, **Check for new** reads
 only emails since the last check; the list is kept in the browser
 (`localStorage`). **Reload 30 days** starts over. `?url=<release link>` on the
@@ -34,8 +44,9 @@ email.
 
 | File | What |
 |---|---|
-| `Code.js` | Server: `doGet`, `getReleaseEmails` (Gmail), `loadRelease` (release page) |
+| `Code.js` | Server: `doGet`, `getReleaseEmails` (Gmail), `enrichItems` (release pages, cached), `loadRelease` |
 | `Parse.js` | Pure parsing: release emails, release pages, merging. No Apps Script calls |
+| `Region.js` | Region presets, location → country, ranking. The page gets the ranking functions from here too |
 | `index.html` | The page |
 | `appsscript.json` | Scopes and web app settings |
 | `test/` | Parser tests: `node --test bc-inbox/test/*.test.js`. `test/fixtures/emails.json` holds trimmed real Bandcamp emails, one per subject kind |
