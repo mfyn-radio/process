@@ -113,7 +113,7 @@
           store(KEY_SYNC, res.syncedAt);
           render();
           setStatus(items.length + ' releases · ' + res.items.length + ' from this check (' +
-            res.scanned + ' emails read) · ' + new Date(res.syncedAt).toLocaleTimeString('nl-NL'));
+            res.scanned + ' emails read' + (res.failed ? ', ' + res.failed + ' unreadable' : '') + ') · ' + new Date(res.syncedAt).toLocaleTimeString('nl-NL'));
         })
         .withFailureHandler(function (err) { setStatus('Gmail read failed: ' + err.message, true); })
         .getReleaseEmails(since);

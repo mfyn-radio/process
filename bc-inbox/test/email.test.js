@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert');
-const { isReleaseSubject, parseReleaseEmail, mergeItems, bodiesFromPayload, headerValue } = require('../Parse.js');
+const { isReleaseSubject, parseReleaseEmail, mergeItems, bodiesFromPayload, headerValue, padBase64 } = require('../Parse.js');
 const fixtures = require('./fixtures/emails.json');
 
 // Fixtures are real Bandcamp emails to mfyn@ (Oct-Nov 2026), trimmed.
@@ -51,4 +51,11 @@ test('bodiesFromPayload reads nested multipart parts', () => {
   const out = bodiesFromPayload(payload, d => Buffer.from(d, 'base64url').toString('utf8'));
   assert.deepStrictEqual(out, { plain: 'plain “text”', html: '<b>html</b>' });
   assert.strictEqual(headerValue(payload, 'subject'), 'New release from Z');
+});
+
+test('padBase64 restores the padding Gmail leaves off', () => {
+  assert.strictEqual(padBase64('YQ'), 'YQ==');
+  assert.strictEqual(padBase64('YWI'), 'YWI=');
+  assert.strictEqual(padBase64('YWJj'), 'YWJj');
+  assert.strictEqual(padBase64('YW\nJj'), 'YWJj');
 });
