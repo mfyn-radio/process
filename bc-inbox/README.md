@@ -12,25 +12,33 @@ Only mfyn@ can open it (`"access": "MYSELF"`).
 
 ## Where it stands
 
-**Milestone 1, the spike.** The page fetches one Bandcamp release
-server-side, reads its embed ID and location, and shows the embedded player.
-It answers two questions before anything else is built:
+- **Milestone 1, the spike: passed** (25 Nov 2026). Bandcamp's player plays
+  inside the Apps Script page, and Google's servers can fetch Bandcamp pages,
+  so Apps Script stays; no Cloudflare fallback.
+- **Milestone 2, release emails.** The page lists Bandcamp "New release from"
+  emails from mfyn@'s Gmail: cover, artist, title, the account you follow,
+  date, album or track, and a pre-order badge for "just announced" releases.
+  Merch, messages, receipts and login emails are left out. **Play** fetches
+  that release page and shows the player under it (one at a time).
 
-1. Does Bandcamp's player play inside an Apps Script page on Android Chrome?
-2. Does Bandcamp answer page fetches from Google's servers (`UrlFetchApp`)?
+The first load reads the last 30 days. After that, **Check for new** reads
+only emails since the last check; the list is kept in the browser
+(`localStorage`). **Reload 30 days** starts over. `?url=<release link>` on the
+web app's address still plays any one release.
 
-If either is no, the fallback is a static page plus a Cloudflare Worker (see
-the plan). Add `?url=<release link>` to the web app's address to try
-another release.
+Gmail is read through the Gmail API advanced service with only the
+`gmail.readonly` scope, so the script can't send, label, archive or delete
+email.
 
 ## Files
 
 | File | What |
 |---|---|
-| `Code.js` | Server: `doGet`, `loadRelease`, and the parsing functions |
+| `Code.js` | Server: `doGet`, `getReleaseEmails` (Gmail), `loadRelease` (release page) |
+| `Parse.js` | Pure parsing: release emails, release pages, merging. No Apps Script calls |
 | `index.html` | The page |
 | `appsscript.json` | Scopes and web app settings |
-| `test/` | Parser tests: `node --test bc-inbox/test/*.test.js` |
+| `test/` | Parser tests: `node --test bc-inbox/test/*.test.js`. `test/fixtures/emails.json` holds trimmed real Bandcamp emails, one per subject kind |
 
 `.claspignore` keeps the tests out of Apps Script. `.clasp.json` (the link to
 the Apps Script project) is per account and not committed.
@@ -52,7 +60,9 @@ clasp deploy --description "milestone 1"
 
 The first time, open the web app URL signed in as mfyn@ and allow access.
 After a change: `clasp push`, then
-`clasp deploy --deploymentId <id>` to update the same URL.
+`clasp deploy --deploymentId <id> --description "..."` to update the same
+URL. A change of scopes (as in milestone 2, which adds Gmail read-only) asks
+for permission again on the next open.
 
 On the phone, open the URL in Chrome signed in as mfyn@. If Chrome is signed
 in to several Google accounts and the page errors, open it in a window where

@@ -1,0 +1,49 @@
+[
+  {
+    "name": "label release, followed",
+    "subject": "New release from LUST TAPES",
+    "date": "2026-11-24T10:00:00Z",
+    "plain": "Greetings Music For Your Neighbors,\n\nLUST TAPES just released \"Sociopathic Morbid Aberrations\" by Corpse Splitter, check it out at:\n\nhttps://lusttapes.bandcamp.com/album/sociopathic-morbid-aberrations?from=fanpub_fnb\n\nYou received this because you're following LUST TAPES.",
+    "html": "",
+    "expect": {"followedAccount": "LUST TAPES", "title": "Sociopathic Morbid Aberrations", "artist": "Corpse Splitter", "releaseUrl": "https://lusttapes.bandcamp.com/album/sociopathic-morbid-aberrations", "itemType": "album", "announced": false, "via": "following", "cover": null}
+  },
+  {
+    "name": "label variant, who brought you, with HTML cover",
+    "subject": "New release from The Ghost Is Clear Records, who brought you Two Songs",
+    "date": "2026-11-06T13:49:08Z",
+    "plain": "Greetings Music For Your Neighbors,\n\nThe Ghost Is Clear Records just released \"Functional Music\" by American Motors, check it out at:\n\nhttps://theghostisclearrecords.bandcamp.com/album/functional-music?from=fanpub_fb_pr\n\n“new LP from American Motors\nOfficially out today via Expert Work Records, The Ghost Is Clear Records, and Vina Records (Italy)\n\nOrder Limited vinyl here\nhttps://theghostisclearrecords.limitedrun.com/products/877758”\n\nYou received this because you bought Two Songs by Missouri Executive Order 44, also on The Ghost Is Clear Records.",
+    "html": "<div style=\"width:210px;min-height:210px;margin-bottom: 20px;\">\r\n    <a href=\"https://theghostisclearrecords.bandcamp.com/album/functional-music?from=fanpub_fb_pr&amp;utm_source=album_release\">\r\n        <img style=\"width:210px;min-height:210px;\" src=\"https://f4.bcbits.com/img/a2478630241_9.jpg\" alt=\"Functional Music Cover Art\">\r\n    </a>\r\n</div>\r\n<a href=\"https://bandcamp.com\"><img src=\"https://bandcamp.com/img/email/bc-logo-small-2.gif\" alt=\"bandcamp logo\"></a>",
+    "expect": {"followedAccount": "The Ghost Is Clear Records", "title": "Functional Music", "artist": "American Motors", "releaseUrl": "https://theghostisclearrecords.bandcamp.com/album/functional-music", "itemType": "album", "announced": false, "via": "bought", "cover": "https://f4.bcbits.com/img/a2478630241_9.jpg"}
+  },
+  {
+    "name": "artist's own track, no 'by'",
+    "subject": "New release from Crowd Of Chairs",
+    "date": "2026-11-21T12:15:29Z",
+    "plain": "Greetings Music For Your Neighbors,\n\nCrowd Of Chairs just released \"Comparison\", check it out at:\n\nhttps://crowdofchairsband.bandcamp.com/track/comparison?from=fanpub_fb_trk\n\nEnjoy!",
+    "html": "<a href=\"https://crowdofchairsband.bandcamp.com/track/comparison?from=fanpub_fb_trk\">\r\n        <img style=\"width:210px;min-height:210px;\" src=\"https://f4.bcbits.com/img/a3461573084_9.jpg\" alt=\"Comparison Cover Art\">\r\n    </a>",
+    "expect": {"followedAccount": "Crowd Of Chairs", "title": "Comparison", "artist": "Crowd Of Chairs", "releaseUrl": "https://crowdofchairsband.bandcamp.com/track/comparison", "itemType": "track", "announced": false, "via": null, "cover": "https://f4.bcbits.com/img/a3461573084_9.jpg"}
+  },
+  {
+    "name": "announced (pre-order)",
+    "subject": "New release from ant-zen",
+    "date": "2026-11-06T09:26:53Z",
+    "plain": "Greetings Music For Your Neighbors,\n\nant-zen just announced \"enemy\" by control, check it out at:\n\nhttps://ant-zen.bandcamp.com/album/enemy?from=fanpub_fb\n\nYou received this because you're following ant-zen.\n\nEnjoy!",
+    "html": "",
+    "expect": {"followedAccount": "ant-zen", "title": "enemy", "artist": "control", "releaseUrl": "https://ant-zen.bandcamp.com/album/enemy", "itemType": "album", "announced": true, "via": "following", "cover": null}
+  },
+  {
+    "name": "ampersand in artist, bought variant",
+    "subject": "New release from Industrial Coast, who brought you The Nightmare Continues",
+    "date": "2026-10-30T20:08:22Z",
+    "plain": "Greetings Music For Your Neighbors,\n\nIndustrial Coast just released \"WOLF COLLAR\" by BALF & JONATHAN BREAKFAST, check it out at:\n\nhttps://industrialcoast.bandcamp.com/album/wolf-collar?from=fanpub_fb\n\nYou received this because you bought The Nightmare Continues by Various Artists, also on Industrial Coast.",
+    "html": "",
+    "expect": {"followedAccount": "Industrial Coast", "title": "WOLF COLLAR", "artist": "BALF & JONATHAN BREAKFAST", "releaseUrl": "https://industrialcoast.bandcamp.com/album/wolf-collar", "itemType": "album", "announced": false, "via": "bought", "cover": null}
+  },
+  {"name": "merch", "subject": "New from Fellatio: Troubadour Tee", "date": "2026-11-01T00:00:00Z", "plain": "", "html": "", "expect": null},
+  {"name": "merch batch", "subject": "New items from Sacred Bones Records", "date": "2026-11-01T00:00:00Z", "plain": "", "html": "", "expect": null},
+  {"name": "single merch item", "subject": "New item from iDEAL Recordings", "date": "2026-11-01T00:00:00Z", "plain": "", "html": "", "expect": null},
+  {"name": "artist message", "subject": "New message from Morgan Garrett", "date": "2026-11-01T00:00:00Z", "plain": "", "html": "", "expect": null},
+  {"name": "receipt", "subject": "Thank you!", "date": "2026-11-01T00:00:00Z", "plain": "", "html": "", "expect": null},
+  {"name": "login", "subject": "Confirm login", "date": "2026-11-01T00:00:00Z", "plain": "", "html": "", "expect": null},
+  {"name": "newsletter", "subject": "$3.1M in 24 hours for independent music", "date": "2026-11-01T00:00:00Z", "plain": "", "html": "", "expect": null}
+]

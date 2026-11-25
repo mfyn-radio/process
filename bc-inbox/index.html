@@ -3,56 +3,133 @@
 <head>
   <base target="_top">
   <style>
-    body { font-family: sans-serif; margin: 16px; max-width: 480px; }
-    input { width: 100%; box-sizing: border-box; padding: 8px; font-size: 16px; }
-    button { padding: 8px 12px; font-size: 16px; margin-top: 8px; }
-    iframe { border: 0; width: 100%; height: 470px; margin-top: 12px; }
-    #status { color: #555; margin-top: 8px; }
+    body { font-family: sans-serif; margin: 12px; max-width: 560px; }
+    header { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    h1 { font-size: 20px; margin: 0 auto 0 0; }
+    button { padding: 6px 10px; font-size: 15px; }
+    #status { color: #555; margin: 8px 0; font-size: 14px; }
     .error { color: #b00020; }
+    ul { list-style: none; padding: 0; margin: 0; }
+    li { border-top: 1px solid #ddd; padding: 10px 0; }
+    .row { display: flex; gap: 10px; }
+    .row img, .nocover { width: 64px; height: 64px; flex: none; background: #eee; object-fit: cover; }
+    .what { font-weight: bold; }
+    .meta { color: #666; font-size: 13px; }
+    .badge { font-size: 11px; background: #fde68a; padding: 1px 5px; border-radius: 3px; }
+    .actions { margin-top: 6px; display: flex; gap: 8px; align-items: center; }
+    iframe { border: 0; width: 100%; height: 470px; margin-top: 8px; }
   </style>
 </head>
 <body>
-  <h1>BC Inbox spike</h1>
-  <p>Tap play in the player. If you hear music, milestone 1 passes.</p>
-  <input id="url" value="<?= startUrl ?>" aria-label="Bandcamp release link">
-  <button id="load">Load release</button>
+  <header>
+    <h1>BC Inbox</h1>
+    <button id="refresh">Check for new</button>
+    <button id="reload">Reload 30 days</button>
+  </header>
   <div id="status"></div>
-  <div id="meta"></div>
-  <div id="player"></div>
-  <p><a id="open" href="#" target="_blank" rel="noopener">Open on Bandcamp</a></p>
+  <ul id="list"></ul>
 
   <script>
+    var START_URL = <?!= JSON.stringify(startUrl).replace(/</g, '\\u003c') ?>;
+    var KEY_ITEMS = 'bcinbox.emailItems.v1';
+    var KEY_SYNC = 'bcinbox.emailSyncedAt.v1';
     var statusEl = document.getElementById('status');
-    function load() {
-      var url = document.getElementById('url').value;
-      statusEl.className = '';
-      statusEl.textContent = 'Fetching the release page…';
-      document.getElementById('player').innerHTML = '';
+    var items = [];
+
+    function store(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) {} }
+    function recall(key) { try { return JSON.parse(localStorage.getItem(key)); } catch (e) { return null; } }
+
+    function setStatus(text, isError) {
+      statusEl.className = isError ? 'error' : '';
+      statusEl.textContent = text;
+    }
+
+    function merge(lists) {
+      var seen = {}, out = [];
+      lists.forEach(function (list) {
+        (list || []).forEach(function (it) {
+          if (!it || seen[it.releaseUrl]) return;
+          seen[it.releaseUrl] = true; out.push(it);
+        });
+      });
+      return out.sort(function (a, b) { return String(b.date).localeCompare(String(a.date)); });
+    }
+
+    function el(tag, attrs, text) {
+      var e = document.createElement(tag);
+      Object.keys(attrs || {}).forEach(function (k) { e.setAttribute(k, attrs[k]); });
+      if (text != null) e.textContent = text;
+      return e;
+    }
+
+    function render() {
+      var list = document.getElementById('list');
+      list.innerHTML = '';
+      items.forEach(function (it) {
+        var li = el('li');
+        var row = el('div', { 'class': 'row' });
+        row.appendChild(it.cover ? el('img', { src: it.cover, alt: '', loading: 'lazy' }) : el('div', { 'class': 'nocover' }));
+        var text = el('div');
+        text.appendChild(el('div', { 'class': 'what' }, it.artist + ' – ' + it.title));
+        var meta = el('div', { 'class': 'meta' },
+          'via ' + it.followedAccount + ' · ' + new Date(it.date).toLocaleDateString('nl-NL') + ' · ' + it.itemType + ' ');
+        if (it.announced) meta.appendChild(el('span', { 'class': 'badge' }, 'pre-order'));
+        text.appendChild(meta);
+        var actions = el('div', { 'class': 'actions' });
+        var play = el('button', {}, 'Play');
+        play.addEventListener('click', function () { showPlayer(li, it.releaseUrl); });
+        actions.appendChild(play);
+        actions.appendChild(el('a', { href: it.releaseUrl, target: '_blank', rel: 'noopener' }, 'Bandcamp'));
+        text.appendChild(actions);
+        row.appendChild(text);
+        li.appendChild(row);
+        list.appendChild(li);
+      });
+    }
+
+    // One player at a time: remove any other before adding this one.
+    function showPlayer(container, url) {
+      document.querySelectorAll('iframe, .playerStatus').forEach(function (n) { n.remove(); });
+      var note = el('div', { 'class': 'meta playerStatus' }, 'Loading player…');
+      container.appendChild(note);
       google.script.run
         .withSuccessHandler(function (info) {
-          document.getElementById('meta').textContent =
-            (info.artist || '?') + ' – ' + (info.title || '?') + ' · ' + (info.location || 'no location');
-          document.getElementById('open').href = info.releaseUrl;
-          if (!info.embedUrl) {
-            statusEl.className = 'error';
-            statusEl.textContent = 'Fetched the page but found no embed ID.';
-            return;
-          }
-          statusEl.textContent = info.itemType + ' ' + info.itemId;
-          var frame = document.createElement('iframe');
-          frame.src = info.embedUrl;
-          frame.allow = 'autoplay; encrypted-media';
-          frame.setAttribute('seamless', '');
-          document.getElementById('player').appendChild(frame);
+          if (!info.embedUrl) { note.textContent = 'No player found on the release page.'; return; }
+          note.textContent = info.location ? 'Location: ' + info.location : '';
+          var frame = el('iframe', { src: info.embedUrl, allow: 'autoplay; encrypted-media', seamless: '' });
+          container.appendChild(frame);
         })
-        .withFailureHandler(function (err) {
-          statusEl.className = 'error';
-          statusEl.textContent = 'Failed: ' + err.message;
-        })
+        .withFailureHandler(function (err) { note.textContent = 'Player failed: ' + err.message; })
         .loadRelease(url);
     }
-    document.getElementById('load').addEventListener('click', load);
-    load();
+
+    function sync(full) {
+      var since = full ? null : recall(KEY_SYNC);
+      setStatus(full || !since ? 'Reading the last 30 days of Bandcamp emails…' : 'Checking for new release emails…');
+      google.script.run
+        .withSuccessHandler(function (res) {
+          items = merge([full ? [] : items, res.items]);
+          store(KEY_ITEMS, items);
+          store(KEY_SYNC, res.syncedAt);
+          render();
+          setStatus(items.length + ' releases · ' + res.items.length + ' from this check (' +
+            res.scanned + ' emails read) · ' + new Date(res.syncedAt).toLocaleTimeString('nl-NL'));
+        })
+        .withFailureHandler(function (err) { setStatus('Gmail read failed: ' + err.message, true); })
+        .getReleaseEmails(since);
+    }
+
+    document.getElementById('refresh').addEventListener('click', function () { sync(false); });
+    document.getElementById('reload').addEventListener('click', function () { sync(true); });
+
+    items = recall(KEY_ITEMS) || [];
+    render();
+    if (START_URL) {
+      var li = el('li'); li.appendChild(el('div', { 'class': 'what' }, START_URL));
+      document.getElementById('list').prepend(li);
+      showPlayer(li, START_URL);
+    }
+    sync(false);
   </script>
 </body>
 </html>
