@@ -6,11 +6,12 @@
     body { font-family: sans-serif; margin: 12px; max-width: 560px; }
     header { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
     h1 { font-size: 20px; margin: 0 auto 0 0; }
-    button { padding: 6px 10px; font-size: 15px; }
+    button, select { padding: 6px 10px; font-size: 15px; }
     #status { color: #555; margin: 8px 0; font-size: 14px; }
     .error { color: #b00020; }
     ul { list-style: none; padding: 0; margin: 0; }
     li { border-top: 1px solid #ddd; padding: 10px 0; }
+    li.divider { border-top: 2px solid #333; padding: 4px 0; font-size: 12px; color: #333; font-weight: bold; }
     .row { display: flex; gap: 10px; }
     .row img, .nocover { width: 64px; height: 64px; flex: none; background: #eee; object-fit: cover; }
     .what { font-weight: bold; }
@@ -23,6 +24,7 @@
 <body>
   <header>
     <h1>BC Inbox</h1>
+    <select id="region" aria-label="Region"></select>
     <button id="refresh">Check for new</button>
     <button id="reload">Reload 30 days</button>
   </header>
@@ -30,11 +32,19 @@
   <ul id="list"></ul>
 
   <script>
+<?!= regionScript ?>
+  </script>
+  <script>
     var START_URL = <?!= JSON.stringify(startUrl).replace(/</g, '\\u003c') ?>;
     var KEY_ITEMS = 'bcinbox.emailItems.v1';
     var KEY_SYNC = 'bcinbox.emailSyncedAt.v1';
+    var KEY_REGION = 'bcinbox.region.v1';
+    var ENRICH_BATCH = 8;
     var statusEl = document.getElementById('status');
+    var regionEl = document.getElementById('region');
     var items = [];
+    var region = DEFAULT_REGION;
+    var enriching = false;
 
     function store(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) {} }
     function recall(key) { try { return JSON.parse(localStorage.getItem(key)); } catch (e) { return null; } }
@@ -52,7 +62,7 @@
           seen[it.releaseUrl] = true; out.push(it);
         });
       });
-      return out.sort(function (a, b) { return String(b.date).localeCompare(String(a.date)); });
+      return out;
     }
 
     function el(tag, attrs, text) {
@@ -62,22 +72,39 @@
       return e;
     }
 
+    function locationText(it) {
+      if (!it.enriched) return 'location…';
+      if (!it.location) return 'location unknown';
+      return it.location + (it.locationSource === 'label' ? ' (label)' : '');
+    }
+
     function render() {
       var list = document.getElementById('list');
       list.innerHTML = '';
-      items.forEach(function (it) {
+      var ranked = rankItems(items, region);
+      var lastRank = null;
+      var label = REGIONS[region] ? REGIONS[region].label : region;
+      ranked.forEach(function (it) {
+        var rank = regionRank(it, region);
+        if (REGIONS[region] && REGIONS[region].countries && rank !== lastRank) {
+          var title = rank === 0 ? label : rank === 1 ? label + ' (label only)' : 'Everything else';
+          list.appendChild(el('li', { 'class': 'divider' }, title));
+          lastRank = rank;
+        }
         var li = el('li');
         var row = el('div', { 'class': 'row' });
         row.appendChild(it.cover ? el('img', { src: it.cover, alt: '', loading: 'lazy' }) : el('div', { 'class': 'nocover' }));
         var text = el('div');
         text.appendChild(el('div', { 'class': 'what' }, it.artist + ' – ' + it.title));
+        text.appendChild(el('div', { 'class': 'meta' }, locationText(it)));
         var meta = el('div', { 'class': 'meta' },
           'via ' + it.followedAccount + ' · ' + new Date(it.date).toLocaleDateString('nl-NL') + ' · ' + it.itemType + ' ');
         if (it.announced) meta.appendChild(el('span', { 'class': 'badge' }, 'pre-order'));
         text.appendChild(meta);
+        if (it.tags && it.tags.length) text.appendChild(el('div', { 'class': 'meta' }, it.tags.slice(0, 5).join(', ')));
         var actions = el('div', { 'class': 'actions' });
         var play = el('button', {}, 'Play');
-        play.addEventListener('click', function () { showPlayer(li, it.releaseUrl); });
+        play.addEventListener('click', function () { showPlayer(li, it); });
         actions.appendChild(play);
         actions.appendChild(el('a', { href: it.releaseUrl, target: '_blank', rel: 'noopener' }, 'Bandcamp'));
         text.appendChild(actions);
@@ -87,20 +114,53 @@
       });
     }
 
-    // One player at a time: remove any other before adding this one.
-    function showPlayer(container, url) {
+    // One player at a time. Uses the cached player link when the item has one.
+    function showPlayer(container, it) {
       document.querySelectorAll('iframe, .playerStatus').forEach(function (n) { n.remove(); });
+      function addFrame(src) {
+        container.appendChild(el('iframe', { src: src, allow: 'autoplay; encrypted-media', seamless: '' }));
+      }
+      if (it.embedUrl) { addFrame(it.embedUrl); return; }
       var note = el('div', { 'class': 'meta playerStatus' }, 'Loading player…');
       container.appendChild(note);
       google.script.run
         .withSuccessHandler(function (info) {
           if (!info.embedUrl) { note.textContent = 'No player found on the release page.'; return; }
           note.textContent = info.location ? 'Location: ' + info.location : '';
-          var frame = el('iframe', { src: info.embedUrl, allow: 'autoplay; encrypted-media', seamless: '' });
-          container.appendChild(frame);
+          addFrame(info.embedUrl);
         })
         .withFailureHandler(function (err) { note.textContent = 'Player failed: ' + err.message; })
-        .loadRelease(url);
+        .loadRelease(it.releaseUrl);
+    }
+
+    function replaceItems(updated) {
+      var byUrl = {};
+      updated.forEach(function (u) { byUrl[u.releaseUrl] = u; });
+      items = items.map(function (it) { return byUrl[it.releaseUrl] || it; });
+    }
+
+    // Look up release pages a few at a time until every item has a location.
+    function enrich() {
+      if (enriching) return;
+      var todo = items.filter(function (it) { return !it.enriched; });
+      if (!todo.length) return;
+      enriching = true;
+      setStatus('Looking up locations: ' + todo.length + ' to go…');
+      google.script.run
+        .withSuccessHandler(function (res) {
+          enriching = false;
+          replaceItems(res.items);
+          store(KEY_ITEMS, items);
+          render();
+          var left = items.filter(function (it) { return !it.enriched; }).length;
+          if (left && res.items.length) enrich();
+          else setStatus(items.length + ' releases' + (left ? ' · ' + left + ' without a location yet' : ''));
+        })
+        .withFailureHandler(function (err) {
+          enriching = false;
+          setStatus('Location lookup failed: ' + err.message, true);
+        })
+        .enrichItems(todo.slice(0, ENRICH_BATCH));
     }
 
     function sync(full) {
@@ -114,11 +174,23 @@
           render();
           setStatus(items.length + ' releases · ' + res.items.length + ' from this check (' +
             res.scanned + ' emails read' + (res.failed ? ', ' + res.failed + ' unreadable' : '') + ') · ' + new Date(res.syncedAt).toLocaleTimeString('nl-NL'));
+          enrich();
         })
         .withFailureHandler(function (err) { setStatus('Gmail read failed: ' + err.message, true); })
         .getReleaseEmails(since);
     }
 
+    Object.keys(REGIONS).forEach(function (k) {
+      var opt = el('option', { value: k }, REGIONS[k].label);
+      regionEl.appendChild(opt);
+    });
+    region = REGIONS[recall(KEY_REGION)] ? recall(KEY_REGION) : DEFAULT_REGION;
+    regionEl.value = region;
+    regionEl.addEventListener('change', function () {
+      region = regionEl.value;
+      store(KEY_REGION, region);
+      render();
+    });
     document.getElementById('refresh').addEventListener('click', function () { sync(false); });
     document.getElementById('reload').addEventListener('click', function () { sync(true); });
 
@@ -127,7 +199,7 @@
     if (START_URL) {
       var li = el('li'); li.appendChild(el('div', { 'class': 'what' }, START_URL));
       document.getElementById('list').prepend(li);
-      showPlayer(li, START_URL);
+      showPlayer(li, { releaseUrl: START_URL });
     }
     sync(false);
   </script>

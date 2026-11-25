@@ -19,7 +19,7 @@ function decodeEntities(s) {
 
 /** Read the embed ID, type, artist, title and location from a release page's HTML. */
 function parseReleasePage(html) {
-  var info = { itemType: null, itemId: null, artist: null, title: null, location: null };
+  var info = { itemType: null, itemId: null, artist: null, title: null, location: null, pageName: null, tags: [] };
 
   var props = html.match(/<meta\s+name="bc-page-properties"\s+content="([^"]*)"/i);
   if (props) {
@@ -45,8 +45,20 @@ function parseReleasePage(html) {
     else info.title = t;
   }
 
-  var loc = html.match(/<span class="location[^"]*">\s*([^<]*?)\s*<\/span>/i);
+  // The page owner's name and location ("LUST TAPES", "Amsterdam, Netherlands").
+  // On a label's page this is the label, not the artist.
+  var block = html.match(/<p id="band-name-location">([\s\S]*?)<\/p>/i);
+  var scope = block ? block[1] : html;
+  var name = scope.match(/<span class="title">\s*([^<]*?)\s*<\/span>/i);
+  if (block && name && name[1]) info.pageName = decodeEntities(name[1]);
+  var loc = scope.match(/<span class="location[^"]*">\s*([^<]*?)\s*<\/span>/i);
   if (loc && loc[1]) info.location = decodeEntities(loc[1]);
+
+  var tagRe = /<a class="tag"[^>]*>\s*([^<]+?)\s*<\/a>/gi, t2;
+  while ((t2 = tagRe.exec(html)) !== null) {
+    var tag = decodeEntities(t2[1]);
+    if (info.tags.indexOf(tag) === -1) info.tags.push(tag);
+  }
   return info;
 }
 
@@ -54,6 +66,33 @@ function embedUrl(info) {
   if (!info.itemId) return null;
   return 'https://bandcamp.com/EmbeddedPlayer/' + info.itemType + '=' + info.itemId +
     '/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=true/transparent=true/';
+}
+
+function sameName(a, b) {
+  var norm = function (x) { return String(x || '').toLowerCase().replace(/[^a-z0-9\u00c0-\u024f]+/g, ''); };
+  return norm(a) !== '' && norm(a) === norm(b);
+}
+
+/**
+ * Copy what a release page told us onto a queue item. The location counts as
+ * the artist's ("release") when the page belongs to the artist, and as the
+ * label's when it belongs to someone else.
+ */
+function applyEnrichment(item, info) {
+  var out = {};
+  Object.keys(item).forEach(function (k) { out[k] = item[k]; });
+  out.enriched = true;
+  if (!info || info.error) { out.enrichError = info ? info.error : 'no data'; return out; }
+  out.embedUrl = info.embedUrl || embedUrl(info);
+  out.itemId = info.itemId;
+  if (info.itemType) out.itemType = info.itemType;
+  out.tags = info.tags || [];
+  out.pageName = info.pageName || null;
+  out.location = info.location || null;
+  if (!out.location) out.locationSource = 'unknown';
+  else if (info.pageName && !sameName(info.pageName, out.artist)) out.locationSource = 'label';
+  else out.locationSource = 'release';
+  return out;
 }
 
 // --- Release emails -------------------------------------------------------
@@ -165,6 +204,7 @@ if (typeof module !== 'undefined') {
   module.exports = {
     normalizeReleaseUrl: normalizeReleaseUrl, parseReleasePage: parseReleasePage, embedUrl: embedUrl,
     isReleaseSubject: isReleaseSubject, parseReleaseEmail: parseReleaseEmail, mergeItems: mergeItems,
-    bodiesFromPayload: bodiesFromPayload, headerValue: headerValue, padBase64: padBase64
+    bodiesFromPayload: bodiesFromPayload, headerValue: headerValue, padBase64: padBase64,
+    applyEnrichment: applyEnrichment, sameName: sameName
   };
 }
