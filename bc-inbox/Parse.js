@@ -205,6 +205,6 @@ if (typeof module !== 'undefined') {
     normalizeReleaseUrl: normalizeReleaseUrl, parseReleasePage: parseReleasePage, embedUrl: embedUrl,
     isReleaseSubject: isReleaseSubject, parseReleaseEmail: parseReleaseEmail, mergeItems: mergeItems,
     bodiesFromPayload: bodiesFromPayload, headerValue: headerValue, padBase64: padBase64,
-    applyEnrichment: applyEnrichment, sameName: sameName
+    applyEnrichment: applyEnrichment, sameName: sameName, decodeEntities: decodeEntities
   };
 }

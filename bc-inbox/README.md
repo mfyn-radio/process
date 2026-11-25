@@ -31,6 +31,15 @@ Only mfyn@ can open it (`"access": "MYSELF"`).
   fetching. A location marked "(label)" came from a label's page, not the
   artist's.
 
+- **Milestone 4, the weekly top 10.** The page reads the newest
+  `rising-artists-YYYY-MM-DD.csv` in the `MFYN_Rising_Artists` folder of
+  mfyn@'s Drive (Drive read-only) and pins that week's picks on top, in the
+  run's order, with fit notes, IG handle and next BeNe show. **Load top 10 CSV**
+  takes a CSV by hand instead. A pick's Bandcamp link may be an artist page:
+  then the suggested track is tried on that site, else the newest release.
+  A release in both the top 10 and the emails shows once, as top 10. Picks
+  from earlier weeks drop into the main list, ranked by region like the rest.
+
 The first load reads the last 30 days. After that, **Check for new** reads
 only emails since the last check; the list is kept in the browser
 (`localStorage`). **Reload 30 days** starts over. `?url=<release link>` on the
@@ -44,8 +53,9 @@ email.
 
 | File | What |
 |---|---|
-| `Code.js` | Server: `doGet`, `getReleaseEmails` (Gmail), `enrichItems` (release pages, cached), `loadRelease` |
+| `Code.js` | Server: `doGet`, `getReleaseEmails` (Gmail), `enrichItems` (release pages, cached), `getTopTen` / `topTenFromCsv` (Drive), `loadRelease` |
 | `Parse.js` | Pure parsing: release emails, release pages, merging. No Apps Script calls |
+| `TopTen.js` | The weekly CSV: parsing, newest file, artist-page links → a release |
 | `Region.js` | Region presets, location → country, ranking. The page gets the ranking functions from here too |
 | `index.html` | The page |
 | `appsscript.json` | Scopes and web app settings |

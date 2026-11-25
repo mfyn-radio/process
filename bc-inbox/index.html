@@ -16,6 +16,8 @@
     .row img, .nocover { width: 64px; height: 64px; flex: none; background: #eee; object-fit: cover; }
     .what { font-weight: bold; }
     .meta { color: #666; font-size: 13px; }
+    .rank { font-size: 11px; background: #333; color: #fff; padding: 1px 5px; border-radius: 3px; margin-right: 4px; }
+    .notes { font-size: 13px; color: #333; margin-top: 2px; }
     .badge { font-size: 11px; background: #fde68a; padding: 1px 5px; border-radius: 3px; }
     .actions { margin-top: 6px; display: flex; gap: 8px; align-items: center; }
     iframe { border: 0; width: 100%; height: 470px; margin-top: 8px; }
@@ -27,6 +29,8 @@
     <select id="region" aria-label="Region"></select>
     <button id="refresh">Check for new</button>
     <button id="reload">Reload 30 days</button>
+    <button id="pick">Load top 10 CSV</button>
+    <input id="csv" type="file" accept=".csv,text/csv" hidden>
   </header>
   <div id="status"></div>
   <ul id="list"></ul>
@@ -39,10 +43,13 @@
     var KEY_ITEMS = 'bcinbox.emailItems.v1';
     var KEY_SYNC = 'bcinbox.emailSyncedAt.v1';
     var KEY_REGION = 'bcinbox.region.v1';
+    var KEY_TOP10 = 'bcinbox.top10Items.v1';
     var ENRICH_BATCH = 8;
     var statusEl = document.getElementById('status');
     var regionEl = document.getElementById('region');
-    var items = [];
+    var items = [];      // release emails
+    var top10 = [];      // top-10 picks of every week loaded so far
+    var top10Note = '';
     var region = DEFAULT_REGION;
     var enriching = false;
 
@@ -58,8 +65,9 @@
       var seen = {}, out = [];
       lists.forEach(function (list) {
         (list || []).forEach(function (it) {
-          if (!it || seen[it.releaseUrl]) return;
-          seen[it.releaseUrl] = true; out.push(it);
+          var key = it && (it.key || it.releaseUrl);
+          if (!it || seen[key]) return;
+          seen[key] = true; out.push(it);
         });
       });
       return out;
@@ -73,40 +81,63 @@
     }
 
     function locationText(it) {
-      if (!it.enriched) return 'location…';
+      if (!it.enriched && !it.location) return 'location…';
       if (!it.location) return 'location unknown';
       return it.location + (it.locationSource === 'label' ? ' (label)' : '');
+    }
+
+    function pinnedWeek() {
+      return top10.reduce(function (w, it) { return it.top10Week > w ? it.top10Week : w; }, '');
     }
 
     function render() {
       var list = document.getElementById('list');
       list.innerHTML = '';
-      var ranked = rankItems(items, region);
-      var lastRank = null;
+      var week = pinnedWeek();
+      // A top-10 pick and an email for the same release show once, as top 10.
+      var all = merge([top10, items]);
+      var ranked = queueOrder(all, region, week);
+      var lastGroup = null;
       var label = REGIONS[region] ? REGIONS[region].label : region;
       ranked.forEach(function (it) {
+        var pinned = it.source === 'top10' && it.top10Week === week;
         var rank = regionRank(it, region);
-        if (REGIONS[region] && REGIONS[region].countries && rank !== lastRank) {
-          var title = rank === 0 ? label : rank === 1 ? label + ' (label only)' : 'Everything else';
+        var group = pinned ? 'top' : rank;
+        var hasRegion = REGIONS[region] && REGIONS[region].countries;
+        if (group !== lastGroup && (pinned || hasRegion || lastGroup === 'top')) {
+          var title = pinned ? 'Top 10 · week of ' + week
+            : !hasRegion ? 'New releases'
+            : rank === 0 ? label : rank === 1 ? label + ' (label only)' : 'Everything else';
           list.appendChild(el('li', { 'class': 'divider' }, title));
-          lastRank = rank;
         }
+        lastGroup = group;
         var li = el('li');
         var row = el('div', { 'class': 'row' });
         row.appendChild(it.cover ? el('img', { src: it.cover, alt: '', loading: 'lazy' }) : el('div', { 'class': 'nocover' }));
         var text = el('div');
-        text.appendChild(el('div', { 'class': 'what' }, it.artist + ' – ' + it.title));
+        var what = el('div', { 'class': 'what' });
+        if (it.source === 'top10') what.appendChild(el('span', { 'class': 'rank' }, '#' + it.top10Rank + (pinned ? '' : ' · ' + it.top10Week)));
+        what.appendChild(document.createTextNode(it.artist + (it.title ? ' – ' + it.title : '')));
+        text.appendChild(what);
         text.appendChild(el('div', { 'class': 'meta' }, locationText(it)));
-        var meta = el('div', { 'class': 'meta' },
-          'via ' + it.followedAccount + ' · ' + new Date(it.date).toLocaleDateString('nl-NL') + ' · ' + it.itemType + ' ');
+        var meta = el('div', { 'class': 'meta' }, it.source === 'top10'
+          ? 'rising artists' + (it.suggestedTrack && it.suggestedTrack !== it.title ? ' · try: ' + it.suggestedTrack : '') +
+            (it.igHandle ? ' · IG ' + it.igHandle + (it.igFollowers ? ' (' + it.igFollowers + ')' : '') : '') +
+            (it.nextBeneShow ? ' · next BeNe show: ' + it.nextBeneShow : '') +
+            (it.enrichError ? ' · ' + it.enrichError : '')
+          : 'via ' + it.followedAccount + ' · ' + new Date(it.date).toLocaleDateString('nl-NL') + ' · ' + it.itemType + ' ');
         if (it.announced) meta.appendChild(el('span', { 'class': 'badge' }, 'pre-order'));
         text.appendChild(meta);
+        if (it.fitNotes) text.appendChild(el('div', { 'class': 'notes' }, it.fitNotes));
         if (it.tags && it.tags.length) text.appendChild(el('div', { 'class': 'meta' }, it.tags.slice(0, 5).join(', ')));
         var actions = el('div', { 'class': 'actions' });
-        var play = el('button', {}, 'Play');
-        play.addEventListener('click', function () { showPlayer(li, it); });
-        actions.appendChild(play);
-        actions.appendChild(el('a', { href: it.releaseUrl, target: '_blank', rel: 'noopener' }, 'Bandcamp'));
+        if (it.embedUrl || it.releaseUrl) {
+          var play = el('button', {}, 'Play');
+          play.addEventListener('click', function () { showPlayer(li, it); });
+          actions.appendChild(play);
+        }
+        var link = it.releaseUrl || it.sourceUrl;
+        if (link) actions.appendChild(el('a', { href: link, target: '_blank', rel: 'noopener' }, 'Bandcamp'));
         text.appendChild(actions);
         row.appendChild(text);
         li.appendChild(row);
@@ -142,7 +173,7 @@
     // Look up release pages a few at a time until every item has a location.
     function enrich() {
       if (enriching) return;
-      var todo = items.filter(function (it) { return !it.enriched; });
+      var todo = items.filter(function (it) { return !it.enriched; });  // emails only; top 10 arrives filled in
       if (!todo.length) return;
       enriching = true;
       setStatus('Looking up locations: ' + todo.length + ' to go…');
@@ -191,16 +222,55 @@
       store(KEY_REGION, region);
       render();
     });
+    function gotTopTen(res) {
+      if (res.missing) {
+        top10Note = res.missing === 'folder'
+          ? 'No ' + res.folder + ' folder in Drive yet, so no top 10. Use "Load top 10 CSV".'
+          : 'No rising-artists-YYYY-MM-DD.csv in ' + res.folder + ' yet. Use "Load top 10 CSV".';
+      } else {
+        // Replace that week's picks; keep earlier weeks so untriaged ones stay in the list.
+        top10 = top10.filter(function (it) { return it.top10Week !== res.week; }).concat(res.items);
+        store(KEY_TOP10, top10);
+        top10Note = 'Top 10 from ' + res.fileName;
+      }
+      render();
+      setStatus(top10Note);
+    }
+
+    function loadTopTen() {
+      google.script.run
+        .withSuccessHandler(gotTopTen)
+        .withFailureHandler(function (err) { setStatus('Top 10 read failed: ' + err.message, true); })
+        .getTopTen();
+    }
+
+    document.getElementById('pick').addEventListener('click', function () { document.getElementById('csv').click(); });
+    document.getElementById('csv').addEventListener('change', function (e) {
+      var file = e.target.files[0];
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function () {
+        setStatus('Reading ' + file.name + ' and finding each pick on Bandcamp…');
+        google.script.run
+          .withSuccessHandler(gotTopTen)
+          .withFailureHandler(function (err) { setStatus('Top 10 read failed: ' + err.message, true); })
+          .topTenFromCsv(String(reader.result), file.name);
+      };
+      reader.readAsText(file);
+      e.target.value = '';
+    });
     document.getElementById('refresh').addEventListener('click', function () { sync(false); });
     document.getElementById('reload').addEventListener('click', function () { sync(true); });
 
     items = recall(KEY_ITEMS) || [];
+    top10 = recall(KEY_TOP10) || [];
     render();
     if (START_URL) {
       var li = el('li'); li.appendChild(el('div', { 'class': 'what' }, START_URL));
       document.getElementById('list').prepend(li);
       showPlayer(li, { releaseUrl: START_URL });
     }
+    loadTopTen();
     sync(false);
   </script>
 </body>
