@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert');
-const { normalizeReleaseUrl, parseReleasePage, embedUrl } = require('../Code.js');
+const { normalizeReleaseUrl, parseReleasePage, embedUrl } = require('../Parse.js');
 
 test('normalizes release links', () => {
   assert.strictEqual(

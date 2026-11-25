@@ -1,21 +1,63 @@
 /**
- * BC Inbox, milestone 1 (spike): can an Apps Script web app play a Bandcamp
- * release on a phone? The page fetches one release server-side, reads its
- * embed ID and location, and shows Bandcamp's embedded player.
- *
- * The parsing functions below use no Apps Script services, so they are
- * tested locally with `node --test bc-inbox/test`.
+ * BC Inbox server. Parsing lives in Parse.js (pure, tested with node).
+ * Gmail is read through the Gmail API advanced service with the
+ * gmail.readonly scope only: the script cannot send, label, archive or
+ * delete email.
  */
 
-// The release the spike plays unless ?url= names another one.
+var GMAIL_QUERY = 'from:noreply@bandcamp.com subject:"New release from"';
+var FIRST_LOAD_DAYS = 30;
+var MAX_MESSAGES = 300;
+
+// The release the page plays unless ?url= names another one (milestone 1 check).
 var DEFAULT_RELEASE = 'https://lusttapes.bandcamp.com/album/sociopathic-morbid-aberrations';
 
 function doGet(e) {
   var page = HtmlService.createTemplateFromFile('index');
-  page.startUrl = (e && e.parameter && e.parameter.url) || DEFAULT_RELEASE;
+  page.startUrl = (e && e.parameter && e.parameter.url) || '';
   return page.evaluate()
     .setTitle('BC Inbox')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1');
+}
+
+/**
+ * Called from the page: release emails newer than sinceMs (epoch ms), or the
+ * last FIRST_LOAD_DAYS days when sinceMs is empty. Returns { items, syncedAt }.
+ */
+function getReleaseEmails(sinceMs) {
+  var now = Date.now();
+  var since = sinceMs ? Number(sinceMs) : now - FIRST_LOAD_DAYS * 24 * 3600 * 1000;
+  // Gmail's after: takes epoch seconds. Step back an hour for clock skew;
+  // the page dedupes by release URL anyway.
+  var query = GMAIL_QUERY + ' after:' + Math.floor((since - 3600 * 1000) / 1000);
+
+  var ids = [];
+  var pageToken;
+  do {
+    var res = Gmail.Users.Messages.list('me', { q: query, maxResults: 100, pageToken: pageToken });
+    (res.messages || []).forEach(function (m) { ids.push(m.id); });
+    pageToken = res.nextPageToken;
+  } while (pageToken && ids.length < MAX_MESSAGES);
+
+  var decode = function (data) {
+    return Utilities.newBlob(Utilities.base64DecodeWebSafe(data)).getDataAsString('UTF-8');
+  };
+  var items = [];
+  ids.slice(0, MAX_MESSAGES).forEach(function (id) {
+    var msg = Gmail.Users.Messages.get('me', id, { format: 'full' });
+    var bodies = bodiesFromPayload(msg.payload, decode);
+    var item = parseReleaseEmail({
+      subject: headerValue(msg.payload, 'Subject'),
+      date: new Date(Number(msg.internalDate)).toISOString(),
+      plain: bodies.plain,
+      html: bodies.html
+    });
+    if (item) {
+      item.messageId = id;
+      items.push(item);
+    }
+  });
+  return { items: mergeItems([items]), syncedAt: now, scanned: ids.length };
 }
 
 /** Called from the page: fetch a release page and return what the player needs. */
@@ -33,60 +75,4 @@ function loadRelease(url) {
   info.releaseUrl = clean;
   info.embedUrl = embedUrl(info);
   return info;
-}
-
-/** Lowercase host + path, no query string or fragment; null if not a release link. */
-function normalizeReleaseUrl(url) {
-  var m = String(url || '').trim().match(/^https?:\/\/([^\/?#]+\.bandcamp\.com|[^\/?#]+)(\/(album|track)\/[^\/?#]+)/i);
-  if (!m) return null;
-  return 'https://' + m[1].toLowerCase() + m[2].toLowerCase();
-}
-
-function decodeEntities(s) {
-  return String(s)
-    .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&#x27;/g, "'")
-    .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
-}
-
-/** Read the embed ID, type, artist, title and location from a release page's HTML. */
-function parseReleasePage(html) {
-  var info = { itemType: null, itemId: null, artist: null, title: null, location: null };
-
-  var props = html.match(/<meta\s+name="bc-page-properties"\s+content="([^"]*)"/i);
-  if (props) {
-    try {
-      var p = JSON.parse(decodeEntities(props[1]));
-      if (p.item_id) {
-        info.itemId = String(p.item_id);
-        info.itemType = p.item_type === 't' ? 'track' : 'album';
-      }
-    } catch (err) { /* fall through to og:video */ }
-  }
-  if (!info.itemId) {
-    var video = html.match(/EmbeddedPlayer\/(?:v=2\/)?(album|track)=(\d+)/i);
-    if (video) { info.itemType = video[1].toLowerCase(); info.itemId = video[2]; }
-  }
-
-  var title = html.match(/<meta\s+property="og:title"\s+content="([^"]*)"/i);
-  if (title) {
-    // "Release, by Artist"
-    var t = decodeEntities(title[1]);
-    var split = t.lastIndexOf(', by ');
-    if (split > -1) { info.title = t.slice(0, split); info.artist = t.slice(split + 5); }
-    else info.title = t;
-  }
-
-  var loc = html.match(/<span class="location[^"]*">\s*([^<]*?)\s*<\/span>/i);
-  if (loc && loc[1]) info.location = decodeEntities(loc[1]);
-  return info;
-}
-
-function embedUrl(info) {
-  if (!info.itemId) return null;
-  return 'https://bandcamp.com/EmbeddedPlayer/' + info.itemType + '=' + info.itemId +
-    '/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=true/transparent=true/';
-}
-
-if (typeof module !== 'undefined') {
-  module.exports = { normalizeReleaseUrl: normalizeReleaseUrl, parseReleasePage: parseReleasePage, embedUrl: embedUrl };
 }
