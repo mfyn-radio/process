@@ -4,6 +4,7 @@ Bandcamp only serves these pages to real browsers, so this drives a normal
 Chrome window: open the receipt's download link, pick the format, wait for
 Bandcamp to prepare the file, and let Chrome download it.
 """
+import json
 import re
 import time
 from pathlib import Path
@@ -45,6 +46,17 @@ def describe_links(driver):
             (el.get_attribute("data-bind") or "")[:100], bool(el.get_attribute("href")),
         ))
     return "\n".join(lines[:40])
+
+
+# Asks Bandcamp for the next page of a fan's wishlist, from inside the fan page,
+# the way the page's own "view all" button does.
+WISHLIST_ITEMS_SCRIPT = """
+const [fanId, token, done] = arguments;
+fetch('/api/fancollection/1/wishlist_items', {
+  method: 'POST', credentials: 'include', headers: {'Content-Type': 'application/json'},
+  body: JSON.stringify({fan_id: fanId, older_than_token: token, count: 100}),
+}).then(r => r.ok ? r.json() : {error: 'HTTP ' + r.status}).then(done, e => done({error: String(e)}));
+"""
 
 
 class NotAvailable(Exception):
@@ -104,6 +116,33 @@ class Browser:
             bio=first_text("#bio-text"),
             tags=[t for t in texts("a.tag") if t],
         )
+
+    def wishlist(self, fan_page, max_pages=50):
+        """Every item on a fan's public wishlist, newest first, as Bandcamp's own
+        item dicts (item_title, band_name, item_url, added, ...)."""
+        driver = self._chrome()
+        driver.get(fan_page.rstrip("/") + "/wishlist")
+        WebDriverWait(driver, 30).until(lambda d: d.execute_script("return document.readyState") == "complete")
+        blob = driver.execute_script("const el = document.getElementById('pagedata'); return el && el.dataset.blob;")
+        if not blob:
+            raise RuntimeError(f"no fan data on {driver.current_url} (title: {driver.title!r})")
+        blob = json.loads(blob)
+        fan_id = (blob.get("fan_data") or {}).get("fan_id")
+        data = blob.get("wishlist_data") or {}
+        cached = (blob.get("item_cache") or {}).get("wishlist") or {}
+        items = [cached[key] for key in data.get("sequence", []) if key in cached]
+        token = data.get("last_token")
+        more = bool(token) and len(items) < (data.get("item_count") or 0)
+        driver.set_script_timeout(60)
+        for _ in range(max_pages):
+            if not (more and fan_id):
+                break
+            page = driver.execute_async_script(WISHLIST_ITEMS_SCRIPT, fan_id, token)
+            if page.get("error"):
+                raise RuntimeError(f"Bandcamp didn't send more wishlist items: {page['error']}")
+            items += page.get("items") or []
+            token, more = page.get("last_token"), page.get("more_available")
+        return items
 
     def find_album(self, seller_page, title):
         """The album page for `title` on a seller's Bandcamp page, if listed."""
