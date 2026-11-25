@@ -147,6 +147,12 @@ function bodiesFromPayload(payload, decode) {
   return out;
 }
 
+/** Add the '=' padding base64 decoders want; Gmail's base64url omits it. */
+function padBase64(s) {
+  s = String(s).replace(/\s+/g, '');
+  return s + '===='.slice(0, (4 - s.length % 4) % 4);
+}
+
 function headerValue(payload, name) {
   var headers = (payload && payload.headers) || [];
   for (var i = 0; i < headers.length; i++) {
@@ -159,6 +165,6 @@ if (typeof module !== 'undefined') {
   module.exports = {
     normalizeReleaseUrl: normalizeReleaseUrl, parseReleasePage: parseReleasePage, embedUrl: embedUrl,
     isReleaseSubject: isReleaseSubject, parseReleaseEmail: parseReleaseEmail, mergeItems: mergeItems,
-    bodiesFromPayload: bodiesFromPayload, headerValue: headerValue
+    bodiesFromPayload: bodiesFromPayload, headerValue: headerValue, padBase64: padBase64
   };
 }

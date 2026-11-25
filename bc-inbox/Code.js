@@ -39,25 +39,39 @@ function getReleaseEmails(sinceMs) {
     pageToken = res.nextPageToken;
   } while (pageToken && ids.length < MAX_MESSAGES);
 
-  var decode = function (data) {
-    return Utilities.newBlob(Utilities.base64DecodeWebSafe(data)).getDataAsString('UTF-8');
-  };
   var items = [];
+  var failed = 0;
   ids.slice(0, MAX_MESSAGES).forEach(function (id) {
-    var msg = Gmail.Users.Messages.get('me', id, { format: 'full' });
-    var bodies = bodiesFromPayload(msg.payload, decode);
-    var item = parseReleaseEmail({
-      subject: headerValue(msg.payload, 'Subject'),
-      date: new Date(Number(msg.internalDate)).toISOString(),
-      plain: bodies.plain,
-      html: bodies.html
-    });
-    if (item) {
-      item.messageId = id;
-      items.push(item);
+    try {
+      var msg = Gmail.Users.Messages.get('me', id, { format: 'full' });
+      var bodies = bodiesFromPayload(msg.payload, decodeBody);
+      var item = parseReleaseEmail({
+        subject: headerValue(msg.payload, 'Subject'),
+        date: new Date(Number(msg.internalDate)).toISOString(),
+        plain: bodies.plain,
+        html: bodies.html
+      });
+      if (item) {
+        item.messageId = id;
+        items.push(item);
+      }
+    } catch (err) {
+      // One odd email must not break the whole list.
+      failed++;
+      console.warn('BC Inbox: could not read message ' + id + ': ' + err);
     }
   });
-  return { items: mergeItems([items]), syncedAt: now, scanned: ids.length };
+  return { items: mergeItems([items]), syncedAt: now, scanned: ids.length, failed: failed };
+}
+
+/**
+ * A Gmail API body. The advanced service usually hands it over already
+ * decoded to bytes; if it comes as a base64url string, Gmail leaves off the
+ * '=' padding that Utilities.base64DecodeWebSafe needs.
+ */
+function decodeBody(data) {
+  if (Array.isArray(data)) return Utilities.newBlob(data).getDataAsString('UTF-8');
+  return Utilities.newBlob(Utilities.base64DecodeWebSafe(padBase64(String(data)))).getDataAsString('UTF-8');
 }
 
 /** Called from the page: fetch a release page and return what the player needs. */
