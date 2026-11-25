@@ -20,7 +20,7 @@ function doGet(e) {
   page.regionScript = ('var REGIONS = ' + JSON.stringify(REGIONS) + ';\n' +
     'var DEFAULT_REGION = ' + JSON.stringify(DEFAULT_REGION) + ';\n' +
     'function countryOf() { return null; }\n' +
-    regionRank.toString() + '\n' + rankItems.toString()).replace(/<\//g, '<\\/');
+    regionRank.toString() + '\n' + rankItems.toString() + '\n' + queueOrder.toString()).replace(/<\//g, '<\\/');
   return page.evaluate()
     .setTitle('BC Inbox')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1');
@@ -150,6 +150,103 @@ function enrichItems(items) {
     out.push(enriched);
   });
   return { items: out, remaining: res.remaining.length, fetched: res.fetched };
+}
+
+// --- Weekly top 10 -------------------------------------------------------
+
+// The rising-artists run saves rising-artists-YYYY-MM-DD.csv here, in mfyn@'s Drive.
+var TOP10_FOLDER = 'MFYN_Rising_Artists';
+var RESOLVE_PREFIX = 'art1:';
+
+/** Called from the page: this week's top 10 from the newest CSV in TOP10_FOLDER. */
+function getTopTen() {
+  var files = [];
+  var folders = DriveApp.getFoldersByName(TOP10_FOLDER);
+  if (!folders.hasNext()) return { missing: 'folder', folder: TOP10_FOLDER, items: [] };
+  while (folders.hasNext()) {
+    var it = folders.next().getFiles();
+    while (it.hasNext()) {
+      var f = it.next();
+      files.push({ name: f.getName(), id: f.getId() });
+    }
+  }
+  var newest = newestTop10File(files);
+  if (!newest) return { missing: 'file', folder: TOP10_FOLDER, items: [] };
+  var text = DriveApp.getFileById(newest.id).getBlob().getDataAsString('UTF-8');
+  return { fileName: newest.name, week: newest.week, items: resolveTop10(top10Items(text, newest.week)) };
+}
+
+/** Called from the page with a CSV picked by hand (the fallback). */
+function topTenFromCsv(text, fileName) {
+  var week = weekOfFile(fileName) || Utilities.formatDate(new Date(), 'Europe/Amsterdam', 'yyyy-MM-dd');
+  return { fileName: fileName, week: week, items: resolveTop10(top10Items(text, week)) };
+}
+
+/**
+ * Give each pick a playable release: its own link if it is one, else the
+ * suggested track on the artist's site, else the newest release there. Then
+ * fill in the player and tags like an email item, keeping the CSV's location.
+ */
+function resolveTop10(items) {
+  var props = PropertiesService.getScriptProperties();
+  items.forEach(function (it) {
+    if (it.releaseUrl || it.linkKind !== 'artist') return;
+    var site = siteOf(it.sourceUrl);
+    var key = RESOLVE_PREFIX + site + '|' + (it.suggestedTrack || '');
+    var cached = props.getProperty(key);
+    if (cached) { it.releaseUrl = cached === '-' ? null : cached; return; }
+    var found = null;
+    if (it.suggestedTrack) {
+      var guess = normalizeReleaseUrl(site + '/track/' + slugify(it.suggestedTrack));
+      var info = guess && enrichReleases([guess]).results[guess];
+      if (info && !info.error && info.itemId) found = guess;
+    }
+    if (!found) {
+      var page = fetchPage(site + '/music');
+      if (page) found = releaseLinksFromArtistPage(page, site)[0] || null;
+    }
+    it.releaseUrl = found;
+    props.setProperty(key, found || '-');
+  });
+
+  var urls = items.map(function (it) { return it.releaseUrl; }).filter(Boolean);
+  var results = {};
+  var guard = 0;
+  while (urls.length && guard++ < 10) {
+    var res = enrichReleases(urls);
+    Object.keys(res.results).forEach(function (u) { results[u] = res.results[u]; });
+    urls = res.remaining;
+  }
+  return items.map(function (it) {
+    var out;
+    if (!it.releaseUrl) {
+      out = applyEnrichment(it, { error: it.sourceUrl ? 'no release found at ' + it.sourceUrl : 'no Bandcamp link in the CSV' });
+    } else {
+      var info = results[it.releaseUrl];
+      out = applyEnrichment(it, info);
+      if (info && !info.error && info.title) {
+        out.releaseTitle = info.title;
+        out.title = info.title;
+      }
+    }
+    if (it.location) { out.location = it.location; out.locationSource = 'csv'; }
+    if (it.tags && it.tags.length) out.tags = it.tags;
+    out.country = countryOf(out.location);
+    out.key = out.releaseUrl || ('top10:' + it.top10Week + ':' + it.top10Rank);
+    return out;
+  });
+}
+
+function fetchPage(url) {
+  try {
+    var r = UrlFetchApp.fetch(url, {
+      muteHttpExceptions: true, followRedirects: true,
+      headers: { 'User-Agent': 'Mozilla/5.0 (BC Inbox for MFYN)' }
+    });
+    return r.getResponseCode() === 200 ? r.getContentText() : null;
+  } catch (err) {
+    return null;
+  }
 }
 
 /** Called from the page: one release's player info (used by ?url=). */

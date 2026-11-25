@@ -101,6 +101,19 @@ function regionRank(item, regionKey) {
   return item.locationSource === 'label' ? 1 : 0;
 }
 
+/**
+ * The whole queue: this week's top 10 pinned first in the run's order, then
+ * everything else (emails and earlier weeks' picks) ranked by region.
+ */
+function queueOrder(items, regionKey, pinnedWeek) {
+  var pinned = [], rest = [];
+  items.forEach(function (it) {
+    (it.source === 'top10' && pinnedWeek && it.top10Week === pinnedWeek ? pinned : rest).push(it);
+  });
+  pinned.sort(function (a, b) { return (a.top10Rank || 99) - (b.top10Rank || 99); });
+  return pinned.concat(rankItems(rest, regionKey));
+}
+
 /** Order the queue for a region: rank first, then newest first. Nothing is dropped. */
 function rankItems(items, regionKey) {
   return items.slice().sort(function (a, b) {
@@ -111,5 +124,5 @@ function rankItems(items, regionKey) {
 }
 
 if (typeof module !== 'undefined') {
-  module.exports = { REGIONS: REGIONS, DEFAULT_REGION: DEFAULT_REGION, countryOf: countryOf, regionRank: regionRank, rankItems: rankItems };
+  module.exports = { REGIONS: REGIONS, DEFAULT_REGION: DEFAULT_REGION, countryOf: countryOf, regionRank: regionRank, rankItems: rankItems, queueOrder: queueOrder };
 }
