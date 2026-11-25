@@ -56,9 +56,12 @@
     function store(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) {} }
     function recall(key) { try { return JSON.parse(localStorage.getItem(key)); } catch (e) { return null; } }
 
+    // The top-10 note stays on the line, whichever answer (Drive or Gmail) comes last.
+    var lastStatus = '';
     function setStatus(text, isError) {
+      if (!isError) lastStatus = text;
       statusEl.className = isError ? 'error' : '';
-      statusEl.textContent = text;
+      statusEl.textContent = text + (top10Note && text !== top10Note ? ' · ' + top10Note : '');
     }
 
     function merge(lists) {
@@ -234,13 +237,17 @@
         top10Note = 'Top 10 from ' + res.fileName;
       }
       render();
-      setStatus(top10Note);
+      setStatus(lastStatus || top10Note);
     }
 
     function loadTopTen() {
       google.script.run
         .withSuccessHandler(gotTopTen)
-        .withFailureHandler(function (err) { setStatus('Top 10 read failed: ' + err.message, true); })
+        .withFailureHandler(function (err) {
+          top10Note = 'Top 10 read failed: ' + err.message;
+          render();
+          setStatus(lastStatus || top10Note, !lastStatus);
+        })
         .getTopTen();
     }
 
