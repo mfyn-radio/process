@@ -21,9 +21,12 @@ It asks for whatever isn't given, then:
    a Music bed track and one track per artist holding that artist's songs,
    placed one after the other in playlist order. If MFYN_Template.rpp is in
    the workspace, the project starts from it: its master FX and its Voice over
-   and Music bed tracks (with their FX) are kept; any other tracks are dropped.
+   and Music bed tracks (with their FX) are kept; any other tracks are dropped;
+5. writes the show cards there (show_cards.md): a spoken intro per artist
+   and an events card, by Claude Code from verified facts (intake.show_cards).
 
-A folder that already has Tracks or a Reaper project is never touched. See docs/02-create-show.md.
+A folder that already has Tracks or a Reaper project is never touched (an
+empty one is filled). --no-cards skips step 5. See docs/02-create-show.md.
 """
 import argparse
 import json
@@ -53,6 +56,7 @@ class PlaylistTrack:
     title: str
     album: str = ""
     url: str = ""
+    album_url: str = ""
 
 
 @dataclass
@@ -73,7 +77,7 @@ def parse_playlist(blob):
     for i, t in enumerate(tracklist.get("tracks") or [], start=1):
         album = t.get("album") or {}
         tracks.append(PlaylistTrack(i, (t.get("artistName") or "").strip(), (t.get("title") or "").strip(),
-                                    (album.get("title") or "").strip(), t.get("url") or ""))
+                                    (album.get("title") or "").strip(), t.get("url") or "", album.get("url") or ""))
     title = (data.get("appData") or {}).get("title") or tracklist.get("title") or ""
     return title.strip(), tracks
 
@@ -308,15 +312,21 @@ def ask_until(ask, question, check):
             return answer
 
 
-def main(argv=None, ask=input, say=print, read=read_playlist, get=None):
-    return runlog.track("Build Show", lambda run: _main(argv, ask, say, read, get or acquire, run))
+def make_cards(work, title, wanted):
+    from . import show_cards
+    return show_cards.make(work, title, wanted)
 
 
-def _main(argv, ask, say, read, acquire, run):
+def main(argv=None, ask=input, say=print, read=read_playlist, get=None, cards=None):
+    return runlog.track("Build Show", lambda run: _main(argv, ask, say, read, get or acquire, cards or make_cards, run))
+
+
+def _main(argv, ask, say, read, acquire, cards_maker, run):
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--link", help="the episode's Bandcamp playlist")
     parser.add_argument("--folder", help="the folder to make in the workspace (default: year_Month from the playlist title)")
     parser.add_argument("--no-acquire", action="store_true", help="don't run Acquire for missing tracks")
+    parser.add_argument("--no-cards", action="store_true", help="don't write the show cards")
     args = parser.parse_args(argv)
     reels.setup_logging(config.BUILD_SHOW_LOG_FILE)
 
@@ -367,9 +377,17 @@ def _main(argv, ask, say, read, acquire, run):
     if template is None:
         log.info("No %s in the workspace, so the project has no FX yet.", config.BUILD_TEMPLATE.name)
     artists = len(artist_tracks(matches))
+    cards = "skipped"
+    if not args.no_cards:
+        say("Writing the show cards (Claude Code)...")
+        try:
+            cards = cards_maker(work, title, wanted).name
+        except Exception as e:     # the tracks and project are made; cards can be written again
+            log.error("The show cards failed: %s: %s", type(e).__name__, e)
+            cards = "failed"
     log.info("\nDone: %d track(s) by %d artist(s) in %s", len(files), artists, work)
     log.info("Open %s in Reaper.", project.name)
-    run.add(work.name, runlog.OK, f"{len(files)} track(s), {artists} artist track(s)")
+    run.add(work.name, runlog.OK, f"{len(files)} track(s), {artists} artist track(s), cards: {cards}")
     run.summary = f"{work.name}: {len(files)} track(s)"
     return 0
 
