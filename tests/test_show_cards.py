@@ -68,6 +68,7 @@ def test_make_writes_the_file(tmp_path):
     wanted = [PlaylistTrack(1, "Coffin", "Song", "", "https://c/track/1", "")]
     path = show_cards.make(tmp_path, "MFYN - December 2026", wanted, today=TODAY,
                            read_pages=lambda w: {}, catalog=catalog, writer=writer)
+    assert path.name == f"{tmp_path.name}_show_cards.md"
     assert path.read_text(encoding="utf-8") == "# Show cards\n"
     assert seen["artists"][0]["upcoming_events"][0]["venue"] == "Rotown"
 

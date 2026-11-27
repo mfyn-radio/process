@@ -49,7 +49,7 @@ FOLDER = "2026_December"
 
 
 def fake_cards(work):
-    path = work / "show_cards.md"
+    path = work / f"{work.name}_show_cards.md"
     path.write_text("# Show cards\n", encoding="utf-8")
     return path
 
@@ -226,7 +226,7 @@ def test_writes_the_cards_and_survives_their_failure(setup):
     lib, work = setup
     full_library(lib)
     assert run() == 0
-    assert (work / FOLDER / "show_cards.md").is_file()
+    assert (work / FOLDER / f"{FOLDER}_show_cards.md").is_file()
 
     def broken(work, title, wanted):
         raise RuntimeError("no Claude")

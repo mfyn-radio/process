@@ -22,7 +22,7 @@ It asks for whatever isn't given, then:
    placed one after the other in playlist order. If MFYN_Template.rpp is in
    the workspace, the project starts from it: its master FX and its Voice over
    and Music bed tracks (with their FX) are kept; any other tracks are dropped;
-5. writes the show cards there (show_cards.md): a spoken intro per artist
+5. writes the show cards there (<folder>_show_cards.md): a spoken intro per artist
    and an events card, by Claude Code from verified facts (intake.show_cards).
 
 A folder that already has Tracks or a Reaper project is never touched (an

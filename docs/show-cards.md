@@ -7,7 +7,7 @@ not read: a few natural sentences per artist, never a fact sheet.
 | | |
 |---|---|
 | **Input** | The episode's Bandcamp playlist (e.g. `https://bandcamp.com/music_for_your_neighbors/playlist/mfyn-december-2026`), the artists' Bandcamp pages, the MFYN Catalog (Airtable: Artists, Events) |
-| **Output** | `show_cards.md` in the episode folder (`MFYN_Workspace\2026_December\show_cards.md`), which Bryant edits before the show |
+| **Output** | `<folder>_show_cards.md` in the episode folder (`MFYN_Workspace\2026_December\2026_December_show_cards.md`), which Bryant edits before the show |
 | **Done by** | [Build Show](02-create-show.md#build-show), as its last step (`intake.show_cards`). Claude Code on the PC (`claude -p`, on MFYN's Claude subscription) writes the cards from facts the code gathers. Asking Claude in the project still works too (the `mfyn-show-cards` skill, as a Claude Doc) |
 | **When** | When Build Show runs, once the playlist is final |
 | **Log** | Build Show's log. If the cards fail, the tracks and project are still made; the run says so |
@@ -19,7 +19,7 @@ not read: a few natural sentences per artist, never a fact sheet.
    Artists and Events (events from the show's month, or today if later, to six weeks after).
 2. It hands those facts, as JSON, to Claude Code with the card rules below
    and no tools, so the cards can't add facts from anywhere else.
-3. The reply is saved as `show_cards.md`. Run Build Show with `--no-cards` to
+3. The reply is saved as `<folder>_show_cards.md`. Run Build Show with `--no-cards` to
    skip it.
 
 ## What a card holds
