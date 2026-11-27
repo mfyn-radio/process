@@ -54,43 +54,52 @@ MFYN_Show_Archive\
 ## Build Show
 
 `intake.build_show` (issue #40, with #16). Double-click **MFYN – Build Show**
-on the desktop (`scripts\build_show.cmd`). It asks for:
+(`scripts\build_show.cmd`). It asks for:
 
 - the episode's **Bandcamp playlist link**, like
   `https://bandcamp.com/music_for_your_neighbors/playlist/mfyn-december-2026`;
-- the **air date**, as day_month_year (`3_12_2026`);
-- the **episode name**.
+- the **air date**, as day_month_year (`3_12_2026`).
 
 Then it:
 
 1. reads the playlist in Chrome (Bandcamp blocks plain scripts), in its order;
 2. finds each track in `MFYN_Library` by artist and title, ignoring case,
-   accents and punctuation (the album breaks a tie). **If any track isn't in
-   the library, it stops, lists them and copies nothing**: buy them, let
-   Acquire add them, and run it again;
-3. copies the tracks, tags and all, into a working folder on the desktop,
-   named like the archive: `Desktop\3_12_2026- Episode Name\Tracks\01 - Artist - Title.flac`;
-4. writes a Reaper project there, `20261203_Episode Name.rpp`, with a
-   **Voice over** track, a **Music bed** track, and one track per artist
-   (named after the artist) holding their songs, placed back to back in
-   playlist order. The file paths are relative, so the folder still opens
-   in Reaper after it moves.
+   accents and punctuation (the album breaks a tie);
+3. if any are missing, runs [Acquire](01-acquire.md), which downloads new
+   Bandcamp purchases as FLAC albums into the library, and looks again.
+   **If some are still missing, it stops, lists them and copies nothing**:
+   they haven't been bought yet. Buy them and run it again;
+4. **copies** (never moves) the tracks, tags and all, from the library on
+   Drive to the episode's folder on the PC:
+   `C:\Users\admin\OneDrive\Desktop\MFYN_Workspace\2026_12_03\Tracks\01 - Artist - Title.flac`;
+5. writes a Reaper project there, `20261203_MFYN.rpp`, with a **Voice over**
+   track, a **Music bed** track, and one track per artist (named after the
+   artist) holding their songs, placed back to back in playlist order. The
+   file paths are relative, so the folder still opens in Reaper after it
+   moves.
 
-It never overwrites a working folder: if one with that name is on the
-desktop, it stops. When the show is done, move the folder into
-`MFYN_Show_Archive` yourself, as step 3 above. The YouTube playlist skips the
-Voice over and Music bed tracks when it reads the running order.
+**The template.** If `MFYN_Workspace\MFYN_Template.rpp` exists, each project
+starts from it: its settings, master FX chain and its **Voice over** and
+**Music bed** tracks with their FX are kept; any other tracks in it are left
+out. To make it: in Reaper, set up the master FX and those two tracks (named
+exactly so), then **File → Save project as…** `MFYN_Template.rpp` in
+`MFYN_Workspace`. Without it the project has no FX.
+
+It never overwrites an episode folder: if `2026_12_03` is already in the
+workspace, it stops. The YouTube playlist skips the Voice over and Music bed
+tracks when it reads the running order.
 
 | | |
 |---|---|
-| **Input** | A Bandcamp playlist link, the air date, the episode name; albums in `MFYN_Library` |
-| **Output** | `D_M_YYYY- Episode Name` on the desktop (OneDrive's Desktop on the MFYN PC; `MFYN_WORK_DIR` overrides it), with `Tracks\` and the `.rpp` |
-| **Log** | `%APPDATA%\mfyn-intake\build_show.log`, and a row in the MFYN Run Log |
+| **Input** | A Bandcamp playlist link and the air date; albums in `MFYN_Library` (and new purchases, through Acquire) |
+| **Output** | `MFYN_Workspace\YYYY_MM_DD\` with `Tracks\` and the `.rpp` (`MFYN_WORK_DIR` overrides the workspace) |
+| **Log** | `%APPDATA%\mfyn-intake\build_show.log` (Acquire's run goes to its own log), and a row in the MFYN Run Log |
 
 From Command Prompt, in the repo folder:
 
 ```
-python -m intake.build_show --link URL --date 3_12_2026 --name "Episode Name"
+python -m intake.build_show --link URL --date 3_12_2026
+python -m intake.build_show --no-acquire ...   # don't download missing tracks
 ```
 
 To set up the shortcut (one time): right-click `scripts\build_show.cmd`,

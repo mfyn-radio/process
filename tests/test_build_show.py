@@ -18,11 +18,12 @@ BLOB = {"appData": {"title": "MFYN - December 2026", "tracklist": {"tracks": [
 
 @pytest.fixture
 def setup(tmp_path, monkeypatch):
-    lib, work = tmp_path / "MFYN_Library", tmp_path / "Desktop"
+    lib, work = tmp_path / "MFYN_Library", tmp_path / "MFYN_Workspace"
     lib.mkdir()
     work.mkdir()
     monkeypatch.setattr(config, "LIBRARY_DIR", lib)
     monkeypatch.setattr(config, "WORK_DIR", work)
+    monkeypatch.setattr(config, "BUILD_TEMPLATE", work / "MFYN_Template.rpp")
     monkeypatch.setattr(config, "APP_DIR", tmp_path / "app")
     monkeypatch.setattr(config, "BUILD_SHOW_LOG_FILE", tmp_path / "app" / "build_show.log")
     runs, last = MemoryTable(runlog.RUNS, ("Time", "Automation", "About")), MemoryTable(runlog.LAST_RUN, "Automation")
@@ -44,9 +45,10 @@ def full_library(lib):
     add(lib, "LOTION - Xmas", "L.O.T.I.O.N. Multinational Corporation", "(It's Our) Last Xmas feat. Lulu", "Xmas")
 
 
-def run(argv=("--link", "https://bandcamp.com/x/playlist/y", "--date", "3_12_2026", "--name", "Fav Purchased 2026")):
+def run(argv=("--link", "https://bandcamp.com/x/playlist/y", "--date", "3_12_2026"), get=None):
     return build_show.main(list(argv), ask=lambda q: pytest.fail(f"asked {q}"), say=lambda *a: None,
-                           read=lambda url: build_show.parse_playlist(json.dumps(BLOB)))
+                           read=lambda url: build_show.parse_playlist(json.dumps(BLOB)),
+                           get=get or (lambda: pytest.fail("ran Acquire")))
 
 
 def test_parse_playlist():
@@ -87,7 +89,7 @@ def test_builds_the_working_folder_and_project(setup):
     lib, work = setup
     full_library(lib)
     assert run() == 0
-    folder = work / "3_12_2026- Fav Purchased 2026"
+    folder = work / "2026_12_03"
     assert [p.name for p in sorted((folder / "Tracks").iterdir())] == [
         "01 - Crowd Of Chairs - Amends.flac",
         "02 - My Wife's An Angel - Not Me.flac",
@@ -95,7 +97,7 @@ def test_builds_the_working_folder_and_project(setup):
         "04 - My Wife's An Angel - Lil' Bug.flac",
         "05 - L.O.T.I.O.N. Multinational Corporation - (It's Our) Last Xmas Feat. Lulu.flac",
     ]
-    project = folder / "20261203_Fav Purchased 2026.rpp"
+    project = folder / "20261203_MFYN.rpp"
     text = project.read_text(encoding="utf-8")
     names = [line.strip()[5:] for line in text.splitlines() if line.strip().startswith("NAME") and "<" not in line]
     tracks = [n for n in names if not n.strip("\"'`")[:2].isdigit()]
@@ -104,7 +106,7 @@ def test_builds_the_working_folder_and_project(setup):
     assert "FILE \"Tracks\\01 - Crowd Of Chairs - Amends.flac\"" in text
 
     # The project reads back as the playlist's running order (the YouTube playlist uses this).
-    ep = episode.parse(folder)
+    ep = episode.Episode(folder, datetime.date(2026, 12, 3), "")
     order = reaper.running_order(ep, project)
     assert [(p.artist, p.title) for p in order] == [
         ("Crowd Of Chairs", "Amends"), ("My Wife's An Angel", "Not Me"), ("DAUFØDT", "Glitter"),
@@ -114,26 +116,74 @@ def test_builds_the_working_folder_and_project(setup):
 def test_missing_tracks_stop_before_copying(setup):
     lib, work = setup
     add(lib, "Crowd Of Chairs - Breather", "Crowd Of Chairs", "Amends", "Breather")
-    assert run() == 1
+    acquired = []
+    assert run(get=lambda: acquired.append(1)) == 1
+    assert acquired == [1]
     assert list(work.iterdir()) == []
+
+
+def test_acquire_fills_the_gaps(setup):
+    lib, work = setup
+    add(lib, "Crowd Of Chairs - Breather", "Crowd Of Chairs", "Amends", "Breather")
+    assert run(get=lambda: full_library(lib)) == 0
+    assert len(list((work / "2026_12_03" / "Tracks").iterdir())) == 5
+    # Copied, not moved: the library keeps its files.
+    assert (lib / "Crowd Of Chairs - Breather" / "Crowd Of Chairs - Breather - 01 Amends.flac").is_file()
+
+
+TEMPLATE = """<REAPER_PROJECT 0.1 "7.0/x64" 1700000000
+  RIPPLE 0
+  <MASTERFXLIST
+    <VST "VST: ReaLimit" reaLimit.dll 0 ""
+      ZmFrZQ==
+    >
+  >
+  <TRACK {AAA}
+    NAME "Voice over"
+    <FXCHAIN
+      <VST "VST: ReaComp" reacomp.dll 0 ""
+        ZmFrZQ==
+      >
+    >
+  >
+  <TRACK {BBB}
+    NAME "Old artist"
+  >
+>
+"""
+
+
+def test_starts_from_the_template(setup):
+    lib, work = setup
+    full_library(lib)
+    (work / "MFYN_Template.rpp").write_text(TEMPLATE, encoding="utf-8")
+    assert run() == 0
+    text = (work / "2026_12_03" / "20261203_MFYN.rpp").read_text(encoding="utf-8")
+    assert text.startswith('<REAPER_PROJECT 0.1 "7.0/x64"')
+    assert "ReaLimit" in text and "ReaComp" in text and "Old artist" not in text
+    assert text.count("<TRACK") == 2 + 4          # Voice over (from the template), Music bed, 4 artists
+    assert text.index("Voice over") < text.index("Music bed") < text.index("Crowd Of Chairs")
+    assert text.rstrip().endswith(">")
+    ep = episode.Episode(work / "2026_12_03", datetime.date(2026, 12, 3), "")
+    assert len(reaper.running_order(ep, work / "2026_12_03" / "20261203_MFYN.rpp")) == 5
 
 
 def test_never_overwrites_a_working_folder(setup):
     lib, work = setup
     full_library(lib)
-    (work / "3_12_2026- Fav Purchased 2026").mkdir()
+    (work / "2026_12_03").mkdir()
     assert run() == 1
-    assert list((work / "3_12_2026- Fav Purchased 2026").iterdir()) == []
+    assert list((work / "2026_12_03").iterdir()) == []
 
 
 def test_asks_for_what_is_missing(setup):
     lib, work = setup
     full_library(lib)
-    answers = iter(["not a link", "https://bandcamp.com/x/playlist/y", "3 dec", "3-12-2026", "Fav"])
+    answers = iter(["not a link", "https://bandcamp.com/x/playlist/y", "3 dec", "3-12-2026"])
     code = build_show.main([], ask=lambda q: next(answers), say=lambda *a: None,
                            read=lambda url: build_show.parse_playlist(BLOB))
     assert code == 0
-    assert (work / "3_12_2026- Fav" / "20261203_Fav.rpp").is_file()
+    assert (work / "2026_12_03" / "20261203_MFYN.rpp").is_file()
 
 
 def test_parse_date():

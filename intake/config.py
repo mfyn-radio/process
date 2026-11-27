@@ -110,12 +110,12 @@ EVENTS_MODEL = os.environ.get("MFYN_CLAUDE_MODEL", "")
 # from its Reaper project; this Reaper track is the host's voice and is skipped.
 REAPER_VOICE_TRACK = "voice"
 
-# Build Show (intake.build_show): the working folder goes on the desktop (OneDrive's
-# Desktop on the MFYN PC), and the Reaper project gets these two tracks before the
-# artists'. The YouTube playlist skips both when it reads the running order.
-_HOME = Path.home()
-WORK_DIR = Path(os.environ.get("MFYN_WORK_DIR", "") or (
-    _HOME / "OneDrive" / "Desktop" if (_HOME / "OneDrive" / "Desktop").is_dir() else _HOME / "Desktop"))
+# Build Show (intake.build_show): each episode gets a folder named YYYY_MM_DD in
+# the workspace, and its Reaper project starts from MFYN_Template.rpp there, if
+# present. The project gets these two tracks before the artists'; the YouTube
+# playlist skips both when it reads the running order.
+WORK_DIR = Path(os.environ.get("MFYN_WORK_DIR", r"C:\Users\admin\OneDrive\Desktop\MFYN_Workspace"))
+BUILD_TEMPLATE = WORK_DIR / "MFYN_Template.rpp"
 BUILD_VOICE_TRACK = "Voice over"
 BUILD_BED_TRACK = "Music bed"
 # Search results per YouTube search (each search costs 100 of the 10,000 daily quota units).

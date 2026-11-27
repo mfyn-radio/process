@@ -3,22 +3,24 @@
 Double-click scripts\\build_show.cmd (or its desktop shortcut), or run:
 
     python -m intake.build_show
-    python -m intake.build_show --link URL --date 3_12_2026 --name "Episode Name"
+    python -m intake.build_show --link URL --date 3_12_2026
 
 It asks for whatever isn't given, then:
 
 1. reads the playlist on Bandcamp (in Chrome, as Acquire does), in its order;
 2. finds every track in MFYN_Library by artist and title (album to break ties).
-   If any track isn't there, it stops and lists them, and copies nothing:
-   MFYN only plays music it owns;
-3. copies the tracks, tags and all, into a working folder on the desktop named
-   like the archive ("3_12_2026- Episode Name"), in Tracks\\, numbered in
-   playlist order;
-4. writes a Reaper project there (20261203_Episode Name.rpp) with a Voice over
-   track, a Music bed track and one track per artist holding that artist's
-   songs, placed one after the other in playlist order.
+   If any are missing, it runs Acquire, which downloads new purchases as FLAC
+   into the library, and looks again. If some are still missing (not bought
+   yet), it stops, lists them and copies nothing: MFYN only plays music it owns;
+3. copies the tracks, tags and all, into the episode's folder in the workspace
+   (MFYN_Workspace\\2026_12_03\\Tracks), numbered in playlist order;
+4. writes a Reaper project there (20261203_MFYN.rpp) with a Voice over track,
+   a Music bed track and one track per artist holding that artist's songs,
+   placed one after the other in playlist order. If MFYN_Template.rpp is in
+   the workspace, the project starts from it: its master FX and its Voice over
+   and Music bed tracks (with their FX) are kept; any other tracks are dropped.
 
-An existing working folder is never overwritten. See docs/02-create-show.md.
+An existing episode folder is never overwritten. See docs/02-create-show.md.
 """
 import argparse
 import datetime
@@ -156,8 +158,8 @@ def parse_date(text):
         return None
 
 
-def folder_name(air_date, name):
-    return f"{air_date.day}_{air_date.month}_{air_date.year}- {library.clean(name)}".rstrip("- ")
+def folder_name(air_date):
+    return f"{air_date:%Y_%m_%d}"
 
 
 def file_name(m):
@@ -193,17 +195,53 @@ def artist_tracks(matches):
     return list(groups.values())
 
 
-def project_text(matches, files):
+def top_level(text):
+    """A template project split into its top-level chunks: (header, tracks, rest),
+    where header is the opening <REAPER_PROJECT line, tracks are the <TRACK
+    blocks (as lists of lines) and rest is every other line inside the project
+    (settings, <MASTERFXLIST, ...), the closing ">" left out."""
+    lines = text.splitlines()
+    header, tracks, rest, depth, current = lines[0], [], [], 0, None
+    for line in lines[1:]:
+        stripped = line.strip()
+        opens, closes = stripped.startswith("<"), stripped == ">"
+        if depth == 0 and closes:
+            break                       # the project's own closing ">"
+        if depth == 0 and opens and stripped[1:].split()[0:1] == ["TRACK"]:
+            current = []
+            tracks.append(current)
+        (current if current is not None else rest).append(line)
+        depth += 1 if opens else -1 if closes else 0
+        if depth == 0:
+            current = None
+    return header, tracks, rest
+
+
+def track_name(block):
+    for line in block[1:]:
+        if line.strip().startswith("NAME "):
+            from .reaper import value
+            return value(line.strip()[5:])
+    return ""
+
+
+def project_text(matches, files, template=None):
     """The .rpp: Voice over and Music bed tracks first, then a track per artist
     with their songs placed back to back in playlist order. Files are relative
-    to the project, so the folder can move (e.g. into MFYN_Show_Archive)."""
+    to the project, so the folder can move (e.g. into MFYN_Show_Archive).
+    A template's settings, master FX and Voice over and Music bed tracks are kept."""
     position, placed = 0.0, {}
     for m, f in zip(matches, files):
         placed[id(m)] = (position, f)
         position += m.length
-    lines = ['<REAPER_PROJECT 0.1 "7.0" 0', "  SAMPLERATE 44100 0 0"]
+    if template:
+        header, kept, rest = top_level(template)
+        kept = {track_name(t).casefold(): t for t in kept}
+        lines = [header] + rest
+    else:
+        kept, lines = {}, ['<REAPER_PROJECT 0.1 "7.0" 0', "  SAMPLERATE 44100 0 0"]
     for name in (config.BUILD_VOICE_TRACK, config.BUILD_BED_TRACK):
-        lines += ["  <TRACK", f"    NAME {quote(name)}", "  >"]
+        lines += kept.get(name.casefold()) or ["  <TRACK", f"    NAME {quote(name)}", "  >"]
     for artist, songs in artist_tracks(matches):
         lines += ["  <TRACK", f"    NAME {quote(artist)}"]
         for m in songs:
@@ -225,6 +263,32 @@ def project_text(matches, files):
 
 # --- the run ---------------------------------------------------------------
 
+def describe(w):
+    return f"{w.number:02d} {w.artist} - {w.title}" + (f" ({w.album})" if w.album else "")
+
+
+def acquire():
+    """One Acquire run (new purchases into the library), with its own log file.
+    Our log handlers are set aside meanwhile, so nothing prints twice."""
+    from . import acquire as acquire_step
+
+    root = logging.getLogger()
+    ours = list(root.handlers)
+    for h in ours:
+        root.removeHandler(h)
+    try:
+        return acquire_step.main([])
+    except SystemExit as e:           # e.g. the Google sign-in needs redoing
+        log.error("Acquire stopped: %s", e.code)
+        return 1
+    finally:
+        for h in list(root.handlers):
+            root.removeHandler(h)
+            h.close()
+        for h in ours:
+            root.addHandler(h)
+
+
 def ask_until(ask, question, check):
     while True:
         answer = check(ask(question).strip())
@@ -232,15 +296,15 @@ def ask_until(ask, question, check):
             return answer
 
 
-def main(argv=None, ask=input, say=print, read=read_playlist):
-    return runlog.track("Build Show", lambda run: _main(argv, ask, say, read, run))
+def main(argv=None, ask=input, say=print, read=read_playlist, get=None):
+    return runlog.track("Build Show", lambda run: _main(argv, ask, say, read, get or acquire, run))
 
 
-def _main(argv, ask, say, read, run):
+def _main(argv, ask, say, read, acquire, run):
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--link", help="the episode's Bandcamp playlist")
     parser.add_argument("--date", help="the air date, day_month_year (3_12_2026)")
-    parser.add_argument("--name", help="the episode name")
+    parser.add_argument("--no-acquire", action="store_true", help="don't run Acquire for missing tracks")
     args = parser.parse_args(argv)
     reels.setup_logging(config.BUILD_SHOW_LOG_FILE)
 
@@ -250,12 +314,11 @@ def _main(argv, ask, say, read, run):
     if air_date is None:
         air_date = ask_until(ask, "Air date (day_month_year, e.g. 3_12_2026): ",
                              lambda a: parse_date(a) or say("  Write it as day_month_year, e.g. 3_12_2026."))
-    name = (args.name or ask("Episode name: ")).strip()
 
     if not config.LIBRARY_DIR.is_dir():
         log.error("Library %s not found. Is Google Drive for desktop running?", config.LIBRARY_DIR)
         return 1
-    work = config.WORK_DIR / folder_name(air_date, name)
+    work = config.WORK_DIR / folder_name(air_date)
     if work.exists():
         log.error("%s already exists. Rename or move it, then run this again.", work)
         return 1
@@ -267,17 +330,29 @@ def _main(argv, ask, say, read, run):
         return 1
     say(f"{title}: {len(wanted)} track(s). Looking for them in MFYN_Library...")
     matches, missing = match(wanted, library_tracks(config.LIBRARY_DIR))
+    if missing and not args.no_acquire:
+        say(f"{len(missing)} track(s) aren't in MFYN_Library yet:")
+        for w in missing:
+            say(f"  {describe(w)}")
+        say("Running Acquire to download new purchases...")
+        acquire()
+        matches, missing = match(wanted, library_tracks(config.LIBRARY_DIR))
     if missing:
         log.error("These %d track(s) aren't in MFYN_Library, so nothing was copied:", len(missing))
         for w in missing:
-            log.error("  %02d %s - %s%s", w.number, w.artist, w.title, f" ({w.album})" if w.album else "")
-        log.error("Buy or add them (Acquire puts purchases in the library), then run this again.")
+            log.error("  %s", describe(w))
+        log.error("Buy them on Bandcamp, then run this again: it downloads them. (Bought before %s? "
+                  "Run python -m intake.acquire --backlog once.)", f"{config.START_DATE:%d %b %Y}")
         run.summary = f"{len(missing)} of {len(wanted)} track(s) not in the library"
         return 1
 
     files = copy_tracks(matches, work / "Tracks")
-    project = work / f"{air_date:%Y%m%d}_{library.clean(name) or 'MFYN'}.rpp"
-    project.write_text(project_text(matches, files), encoding="utf-8")
+    project = work / f"{air_date:%Y%m%d}_MFYN.rpp"
+    template = config.BUILD_TEMPLATE.read_text(encoding="utf-8", errors="replace") \
+        if config.BUILD_TEMPLATE.is_file() else None
+    project.write_text(project_text(matches, files, template), encoding="utf-8")
+    if template is None:
+        log.info("No %s in the workspace, so the project has no FX yet.", config.BUILD_TEMPLATE.name)
     artists = len(artist_tracks(matches))
     log.info("\nDone: %d track(s) by %d artist(s) in %s", len(files), artists, work)
     log.info("Open %s in Reaper.", project.name)
