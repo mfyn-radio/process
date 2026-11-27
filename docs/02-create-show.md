@@ -54,11 +54,8 @@ MFYN_Show_Archive\
 ## Build Show
 
 `intake.build_show` (issue #40, with #16). Double-click **MFYN – Build Show**
-(`scripts\build_show.cmd`). It asks for:
-
-- the episode's **Bandcamp playlist link**, like
-  `https://bandcamp.com/music_for_your_neighbors/playlist/mfyn-december-2026`;
-- the **air date**, as day_month_year (`3_12_2026`).
+(`scripts\build_show.cmd`). It asks for the episode's **Bandcamp playlist
+link**, like `https://bandcamp.com/music_for_your_neighbors/playlist/mfyn-december-2026`.
 
 Then it:
 
@@ -69,10 +66,13 @@ Then it:
    Bandcamp purchases as FLAC albums into the library, and looks again.
    **If some are still missing, it stops, lists them and copies nothing**:
    they haven't been bought yet. Buy them and run it again;
-4. **copies** (never moves) the tracks, tags and all, from the library on
-   Drive to the episode's folder on the PC:
-   `C:\Users\admin\OneDrive\Desktop\MFYN_Workspace\2026_12_03\Tracks\01 - Artist - Title.flac`;
-5. writes a Reaper project there, `20261203_MFYN.rpp`, with a **Voice over**
+4. makes the episode's folder in the workspace, named year_Month from the
+   playlist's title ("MFYN - December 2026" gives `2026_December`; if the
+   title has no month it asks), and **copies** (never moves) the tracks, tags
+   and all, from the library on Drive into it:
+   `C:\Users\admin\OneDrive\Desktop\MFYN_Workspace\2026_December\Tracks\01 - Artist - Title.flac`.
+   Add the day to the folder name yourself afterwards (`2026_December_3`);
+5. writes a Reaper project there, `2026_December.rpp`, with a **Voice over**
    track, a **Music bed** track, and one track per artist (named after the
    artist) holding their songs, placed back to back in playlist order. The
    file paths are relative, so the folder still opens in Reaper after it
@@ -85,20 +85,22 @@ out. To make it: in Reaper, set up the master FX and those two tracks (named
 exactly so), then **File → Save project as…** `MFYN_Template.rpp` in
 `MFYN_Workspace`. Without it the project has no FX.
 
-It never overwrites an episode folder: if `2026_12_03` is already in the
-workspace, it stops. The YouTube playlist skips the Voice over and Music bed
+It never touches a folder that already has tracks or a Reaper project: if
+`2026_December` is in the workspace and in use, it stops (an empty one is
+filled). The YouTube playlist skips the Voice over and Music bed
 tracks when it reads the running order.
 
 | | |
 |---|---|
-| **Input** | A Bandcamp playlist link and the air date; albums in `MFYN_Library` (and new purchases, through Acquire) |
-| **Output** | `MFYN_Workspace\YYYY_MM_DD\` with `Tracks\` and the `.rpp` (`MFYN_WORK_DIR` overrides the workspace) |
+| **Input** | A Bandcamp playlist link; albums in `MFYN_Library` (and new purchases, through Acquire) |
+| **Output** | `MFYN_Workspace\YYYY_Month\` with `Tracks\` and the `.rpp` (`MFYN_WORK_DIR` overrides the workspace) |
 | **Log** | `%APPDATA%\mfyn-intake\build_show.log` (Acquire's run goes to its own log), and a row in the MFYN Run Log |
 
 From Command Prompt, in the repo folder:
 
 ```
-python -m intake.build_show --link URL --date 3_12_2026
+python -m intake.build_show --link URL
+python -m intake.build_show --link URL --folder 2026_December   # choose the folder name
 python -m intake.build_show --no-acquire ...   # don't download missing tracks
 ```
 

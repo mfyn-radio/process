@@ -45,7 +45,10 @@ def full_library(lib):
     add(lib, "LOTION - Xmas", "L.O.T.I.O.N. Multinational Corporation", "(It's Our) Last Xmas feat. Lulu", "Xmas")
 
 
-def run(argv=("--link", "https://bandcamp.com/x/playlist/y", "--date", "3_12_2026"), get=None):
+FOLDER = "2026_December"
+
+
+def run(argv=("--link", "https://bandcamp.com/x/playlist/y"), get=None):
     return build_show.main(list(argv), ask=lambda q: pytest.fail(f"asked {q}"), say=lambda *a: None,
                            read=lambda url: build_show.parse_playlist(json.dumps(BLOB)),
                            get=get or (lambda: pytest.fail("ran Acquire")))
@@ -89,7 +92,7 @@ def test_builds_the_working_folder_and_project(setup):
     lib, work = setup
     full_library(lib)
     assert run() == 0
-    folder = work / "2026_12_03"
+    folder = work / FOLDER
     assert [p.name for p in sorted((folder / "Tracks").iterdir())] == [
         "01 - Crowd Of Chairs - Amends.flac",
         "02 - My Wife's An Angel - Not Me.flac",
@@ -97,7 +100,7 @@ def test_builds_the_working_folder_and_project(setup):
         "04 - My Wife's An Angel - Lil' Bug.flac",
         "05 - L.O.T.I.O.N. Multinational Corporation - (It's Our) Last Xmas Feat. Lulu.flac",
     ]
-    project = folder / "20261203_MFYN.rpp"
+    project = folder / f"{FOLDER}.rpp"
     text = project.read_text(encoding="utf-8")
     names = [line.strip()[5:] for line in text.splitlines() if line.strip().startswith("NAME") and "<" not in line]
     tracks = [n for n in names if not n.strip("\"'`")[:2].isdigit()]
@@ -126,7 +129,7 @@ def test_acquire_fills_the_gaps(setup):
     lib, work = setup
     add(lib, "Crowd Of Chairs - Breather", "Crowd Of Chairs", "Amends", "Breather")
     assert run(get=lambda: full_library(lib)) == 0
-    assert len(list((work / "2026_12_03" / "Tracks").iterdir())) == 5
+    assert len(list((work / FOLDER / "Tracks").iterdir())) == 5
     # Copied, not moved: the library keeps its files.
     assert (lib / "Crowd Of Chairs - Breather" / "Crowd Of Chairs - Breather - 01 Amends.flac").is_file()
 
@@ -158,35 +161,55 @@ def test_starts_from_the_template(setup):
     full_library(lib)
     (work / "MFYN_Template.rpp").write_text(TEMPLATE, encoding="utf-8")
     assert run() == 0
-    text = (work / "2026_12_03" / "20261203_MFYN.rpp").read_text(encoding="utf-8")
+    text = (work / FOLDER / f"{FOLDER}.rpp").read_text(encoding="utf-8")
     assert text.startswith('<REAPER_PROJECT 0.1 "7.0/x64"')
     assert "ReaLimit" in text and "ReaComp" in text and "Old artist" not in text
     assert text.count("<TRACK") == 2 + 4          # Voice over (from the template), Music bed, 4 artists
     assert text.index("Voice over") < text.index("Music bed") < text.index("Crowd Of Chairs")
     assert text.rstrip().endswith(">")
-    ep = episode.Episode(work / "2026_12_03", datetime.date(2026, 12, 3), "")
-    assert len(reaper.running_order(ep, work / "2026_12_03" / "20261203_MFYN.rpp")) == 5
+    ep = episode.Episode(work / FOLDER, datetime.date(2026, 12, 3), "")
+    assert len(reaper.running_order(ep, work / FOLDER / f"{FOLDER}.rpp")) == 5
 
 
-def test_never_overwrites_a_working_folder(setup):
+def test_leaves_a_used_folder_alone(setup):
     lib, work = setup
     full_library(lib)
-    (work / "2026_12_03").mkdir()
+    (work / FOLDER).mkdir()
+    (work / FOLDER / "old.rpp").write_text("x")
     assert run() == 1
-    assert list((work / "2026_12_03").iterdir()) == []
+    assert [p.name for p in (work / FOLDER).iterdir()] == ["old.rpp"]
 
 
-def test_asks_for_what_is_missing(setup):
+def test_fills_an_empty_folder_and_ignores_renamed_ones(setup):
     lib, work = setup
     full_library(lib)
-    answers = iter(["not a link", "https://bandcamp.com/x/playlist/y", "3 dec", "3-12-2026"])
+    (work / FOLDER).mkdir()
+    (work / "2026_November_5").mkdir()
+    (work / "2026_November_5" / "2026_November.rpp").write_text("done")
+    assert run() == 0
+    assert (work / FOLDER / f"{FOLDER}.rpp").is_file()
+
+
+def test_folder_from_the_command_line(setup):
+    lib, work = setup
+    full_library(lib)
+    assert run(("--link", "https://bandcamp.com/x/playlist/y", "--folder", "2027_January")) == 0
+    assert (work / "2027_January" / "2027_January.rpp").is_file()
+
+
+def test_asks_for_the_link_and_a_folder_when_the_title_has_no_month(setup):
+    lib, work = setup
+    full_library(lib)
+    blob = json.loads(json.dumps(BLOB))
+    blob["appData"]["title"] = "Fav purchases"
+    answers = iter(["not a link", "https://bandcamp.com/x/playlist/y", "soon", "december 2026"])
     code = build_show.main([], ask=lambda q: next(answers), say=lambda *a: None,
-                           read=lambda url: build_show.parse_playlist(BLOB))
+                           read=lambda url: build_show.parse_playlist(blob))
     assert code == 0
-    assert (work / "2026_12_03" / "20261203_MFYN.rpp").is_file()
+    assert (work / FOLDER / f"{FOLDER}.rpp").is_file()
 
 
-def test_parse_date():
-    assert build_show.parse_date("3_12_2026") == datetime.date(2026, 12, 3)
-    assert build_show.parse_date("03/12/2026") == datetime.date(2026, 12, 3)
-    assert build_show.parse_date("31_2_2026") is None
+def test_month_folder():
+    assert build_show.month_folder("MFYN - December 2026") == "2026_December"
+    assert build_show.month_folder("mfyn january, 2027") == "2027_January"
+    assert build_show.month_folder("Fav purchases") is None

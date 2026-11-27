@@ -3,7 +3,8 @@
 Double-click scripts\\build_show.cmd (or its desktop shortcut), or run:
 
     python -m intake.build_show
-    python -m intake.build_show --link URL --date 3_12_2026
+    python -m intake.build_show --link URL
+    python -m intake.build_show --link URL --folder 2026_December
 
 It asks for whatever isn't given, then:
 
@@ -12,18 +13,19 @@ It asks for whatever isn't given, then:
    If any are missing, it runs Acquire, which downloads new purchases as FLAC
    into the library, and looks again. If some are still missing (not bought
    yet), it stops, lists them and copies nothing: MFYN only plays music it owns;
-3. copies the tracks, tags and all, into the episode's folder in the workspace
-   (MFYN_Workspace\\2026_12_03\\Tracks), numbered in playlist order;
-4. writes a Reaper project there (20261203_MFYN.rpp) with a Voice over track,
+3. makes the episode's folder in the workspace, named year_Month from the
+   playlist's title ("MFYN - December 2026" -> MFYN_Workspace\\2026_December;
+   you add the day yourself), and copies the tracks, tags and all, into its
+   Tracks folder, numbered in playlist order;
+4. writes a Reaper project there (2026_December.rpp) with a Voice over track,
    a Music bed track and one track per artist holding that artist's songs,
    placed one after the other in playlist order. If MFYN_Template.rpp is in
    the workspace, the project starts from it: its master FX and its Voice over
    and Music bed tracks (with their FX) are kept; any other tracks are dropped.
 
-An existing episode folder is never overwritten. See docs/02-create-show.md.
+A folder that already has Tracks or a Reaper project is never touched. See docs/02-create-show.md.
 """
 import argparse
-import datetime
 import json
 import logging
 import re
@@ -40,7 +42,6 @@ from . import config, episode, library, reels, runlog
 log = logging.getLogger("build_show")
 
 PLAYLIST_URL = re.compile(r"^https://bandcamp\.com/[^/]+/playlist/[^/?#]+")
-DATE = re.compile(r"^\s*(\d{1,2})[_\-/. ](\d{1,2})[_\-/. ](\d{4})\s*$")
 # Reaper's source type for each audio file type.
 SOURCE_TYPES = {".flac": "FLAC", ".mp3": "MP3", ".wav": "WAVE", ".aiff": "WAVE", ".ogg": "VORBIS", ".m4a": "VIDEO"}
 
@@ -147,19 +148,30 @@ def length_of(path):
 
 # --- the working folder ----------------------------------------------------
 
-def parse_date(text):
-    m = DATE.match(text or "")
+def is_used(folder):
+    """A folder Build Show has already filled (or you've started working in)."""
+    tracks = folder / "Tracks"
+    return any(folder.glob("*.rpp")) or (tracks.is_dir() and any(tracks.iterdir()))
+
+
+MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August",
+          "September", "October", "November", "December"]
+MONTH_YEAR = re.compile(r"\b(" + "|".join(MONTHS) + r")\b\D{0,3}(\d{4})\b", re.IGNORECASE)
+
+
+def month_folder(title):
+    """The episode folder's name, year and month, from the playlist's title:
+    "MFYN - December 2026" -> "2026_December". None if the title has no month and year."""
+    m = MONTH_YEAR.search(title or "")
     if not m:
         return None
-    day, month, year = (int(g) for g in m.groups())
-    try:
-        return datetime.date(year, month, day)
-    except ValueError:
-        return None
+    return f"{m.group(2)}_{MONTHS[[x.casefold() for x in MONTHS].index(m.group(1).casefold())]}"
 
 
-def folder_name(air_date):
-    return f"{air_date:%Y_%m_%d}"
+def folder_answer(answer):
+    """A folder name typed in: "2026_December" or "december 2026"."""
+    answer = answer.strip()
+    return month_folder(answer) or (library.clean(answer) if re.fullmatch(r"\d{4}_\w+", answer) else None)
 
 
 def file_name(m):
@@ -168,7 +180,7 @@ def file_name(m):
 
 
 def copy_tracks(matches, tracks_dir):
-    tracks_dir.mkdir(parents=True)
+    tracks_dir.mkdir(parents=True, exist_ok=True)
     copied = []
     for m in matches:
         target = tracks_dir / file_name(m)
@@ -303,30 +315,30 @@ def main(argv=None, ask=input, say=print, read=read_playlist, get=None):
 def _main(argv, ask, say, read, acquire, run):
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--link", help="the episode's Bandcamp playlist")
-    parser.add_argument("--date", help="the air date, day_month_year (3_12_2026)")
+    parser.add_argument("--folder", help="the folder to make in the workspace (default: year_Month from the playlist title)")
     parser.add_argument("--no-acquire", action="store_true", help="don't run Acquire for missing tracks")
     args = parser.parse_args(argv)
     reels.setup_logging(config.BUILD_SHOW_LOG_FILE)
 
     link = args.link or ask_until(ask, "Bandcamp playlist link: ",
                                   lambda a: a if PLAYLIST_URL.match(a) else say("  That isn't a Bandcamp playlist link."))
-    air_date = parse_date(args.date) if args.date else None
-    if air_date is None:
-        air_date = ask_until(ask, "Air date (day_month_year, e.g. 3_12_2026): ",
-                             lambda a: parse_date(a) or say("  Write it as day_month_year, e.g. 3_12_2026."))
 
     if not config.LIBRARY_DIR.is_dir():
         log.error("Library %s not found. Is Google Drive for desktop running?", config.LIBRARY_DIR)
-        return 1
-    work = config.WORK_DIR / folder_name(air_date)
-    if work.exists():
-        log.error("%s already exists. Rename or move it, then run this again.", work)
         return 1
 
     say("\nReading the playlist...")
     title, wanted = read(link)
     if not wanted:
         log.error("No tracks found on %s", link)
+        return 1
+    name = args.folder or month_folder(title) or ask_until(
+        ask, f"The playlist title ({title!r}) has no month. Folder name (e.g. 2026_December): ",
+        lambda a: folder_answer(a) or say("  Write it as year_Month, e.g. 2026_December."))
+    work = config.WORK_DIR / name
+    if work.exists() and is_used(work):
+        log.error("%s already has tracks or a Reaper project, so it's left alone. "
+                  "Rename it (e.g. to %s_3), then run this again.", work, name)
         return 1
     say(f"{title}: {len(wanted)} track(s). Looking for them in MFYN_Library...")
     matches, missing = match(wanted, library_tracks(config.LIBRARY_DIR))
@@ -346,8 +358,9 @@ def _main(argv, ask, say, read, acquire, run):
         run.summary = f"{len(missing)} of {len(wanted)} track(s) not in the library"
         return 1
 
+    work.mkdir(parents=True, exist_ok=True)
     files = copy_tracks(matches, work / "Tracks")
-    project = work / f"{air_date:%Y%m%d}_MFYN.rpp"
+    project = work / f"{work.name}.rpp"
     template = config.BUILD_TEMPLATE.read_text(encoding="utf-8", errors="replace") \
         if config.BUILD_TEMPLATE.is_file() else None
     project.write_text(project_text(matches, files, template), encoding="utf-8")
