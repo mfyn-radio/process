@@ -6,7 +6,8 @@ the one run that makes the content by hand.
 
 | Sub-step | What it does | State |
 |---|---|---|
-| [Build Show](#build-show) | From the episode's Bandcamp playlist: the tracks copied from `MFYN_Library` into a desktop working folder, and a Reaper project with a track per artist, a Voice over track and a Music bed track | Built, not tried on the PC yet |
+| [Build Show](#build-show) | From the episode's Bandcamp playlist: the tracks copied from `MFYN_Library` into `MFYN_Workspace\YYYY_Month`, and a Reaper project (from `MFYN_Template.rpp`) with a track per artist, a Voice over track and a Music bed track | Built, tried on the PC 27 Nov 2026 |
+| [Show cards](show-cards.md) | Spoken intros for each artist on the playlist, checked against the event calendar, and an events card to close the show, as a Claude Doc | Done by Claude when asked |
 | [2a. Make Episode Content](02a-make-episode-content.md) | One run for the episode's baseline content: the pieces below | Built |
 | [Archive cover](archive-cover.md) | `MFYN_archive_NN.png` and the YouTube playlist image `MFYN_tracklist_NN.png` in the episode folder | Built, runs at the start of 2a |
 | Video posts | An ON AIR video post per track, in `MFYN_Posts` | Built, part of 2a |
@@ -84,6 +85,16 @@ starts from it: its settings, master FX chain and its **Voice over** and
 out. To make it: in Reaper, set up the master FX and those two tracks (named
 exactly so), then **File → Save project as…** `MFYN_Template.rpp` in
 `MFYN_Workspace`. Without it the project has no FX.
+
+The template made on 27 Nov 2026 (stock REAPER plugins) follows the RØDE
+podcast processing guide and AES TD1008 for internet radio (−16 LUFS
+integrated, −1.0 dBTP):
+
+| Track | FX, in order |
+|---|---|
+| Voice over | ReaEQ (high-pass 80 Hz, −3 dB at 300 Hz, +2 dB at 3.5 kHz, low-pass 16 kHz) → JS De-esser (6 kHz, −25 dB, 4:1) → ReaComp (4:1, −20 dB, 3 ms / 100 ms, soft knee, +3 dB out) |
+| Music bed | −12 dB; ReaEQ −3 dB at 2.5 kHz to make room for the voice |
+| Master | ReaXcomp (4 bands, 2:1 at −18 dB, no make-up) → ReaLimit (−1.0 dB ceiling, true peak on) → JS Loudness Meter (last; aim for −16 LUFS integrated by raising the limiter's input) |
 
 It never touches a folder that already has tracks or a Reaper project: if
 `2026_December` is in the workspace and in use, it stops (an empty one is
