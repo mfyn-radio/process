@@ -16,7 +16,7 @@ not read: a few natural sentences per artist, never a fact sheet.
 
 1. Build Show reads each release's Bandcamp page in Chrome (album, label,
    date, tags, credits, the artist's location and bio), and the MFYN Catalog's
-   Artists and Events (events from today to six weeks ahead).
+   Artists and Events (events from the show's month, or today if later, to six weeks after).
 2. It hands those facts, as JSON, to Claude Code with the card rules below
    and no tools, so the cards can't add facts from anywhere else.
 3. The reply is saved as `show_cards.md`. Run Build Show with `--no-cards` to
