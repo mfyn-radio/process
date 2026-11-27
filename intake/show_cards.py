@@ -156,9 +156,20 @@ def write_cards(data, model=None, run=subprocess.run, claude=None):
     return text.strip() + "\n"
 
 
+def first_day(title, today):
+    """When the events window starts: the playlist's month ("MFYN - December 2026"
+    airs in December), or today if that's later or the title has no month."""
+    from .build_show import month_folder, MONTHS
+    folder = month_folder(title)
+    if not folder:
+        return today
+    year, month = folder.split("_")
+    return max(today, datetime.date(int(year), MONTHS.index(month) + 1, 1))
+
+
 def make(work, title, wanted, today=None, read_pages=None, catalog=None, writer=write_cards):
     """Write show_cards.md in the episode folder. Returns its path."""
-    today = today or datetime.date.today()
+    today = first_day(title, today or datetime.date.today())
     if catalog is None:
         from .catalog import Catalog
         catalog = Catalog()

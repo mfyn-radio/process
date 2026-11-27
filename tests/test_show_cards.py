@@ -70,3 +70,19 @@ def test_make_writes_the_file(tmp_path):
                            read_pages=lambda w: {}, catalog=catalog, writer=writer)
     assert path.read_text(encoding="utf-8") == "# Show cards\n"
     assert seen["artists"][0]["upcoming_events"][0]["venue"] == "Rotown"
+
+
+def test_events_start_in_the_shows_month(tmp_path):
+    assert show_cards.first_day("MFYN - December 2026", TODAY) == datetime.date(2026, 12, 1)
+    assert show_cards.first_day("MFYN - November 2026", TODAY) == TODAY
+    assert show_cards.first_day("Fav purchases", TODAY) == TODAY
+    catalog = types.SimpleNamespace(artists=types.SimpleNamespace(rows=[]), events=types.SimpleNamespace(
+        rows=EVENTS + [{"Date": "2026-11-28", "Title": "Past by airtime", "City": "Amsterdam"}]))
+    seen = {}
+
+    def writer(data, model=None):
+        seen.update(data)
+        return "x"
+    show_cards.make(tmp_path, "MFYN - December 2026", [], today=TODAY,
+                    read_pages=lambda w: {}, catalog=catalog, writer=writer)
+    assert "Past by airtime" not in [e["title"] for e in seen["events"]]
