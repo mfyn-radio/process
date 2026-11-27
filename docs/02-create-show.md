@@ -77,7 +77,9 @@ Then it:
    track, a **Music bed** track, and one track per artist (named after the
    artist) holding their songs, placed back to back in playlist order. The
    file paths are relative, so the folder still opens in Reaper after it
-   moves.
+   moves;
+6. writes the [show cards](show-cards.md), `show_cards.md`: a spoken intro
+   per artist and an events card to close the show (`--no-cards` skips it).
 
 **The template.** If `MFYN_Workspace\MFYN_Template.rpp` exists, each project
 starts from it: its settings, master FX chain and its **Voice over** and

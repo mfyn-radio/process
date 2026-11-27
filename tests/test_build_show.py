@@ -48,10 +48,17 @@ def full_library(lib):
 FOLDER = "2026_December"
 
 
+def fake_cards(work):
+    path = work / "show_cards.md"
+    path.write_text("# Show cards\n", encoding="utf-8")
+    return path
+
+
 def run(argv=("--link", "https://bandcamp.com/x/playlist/y"), get=None):
     return build_show.main(list(argv), ask=lambda q: pytest.fail(f"asked {q}"), say=lambda *a: None,
                            read=lambda url: build_show.parse_playlist(json.dumps(BLOB)),
-                           get=get or (lambda: pytest.fail("ran Acquire")))
+                           get=get or (lambda: pytest.fail("ran Acquire")),
+                           cards=lambda work, title, wanted: fake_cards(work))
 
 
 def test_parse_playlist():
@@ -203,7 +210,7 @@ def test_asks_for_the_link_and_a_folder_when_the_title_has_no_month(setup):
     blob = json.loads(json.dumps(BLOB))
     blob["appData"]["title"] = "Fav purchases"
     answers = iter(["not a link", "https://bandcamp.com/x/playlist/y", "soon", "december 2026"])
-    code = build_show.main([], ask=lambda q: next(answers), say=lambda *a: None,
+    code = build_show.main(["--no-cards"], ask=lambda q: next(answers), say=lambda *a: None,
                            read=lambda url: build_show.parse_playlist(blob))
     assert code == 0
     assert (work / FOLDER / f"{FOLDER}.rpp").is_file()
@@ -213,3 +220,18 @@ def test_month_folder():
     assert build_show.month_folder("MFYN - December 2026") == "2026_December"
     assert build_show.month_folder("mfyn january, 2027") == "2027_January"
     assert build_show.month_folder("Fav purchases") is None
+
+
+def test_writes_the_cards_and_survives_their_failure(setup):
+    lib, work = setup
+    full_library(lib)
+    assert run() == 0
+    assert (work / FOLDER / "show_cards.md").is_file()
+
+    def broken(work, title, wanted):
+        raise RuntimeError("no Claude")
+    (work / FOLDER).rename(work / "old")
+    code = build_show.main(["--link", "https://bandcamp.com/x/playlist/y"], ask=lambda q: "", say=lambda *a: None,
+                           read=lambda url: build_show.parse_playlist(BLOB), cards=broken)
+    assert code == 0
+    assert (work / FOLDER / f"{FOLDER}.rpp").is_file()

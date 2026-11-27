@@ -7,10 +7,20 @@ not read: a few natural sentences per artist, never a fact sheet.
 | | |
 |---|---|
 | **Input** | The episode's Bandcamp playlist (e.g. `https://bandcamp.com/music_for_your_neighbors/playlist/mfyn-december-2026`), the artists' Bandcamp pages, the MFYN Catalog (Airtable: Artists, Events) |
-| **Output** | A Claude Doc, "MFYN <Month> <Year> artist cards", which Bryant edits by hand before the show |
-| **Done by** | Claude, when asked ("cards for the <month> playlist"). Not a PC automation: there's no script |
-| **Instructions** | The `mfyn-show-cards` skill (Claude's own instructions, in Bryant's account) |
-| **When** | Once the playlist is final, before the show. Example: December 2026 |
+| **Output** | `show_cards.md` in the episode folder (`MFYN_Workspace\2026_December\show_cards.md`), which Bryant edits before the show |
+| **Done by** | [Build Show](02-create-show.md#build-show), as its last step (`intake.show_cards`). Claude Code on the PC (`claude -p`, on MFYN's Claude subscription) writes the cards from facts the code gathers. Asking Claude in the project still works too (the `mfyn-show-cards` skill, as a Claude Doc) |
+| **When** | When Build Show runs, once the playlist is final |
+| **Log** | Build Show's log. If the cards fail, the tracks and project are still made; the run says so |
+
+## How it runs
+
+1. Build Show reads each release's Bandcamp page in Chrome (album, label,
+   date, tags, credits, the artist's location and bio), and the MFYN Catalog's
+   Artists and Events (events from today to six weeks ahead).
+2. It hands those facts, as JSON, to Claude Code with the card rules below
+   and no tools, so the cards can't add facts from anywhere else.
+3. The reply is saved as `show_cards.md`. Run Build Show with `--no-cards` to
+   skip it.
 
 ## What a card holds
 
