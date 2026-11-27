@@ -40,6 +40,7 @@ STORIES_LOG_FILE = APP_DIR / "stories.log"
 EVENTS_LOG_FILE = APP_DIR / "events.log"
 CONTENT_LOG_FILE = APP_DIR / "content.log"
 PLAYLIST_LOG_FILE = APP_DIR / "playlist.log"
+BUILD_SHOW_LOG_FILE = APP_DIR / "build_show.log"
 
 # The catalog: artists and their Instagram handles, releases, labels, events and
 # playlists, in an Airtable base (docs/airtable.md).
@@ -108,6 +109,15 @@ EVENTS_MODEL = os.environ.get("MFYN_CLAUDE_MODEL", "")
 # YouTube playlist (docs/youtube-playlist.md): an episode's running order comes
 # from its Reaper project; this Reaper track is the host's voice and is skipped.
 REAPER_VOICE_TRACK = "voice"
+
+# Build Show (intake.build_show): the working folder goes on the desktop (OneDrive's
+# Desktop on the MFYN PC), and the Reaper project gets these two tracks before the
+# artists'. The YouTube playlist skips both when it reads the running order.
+_HOME = Path.home()
+WORK_DIR = Path(os.environ.get("MFYN_WORK_DIR", "") or (
+    _HOME / "OneDrive" / "Desktop" if (_HOME / "OneDrive" / "Desktop").is_dir() else _HOME / "Desktop"))
+BUILD_VOICE_TRACK = "Voice over"
+BUILD_BED_TRACK = "Music bed"
 # Search results per YouTube search (each search costs 100 of the 10,000 daily quota units).
 PLAYLIST_SEARCH_RESULTS = 10
 # The playlists are made public, so the Instagram Story link works for everyone.

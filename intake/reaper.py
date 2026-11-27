@@ -3,7 +3,8 @@
 The project is the true order: the show notes are written before the show,
 and the Tracks folder misses tracks played straight from MFYN_Library. Each
 item on a Reaper track is one play; they're put in order by their POSITION
-(seconds from the start). The host's voice track and muted items are skipped,
+(seconds from the start). The host's voice track ("voice" or "Voice over"),
+the "Music bed" track and muted items are skipped,
 and a track split into several items in a row counts once.
 
 The file paths saved in the project often no longer work (the episode folder
@@ -143,9 +144,9 @@ def running_order(ep, project=None):
     if project is None:
         return []
     plays = []
-    voice = config.REAPER_VOICE_TRACK.casefold()
+    skipped = {n.casefold() for n in (config.REAPER_VOICE_TRACK, config.BUILD_VOICE_TRACK, config.BUILD_BED_TRACK)}
     for track, track_muted, item in items(project.read_text(encoding="utf-8", errors="replace")):
-        if track is None or track.strip().casefold() == voice or track_muted or item["mute"]:
+        if track is None or track.strip().casefold() in skipped or track_muted or item["mute"]:
             continue
         name = item["name"] or PureWindowsPath(item["file"]).name
         found = find_file(ep, item["file"] or name)

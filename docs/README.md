@@ -10,7 +10,7 @@ starts after that.
 | # | Step | What happens | Status |
 |---|---|---|---|
 | 1 | [Acquire](01-acquire.md) | A Bandcamp purchase is downloaded as FLAC into `MFYN_Library` | Live (2026-10-23) |
-| 2 | [Create the show](02-create-show.md) | **The parent.** Pick tracks, make the episode, archive it in `MFYN_Show_Archive`, then start the sub-automations below | Manual today |
+| 2 | [Create the show](02-create-show.md) | **The parent.** Pick tracks as a Bandcamp playlist, Build Show copies them and writes the Reaper project, make the episode, archive it in `MFYN_Show_Archive`, then start the sub-automations below | Build Show built; the rest manual |
 | 2a | [Make Episode Content](02a-make-episode-content.md) | The episode's baseline content in one run: archive cover and YouTube playlist image, a 30-second 1080×1920 video post per track in `MFYN_Posts`, and an Album Story per artist in `MFYN_Stories` | Built, being tested |
 | — | [YouTube playlist](youtube-playlist.md) | After the show airs: a proposed playlist of the bands' own videos, from the Reaper running order, reviewed in the MFYN Catalog, then made on MFYN's YouTube channel | Built, not set up yet |
 | 2b | [Instagram copy](02b-instagram-copy.md) | A caption for each video post, from its details and the MFYN Catalog | Built, runs during Make Episode Content |
@@ -34,6 +34,7 @@ misbehaves.
 |---|---|---|---|---|
 | Acquire (`intake.acquire`) | Task Scheduler task `MFYN Acquire`, daily at 20:00, via `scripts\run_acquire.cmd` | MFYN PC, while signed in | `%APPDATA%\mfyn-intake\acquire.log` | [Step 1](01-acquire.md), [troubleshooting](01-acquire-troubleshooting.md) |
 | Make Episode Content (`intake.content`): the archive cover (`intake.archive_cover`), video posts (`intake.reels`), Instagram copy (`intake.captions`) and Album Stories (`intake.stories`) | You, double-clicking **MFYN – Make Episode Content** (`scripts\make_content.cmd`), until step 2 starts it itself | MFYN PC | `%APPDATA%\mfyn-intake\content.log` | [Step 2a](02a-make-episode-content.md), [step 2b](02b-instagram-copy.md), [archive cover](archive-cover.md), [Album Stories](featured-album-story.md) |
+| Build Show (`intake.build_show`) | You, double-clicking **MFYN – Build Show** (`scripts\build_show.cmd`) | MFYN PC | `%APPDATA%\mfyn-intake\build_show.log` | [Step 2](02-create-show.md#build-show) |
 | YouTube playlist (`intake.playlist`) | Make Episode Content's playlist question, or `python -m intake.playlist` | MFYN PC | `%APPDATA%\mfyn-intake\playlist.log` | [YouTube playlist](youtube-playlist.md) |
 | Event Calendar (`intake.events`) | Task Scheduler task `MFYN Event Calendar`, daily at 20:00, via `scripts\run_events.cmd` | MFYN PC, while signed in | `%APPDATA%\mfyn-intake\events.log` | [Event Calendar](event-calendar.md) |
 | Wishlist (`intake.wishlist`) | Task Scheduler task `MFYN Wishlist`, daily at 20:00, via `scripts\run_wishlist.cmd` | MFYN PC, while signed in | `%APPDATA%\mfyn-intake\wishlist.log` | [Wishlist](wishlist.md) |
