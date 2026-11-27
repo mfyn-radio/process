@@ -118,6 +118,9 @@ WORK_DIR = Path(os.environ.get("MFYN_WORK_DIR", r"C:\Users\admin\OneDrive\Deskto
 BUILD_TEMPLATE = WORK_DIR / "MFYN_Template.rpp"
 BUILD_VOICE_TRACK = "Voice over"
 BUILD_BED_TRACK = "Music bed"
+# Make Episode Content archives a finished Workspace folder first (intake.archive).
+# False keeps the local copy after archiving; True removes it once every file is copied.
+ARCHIVE_REMOVE_LOCAL = False
 # Search results per YouTube search (each search costs 100 of the 10,000 daily quota units).
 PLAYLIST_SEARCH_RESULTS = 10
 # The playlists are made public, so the Instagram Story link works for everyone.
