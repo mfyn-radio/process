@@ -31,11 +31,13 @@ Process (separate, not built yet) is up to you after that.
    on MFYN's Bandcamp page.
 2. Run [Build Show](#build-show) with the playlist's link, and make the show
    in the Reaper project it writes.
-3. Archive it in `H:\My Drive\MFYN_Show_Archive`, in a folder named
-   `D_M_YYYY- Episode Name`, for example `5_11_2026- Official Unofficial`.
-4. Put the episode's tracks (the FLACs, copied from the library) in its
-   `Tracks` folder. Step 2a also reads MP3, WAV, M4A, AIFF and OGG files.
-5. **Last action:** double-click **MFYN – Make Episode Content** on the desktop.
+3. Add the air day to the Workspace folder's name (`2026_December_3`). Make
+   Episode Content archives it in `H:\My Drive\MFYN_Show_Archive`, in a folder
+   named `D_M_YYYY- Episode Name`, for example `5_11_2026- Official Unofficial`
+   (see [step 2a](02a-make-episode-content.md#what-it-does)).
+4. **Last action:** double-click **MFYN – Make Episode Content** on the
+   desktop. It archives the episode, with the `Tracks` folder Build Show
+   filled, then makes the content.
 
 ## The episode folder
 

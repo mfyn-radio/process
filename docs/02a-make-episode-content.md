@@ -14,7 +14,7 @@ See also: [process overview](README.md) ·
 | | |
 |---|---|
 | **Trigger** | You, double-clicking **MFYN – Make Episode Content** on the PC, as step 2's last action |
-| **Input** | The newest episode in `MFYN_Show_Archive` (or the one you name) |
+| **Input** | A finished episode folder in `MFYN_Workspace`, which it archives first, or the newest episode in `MFYN_Show_Archive` (or the one you name) |
 | **Output** | Whatever the sub-scripts you chose make (below) |
 | **Runs on** | The MFYN PC (Processing 4 and ffmpeg) |
 | **Code** | [`intake/content.py`](../intake/content.py), started by [`scripts/make_content.cmd`](../scripts/make_content.cmd) |
@@ -37,6 +37,19 @@ stop the others; the summary at the end lists each one as ok or FAILED.
 
 ## What it does
 
+0. **Archive the episode** ([`archive.py`](../intake/archive.py)). If
+   `MFYN_Workspace` has a folder with an air day in its name, like
+   `2026_December_3`, and the archive has no episode on that date yet, it asks
+   `Archive 2026_December_3 (airs Thursday 03 December 2026) to MFYN_Show_Archive? [Y/n]`
+   and then the episode name. It copies the whole folder (Tracks, the Reaper
+   project, the show cards, the rendered episode) to
+   `MFYN_Show_Archive\3_12_2026- Episode Name`, leaving out Reaper's caches
+   (`.reapeaks`, `.rpp-bak`, `Backups`), and checks each file's size. It never
+   overwrites an archive folder. The Workspace folder stays unless
+   `ARCHIVE_REMOVE_LOCAL` is set in `intake/config.py`. A folder without a day
+   (`2026_December`) is skipped with a reminder to add it. The rest of the run
+   works on the episode it just archived. `--no-archive` skips this step, and
+   `python -m intake.archive` runs it on its own.
 1. **Find the episode:** the newest one in `MFYN_Show_Archive`, going by the
    air date in its folder name. It lists the tracks and asks
    `Make the content for this episode (N track(s))? [Y/n]`.

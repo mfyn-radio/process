@@ -10,8 +10,8 @@ starts after that.
 | # | Step | What happens | Status |
 |---|---|---|---|
 | 1 | [Acquire](01-acquire.md) | A Bandcamp purchase is downloaded as FLAC into `MFYN_Library` | Live (2026-10-23) |
-| 2 | [Create the show](02-create-show.md) | **The parent.** Pick tracks as a Bandcamp playlist, Build Show copies them and writes the Reaper project, make the episode, archive it in `MFYN_Show_Archive`, then start the sub-automations below | Build Show built; the rest manual |
-| 2a | [Make Episode Content](02a-make-episode-content.md) | The episode's baseline content in one run: archive cover and YouTube playlist image, a 30-second 1080×1920 video post per track in `MFYN_Posts`, and an Album Story per artist in `MFYN_Stories` | Built, being tested |
+| 2 | [Create the show](02-create-show.md) | **The parent.** Pick tracks as a Bandcamp playlist, Build Show copies them and writes the Reaper project, make the episode, then Make Episode Content archives it in `MFYN_Show_Archive` and runs the sub-automations below | Build Show built; the rest manual |
+| 2a | [Make Episode Content](02a-make-episode-content.md) | Archives the finished episode from `MFYN_Workspace` into `MFYN_Show_Archive`, then the episode's baseline content in one run: archive cover and YouTube playlist image, a 30-second 1080×1920 video post per track in `MFYN_Posts`, and an Album Story per artist in `MFYN_Stories` | Built, being tested |
 | — | [YouTube playlist](youtube-playlist.md) | After the show airs: a proposed playlist of the bands' own videos, from the Reaper running order, reviewed in the MFYN Catalog, then made on MFYN's YouTube channel | Built, not set up yet |
 | 2b | [Instagram copy](02b-instagram-copy.md) | A caption for each video post, from its details and the MFYN Catalog | Built, runs during Make Episode Content |
 | — | **Manual stop** | You review everything made for a post, then trigger Publishing | Not built yet |

@@ -5,6 +5,11 @@ Double-click scripts\\make_content.cmd (or its desktop shortcut), or run:
     python -m intake.content                    # the newest episode in MFYN_Show_Archive
     python -m intake.content --episode NAME     # the episode whose folder name contains NAME
     python -m intake.content --skip-handles     # don't stop to confirm Instagram handles
+    python -m intake.content --no-archive       # don't offer to archive a Workspace folder first
+
+It starts by offering to archive a finished episode folder from MFYN_Workspace
+(2026_December_3) into MFYN_Show_Archive (intake.archive), and then works on
+that episode.
 
 This is only the orchestrator: STEPS below lists the sub-scripts, in the order
 they run. The archive cover (with the YouTube playlist cover, one sketch)
@@ -21,7 +26,7 @@ import logging
 import random
 import sys
 
-from . import config, episode, reels, runlog
+from . import archive, config, episode, reels, runlog
 
 log = logging.getLogger("content")
 
@@ -66,13 +71,15 @@ def _main(argv, ask, say, rng, run):
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--episode", help="the episode whose folder name contains this")
     parser.add_argument("--skip-handles", action="store_true", help="don't stop to confirm Instagram handles")
+    parser.add_argument("--no-archive", action="store_true", help="don't offer to archive a Workspace folder first")
     args = parser.parse_args(argv)
     reels.setup_logging(config.CONTENT_LOG_FILE)
 
     if not config.SHOW_ARCHIVE_DIR.is_dir():
         log.error("Show archive %s not found. Is Google Drive for desktop running?", config.SHOW_ARCHIVE_DIR)
         return 1
-    ep = episode.find(config.SHOW_ARCHIVE_DIR, args.episode)
+    archived = None if args.no_archive else archive.offer(ask, say, run)
+    ep = archived if archived and not args.episode else episode.find(config.SHOW_ARCHIVE_DIR, args.episode)
     if ep is None:
         log.error("No episode folder (named like 5_11_2026- Episode Name) found in %s", config.SHOW_ARCHIVE_DIR)
         return 1
